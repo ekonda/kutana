@@ -1,3 +1,9 @@
+---
+name: Bug or feature issue
+about: Report a bug or request a new feature
+
+---
+
 <!--- Provide a general summary of the issue in the Title above. -->
 
 ## Expected Behavior

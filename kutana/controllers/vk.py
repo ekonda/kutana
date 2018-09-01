@@ -1,6 +1,6 @@
 from kutana.controllers.basiccontroller import BasicController
 from collections import namedtuple
-from kutana import logger
+from kutana.logger import logger
 import asyncio
 import aiohttp
 import json

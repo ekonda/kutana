@@ -1,7 +1,6 @@
 from kutana.controllers.basiccontroller import BasicController
 from collections import namedtuple
 from kutana import logger
-import requests
 import asyncio
 import aiohttp
 import json
@@ -24,9 +23,9 @@ class VKRequest(asyncio.Future):
 
 
 class VKController(BasicController):
-    """Class for receiving updates from vk.com. 
-    Controller requires group's token. You can specifi settings for 
-    lgroups.setLongPollSettings ongpoll with argument `longpoll_settings`. 
+    """Class for receiving updates from vk.com.
+    Controller requires group's token. You can specifi settings for
+    lgroups.setLongPollSettings ongpoll with argument `longpoll_settings`.
     """
 
     TYPE = "vk"
@@ -312,7 +311,7 @@ class VKController(BasicController):
             for update in response["updates"]:
                 if "type" not in update or "object" not in update:
                     continue
-                    
+
                 updates.append(update)
 
             return updates

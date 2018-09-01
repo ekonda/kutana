@@ -1,10 +1,8 @@
 from kutana.executor import Executor
-from kutana.plugins.norm import vk
 from kutana.plugins.data import Attachment
 from kutana.environments.vk_helpers import upload_doc_class, upload_photo_class
 from kutana.controllers.vk import VKController
 import asyncio
-import aiohttp
 import json
 
 
@@ -31,11 +29,11 @@ def create_vk_env(token=None, configuration=None):
 
     async def generic_answer(message, peer_id, attachment=None, sticker_id=None, payload=None, keyboard=None):
         if isinstance(attachment, Attachment):
-            attachment = [attachment] 
+            attachment = [attachment]
 
         if isinstance(attachment, (list, tuple)):
             new_attachment = ""
-            
+
             for a in attachment:
                 if isinstance(a, Attachment):
                     new_attachment += \
@@ -62,7 +60,7 @@ def create_vk_env(token=None, configuration=None):
     async def build_vk_environment(controller_type, update, env):
         if controller_type != "vk":
             return
-            
+
         if update["type"] == "message_new":
             async def concrete_answer(message, attachment=None, sticker_id=None, payload=None, keyboard=None):
                 return await generic_answer(
@@ -88,7 +86,7 @@ def create_vk_env(token=None, configuration=None):
     async def prc_err(controller_type, update, env):
         if update["type"] == "message_new":
             await env.reply("Произошла ошибка! Приносим свои извинения.")
-            
+
     executor.register(prc_err, error=True)
 
     return {

@@ -13,7 +13,7 @@ class KutanaTest(unittest.TestCase):
     @contextmanager
     def dumping_controller(self, queue):
         if self.kutana is None:
-            self.kutana = Kutana() 
+            self.kutana = Kutana()
 
         self.controller = DumpingController(*queue)
 

@@ -1,4 +1,4 @@
-from kutana import Plugin, load_plugins
+from kutana import Plugin
 
 plugin = Plugin()
 

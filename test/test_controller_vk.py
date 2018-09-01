@@ -13,10 +13,10 @@ logger.setLevel(40)  # ERROR LEVEL
 # Theese tests requires internet and token of VK user account as well as VK group.
 # You can set these values through environment variables:
 # TEST_TOKEN and TEST_UTOKEN.
-# 
-# Alternatively you can use json file `configuration_test.json` with format like this: 
+#
+# Alternatively you can use json file `configuration_test.json` with format like this:
 # {
-#   "token": "токен группы", 
+#   "token": "токен группы",
 #   "utoken": "токен пользователя. который модет писать в группу"
 # }
 
@@ -42,7 +42,9 @@ class TestControllerVk(unittest.TestCase):
         async def create_receiver(self):
             actual_reci = await self.original_create_receiver()
 
-            async def reci(empty_if_done=[1]):
+            empty_if_done = [1]
+
+            async def reci():
                 if not empty_if_done:
                     raise ExitException
 
@@ -51,19 +53,19 @@ class TestControllerVk(unittest.TestCase):
                 this_case.messages_to_delete.add(
                     str(
                         this_case.ureq(
-                            "messages.send", 
-                            message="echo message", 
+                            "messages.send",
+                            message="echo message",
                             peer_id=-self.group_id
                         )
                     )
                 )
-                
+
                 return await actual_reci()
 
             return reci
-        
+
         VKController.original_create_receiver = VKController.create_receiver
-        VKController.create_receiver = create_receiver 
+        VKController.create_receiver = create_receiver
 
         self.kutana = Kutana()
 
@@ -77,16 +79,18 @@ class TestControllerVk(unittest.TestCase):
         for k, v in kwargs.items():
             if v is not None:
                 data[k] = v
-        
+
         response = requests.post(
             "https://api.vk.com/method/{}?access_token={}".format(
                 method,
                 self.conf["utoken"]
-            ), 
+            ),
             data=data
-        )
+        ).json()
 
         time.sleep(0.34)
+
+        return response["response"]
 
     def tearDown(self):
         VKController.create_receiver = VKController.original_create_receiver
@@ -98,18 +102,19 @@ class TestControllerVk(unittest.TestCase):
 
         self.called = False
 
-        @plugin.on_regexp_text(r"echo (.+)")
         async def on_regexp(message, env, **kwargs):
             self.assertEqual(env.match.group(1), "message")
             self.assertEqual(env.match.group(0), "echo message")
 
             a_image = await env.upload_photo("test/author.png")
             a_audio = await env.upload_doc("test/girl.ogg", doctype="audio_message", filename="file.ogg")
- 
+
             self.assertTrue(a_image.id)
             self.assertTrue(a_audio.id)
 
             self.called = True
+
+        plugin.on_regexp_text(r"echo (.+)")(on_regexp)
 
         self.kutana.executor.register_plugins(plugin)
 

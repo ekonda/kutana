@@ -1,7 +1,7 @@
 from kutana.plugins.data import Message, Attachment
 import re
 
-def create_attachment(attachment, attachment_type=None):
+def convert_to_attachment(attachment, attachment_type=None):
     if "type" in attachment and attachment["type"] in attachment:
         body = attachment[attachment["type"]]
         attachment_type = attachment["type"]
@@ -27,21 +27,23 @@ def create_attachment(attachment, attachment_type=None):
     )
 
 
-async def resolveScreenName(screen_name, extenv, cache={}):
-    if screen_name in cache:
-        return cache[screen_name]
+naive_cache = {}
+
+async def resolveScreenName(screen_name, extenv):
+    if screen_name in naive_cache:
+        return naive_cache[screen_name]
 
     result = await extenv.request(
-        "utils.resolveScreenName", 
+        "utils.resolveScreenName",
         screen_name=screen_name
     )
 
-    cache[screen_name] = result
+    naive_cache[screen_name] = result
 
     return result
 
 
-async def prepare(arguments, update, env, extenv):
+async def convert_to_message(arguments, update, env, extenv):
     if update["type"] != "message_new":
         return True
 
@@ -71,7 +73,7 @@ async def prepare(arguments, update, env, extenv):
 
     arguments["message"] = Message(
         text,
-        tuple(create_attachment(a) for a in obj["attachments"]),
+        tuple(convert_to_attachment(a) for a in obj["attachments"]),
         obj.get("from_id"),
         obj.get("peer_id"),
         update

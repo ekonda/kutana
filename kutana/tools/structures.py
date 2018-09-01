@@ -45,8 +45,8 @@ class objdict(collections.MutableMapping):
 
 
 class icedict(collections.Mapping):
-    """Immutable dict. 
-    Thanks 
+    """Immutable dict.
+    Thanks
     https://stackoverflow.com/questions/2703599/what-would-a-frozen-dict-be
     """
 

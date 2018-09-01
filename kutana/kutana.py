@@ -1,16 +1,16 @@
 import logging
 
 
-format = logging.Formatter('%(asctime)s [ %(levelname)s ] %(message)s')
+formatter = logging.Formatter('%(asctime)s [ %(levelname)s ] %(message)s')
 level = logging.DEBUG
 
 handler_file = logging.FileHandler('kutana.log')
 handler_file.setLevel(logging.DEBUG)
-handler_file.setFormatter(format)
+handler_file.setFormatter(formatter)
 
 handler_stream = logging.StreamHandler()
 handler_stream.setLevel(level)
-handler_stream.setFormatter(format)
+handler_stream.setFormatter(formatter)
 
 logger = logging.getLogger("kutana")
 logger.setLevel(level)

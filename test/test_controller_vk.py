@@ -112,6 +112,14 @@ class TestControllerVk(unittest.TestCase):
             self.assertTrue(a_image.id)
             self.assertTrue(a_audio.id)
 
+            resp = await env.reply("Спасибо.", attachment=a_image)
+
+            self.assertTrue(resp.response)
+
+            resp = await env.request("messages.delete", message_ids=str(resp.response), delete_for_all=1)
+
+            self.assertTrue(resp.response)
+
             self.called = True
 
         plugin.on_regexp_text(r"echo (.+)")(on_regexp)

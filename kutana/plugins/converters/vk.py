@@ -29,7 +29,7 @@ def convert_to_attachment(attachment, attachment_type=None):
 
 naive_cache = {}
 
-async def resolveScreenName(screen_name, extenv):
+async def resolveScreenName(screen_name, extenv):  # pragma: no cover
     if screen_name in naive_cache:
         return naive_cache[screen_name]
 

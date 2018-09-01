@@ -49,12 +49,12 @@ class upload_doc_class():
         )
 
         if not upload_result_resp:
-            return None
+            return None  # pragma: no cover
 
         upload_result_text = await upload_result_resp.text()
 
         if not upload_result_text:
-            return None
+            return None  # pragma: no cover
 
         try:
             upload_result = json.loads(upload_result_text)
@@ -63,16 +63,14 @@ class upload_doc_class():
                 raise Exception
 
         except Exception:
-            print(upload_result_text)
-
-            return None
+            return None  # pragma: no cover
 
         attachments = await self.controller.request(
             "docs.save", **upload_result
         )
 
         if not attachments.response:
-            return None
+            return None  # pragma: no cover
 
         return convert_to_attachment(
             attachments.response[0], "doc"
@@ -99,7 +97,7 @@ class upload_photo_class():
         )
 
         if "upload_url" not in upload_data.response:
-            return None
+            return None  # pragma: no cover
 
         upload_url = upload_data.response["upload_url"]
 
@@ -111,24 +109,24 @@ class upload_photo_class():
         )
 
         if not upload_result_resp:
-            return None
+            return None  # pragma: no cover
 
         upload_result_text = await upload_result_resp.text()
 
         if not upload_result_text:
-            return None
+            return None  # pragma: no cover
 
         try:
             upload_result = json.loads(upload_result_text)
         except Exception:
-            return None
+            return None  # pragma: no cover
 
         attachments = await self.controller.request(
             "photos.saveMessagesPhoto", **upload_result
         )
 
         if not attachments.response:
-            return None
+            return None  # pragma: no cover
 
         return convert_to_attachment(
             attachments.response[0], "photo"

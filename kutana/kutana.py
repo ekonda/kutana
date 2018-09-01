@@ -1,7 +1,6 @@
 from kutana.executor import Executor
 from kutana.exceptions import ExitException
 from kutana.tools.structures import objdict
-from kutana.logger import logger
 import asyncio
 
 

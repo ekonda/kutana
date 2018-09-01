@@ -2,6 +2,9 @@
 
 [![Documentation Status](https://readthedocs.org/projects/kutana/badge/?version=latest)](https://kutana.readthedocs.io/en/latest/?badge=latest)
 [![Build Status](https://travis-ci.com/vk-brain/kutana.svg?branch=master)](https://travis-ci.com/vk-brain/kutana)
+[![CodeFactor](https://www.codefactor.io/repository/github/vk-brain/kutana/badge)](https://www.codefactor.io/repository/github/vk-brain/kutana)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/3119bfb791604b9db38e8e7a13e1d415)](https://www.codacy.com/app/michaelkrukov/kutana?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=vk-brain/kutana&amp;utm_campaign=Badge_Grade)
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/vk-brain/kutana.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/vk-brain/kutana/alerts/)
 
 # Kutana
 The engine for developing bots for soc. networks, instant messengers and other systems.
@@ -17,7 +20,7 @@ https://www.python.org/downloads/
 
 ```
 python -m pip install -r requirements.txt
-``` 
+```
 
 - Put folder `kutana` into your python path or into your project (proper module in pypi will be available later).
 
@@ -41,7 +44,7 @@ from kutana import Kutana, VKKutana, load_plugins
 kutana = VKKutana(configuration="configuration.json")
 
 # Settings
-kutana.settings["MOTD_MESSAGE"] = "Greetings, traveler." 
+kutana.settings["MOTD_MESSAGE"] = "Greetings, traveler."
 
 # Create simple plugin
 plugin = Plugin()
@@ -82,5 +85,5 @@ Find and fix all current bugs | high
 Find and fix grammar and semantic errors | high
 Create proper documentation | medium
 Adding tests | medium
-Add module to PyPi | low 
+Add module to PyPi | low
 Developing plugins | very low

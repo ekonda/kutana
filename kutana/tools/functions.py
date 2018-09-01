@@ -1,4 +1,4 @@
-from kutana.kutana import logger
+from kutana.logger import logger
 import importlib.util
 import os
 

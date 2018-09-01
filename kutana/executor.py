@@ -1,5 +1,5 @@
 from kutana.tools.structures import objdict
-from kutana.kutana import logger
+from kutana.logger import logger
 import sys
 
 

@@ -2,7 +2,6 @@ from kutana.executor import Executor
 from kutana.plugins.data import Attachment
 from kutana.environments.vk_helpers import upload_doc_class, upload_photo_class
 from kutana.controllers.vk import VKController
-import asyncio
 import json
 
 

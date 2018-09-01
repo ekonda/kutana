@@ -2,8 +2,6 @@ if __name__ == '__main__':
     import sys, os
     sys.path.append(os.getcwd())
 
-
-from kutana import DumpingController, Plugin
 from test_framework import KutanaTest
 import unittest
 import time

@@ -4,10 +4,10 @@ from kutana.exceptions import ExitException
 
 class DumpingController(BasicController):
     """Shoots target texts once."""
-    
+
     TYPE = "dumping"
-    
-    def __init__(self, *texts):    
+
+    def __init__(self, *texts):
         self.die = False
         self.queue = list(texts)
 

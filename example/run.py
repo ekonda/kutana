@@ -1,4 +1,4 @@
-from kutana import VKKutana, Plugin, load_plugins
+from kutana import VKKutana, load_plugins
 
 # Create engine with VK throught shortcut
 kutana = VKKutana(configuration="configuration.json")

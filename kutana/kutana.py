@@ -90,9 +90,9 @@ class Kutana:
                 self.loops.append(awaitable())
 
         self.loop.run_until_complete(self.shedule_update_process(
-            "kutana", 
+            "kutana",
             {
-                "kutana": self, "update_type": "startup", 
+                "kutana": self, "update_type": "startup",
                 "callbacks_owners": self.executor.callbacks_owners
             }
         ))

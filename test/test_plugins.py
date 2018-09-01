@@ -1,4 +1,3 @@
-from kutana import Kutana, DumpingController, Plugin
 from test_framework import KutanaTest
 
 

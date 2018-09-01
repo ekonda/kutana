@@ -1,4 +1,5 @@
 from test_framework import KutanaTest
+import re
 
 
 class TestPlugins(KutanaTest):
@@ -12,6 +13,17 @@ class TestPlugins(KutanaTest):
                 self.actual.append(env.body)
 
             plugin.on_startswith_text("echo ", "echo\n")(on_echo)
+
+    def test_plugin_on_raw(self):
+        self.called = 0
+
+        with self.dumping_controller("message") as plugin:
+            async def on_startup(message, env, **kwargs):
+                self.called += 1
+
+            plugin.on_startup()(on_startup)
+
+        self.assertEqual(self.called, 1)
 
     def test_plugin_callbacks(self):
         self.disposed = 0
@@ -57,7 +69,7 @@ class TestPlugins(KutanaTest):
             plugin.on_startswith_text("echo")(on_echo)
 
     def test_plugin_onstar(self):
-        queue = ["привет", "отлично привет", "ecHo", "ab", "hello"]
+        queue = ["привет", "отлично привет", "ecHo", "ab", "ae", "hello"]
         self.result = 0
 
         with self.dumping_controller(queue) as plugin:
@@ -82,12 +94,18 @@ class TestPlugins(KutanaTest):
             async def two_trigger(message, **kwargs):
                 self.result |= 1 << 2
 
-            plugin.on_startswith_text("hell")(two_trigger)
+            plugin.on_regexp_text(re.compile(r"a(e|z)"))(two_trigger)
 
 
-            async def three_trigger(message, env, **kwargs):
+            async def three_trigger(message, **kwargs):
                 self.result |= 1 << 3
 
-            plugin.on_text("ecHo")(three_trigger)
+            plugin.on_startswith_text("hell")(three_trigger)
 
-        self.assertEqual(self.result, (1 << 4) - 1)
+
+            async def four_trigger(message, env, **kwargs):
+                self.result |= 1 << 4
+
+            plugin.on_text("ecHo")(four_trigger)
+
+        self.assertEqual(self.result, (1 << 5) - 1)

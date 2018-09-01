@@ -3,6 +3,31 @@ import aiohttp
 import json
 
 
+async def upload_file_to_vk(controller, upload_url, data):
+    upload_result_resp = await controller.session.post(
+        upload_url, data=data
+    )
+
+    if not upload_result_resp:
+        return None  # pragma: no cover
+
+    upload_result_text = await upload_result_resp.text()
+
+    if not upload_result_text:
+        return None  # pragma: no cover
+
+    try:
+        upload_result = json.loads(upload_result_text)
+
+        if "error" in upload_result:
+            raise Exception
+
+    except Exception:
+        return None  # pragma: no cover
+
+    return upload_result
+
+
 class upload_doc_class():
     """Class-method for uploading documents.
 
@@ -44,35 +69,17 @@ class upload_doc_class():
         data = aiohttp.FormData()
         data.add_field("file", file, filename=filename)
 
-        upload_result_resp = await self.controller.session.post(
-            upload_url, data=data
-        )
+        upload_result = await upload_file_to_vk(self.controller, upload_url, data)
 
-        if not upload_result_resp:
-            return None
-
-        upload_result_text = await upload_result_resp.text()
-
-        if not upload_result_text:
-            return None
-
-        try:
-            upload_result = json.loads(upload_result_text)
-
-            if "error" in upload_result:
-                raise Exception
-
-        except Exception:
-            print(upload_result_text)
-
-            return None
+        if not upload_result:
+            return None  # pragma: no cover
 
         attachments = await self.controller.request(
             "docs.save", **upload_result
         )
 
         if not attachments.response:
-            return None
+            return None  # pragma: no cover
 
         return convert_to_attachment(
             attachments.response[0], "doc"
@@ -99,36 +106,24 @@ class upload_photo_class():
         )
 
         if "upload_url" not in upload_data.response:
-            return None
+            return None  # pragma: no cover
 
         upload_url = upload_data.response["upload_url"]
 
         data = aiohttp.FormData()
         data.add_field("photo", file, filename="image.png")
 
-        upload_result_resp = await self.controller.session.post(
-            upload_url, data=data
-        )
+        upload_result = await upload_file_to_vk(self.controller, upload_url, data)
 
-        if not upload_result_resp:
-            return None
-
-        upload_result_text = await upload_result_resp.text()
-
-        if not upload_result_text:
-            return None
-
-        try:
-            upload_result = json.loads(upload_result_text)
-        except Exception:
-            return None
+        if not upload_result:
+            return None  # pragma: no cover
 
         attachments = await self.controller.request(
             "photos.saveMessagesPhoto", **upload_result
         )
 
         if not attachments.response:
-            return None
+            return None  # pragma: no cover
 
         return convert_to_attachment(
             attachments.response[0], "photo"

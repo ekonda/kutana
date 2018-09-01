@@ -1,4 +1,4 @@
-class BasicController:
+class BasicController:  # pragma: no cover
     TYPE = "basic"
 
     async def create_tasks(self, ensure_future):

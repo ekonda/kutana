@@ -4,6 +4,8 @@
 [![Build Status](https://travis-ci.com/vk-brain/kutana.svg?branch=master)](https://travis-ci.com/vk-brain/kutana)
 [![CodeFactor](https://www.codefactor.io/repository/github/vk-brain/kutana/badge)](https://www.codefactor.io/repository/github/vk-brain/kutana)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/3119bfb791604b9db38e8e7a13e1d415)](https://www.codacy.com/app/michaelkrukov/kutana?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=vk-brain/kutana&amp;utm_campaign=Badge_Grade)
+[![Coverage Status](https://coveralls.io/repos/github/vk-brain/kutana/badge.svg?branch=master)](https://coveralls.io/github/vk-brain/kutana?branch=master)
+
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/vk-brain/kutana.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/vk-brain/kutana/alerts/)
 
 # Kutana

@@ -1,4 +1,8 @@
 from test_framework import KutanaTest
+import logging
+
+
+logging.disable(logging.CRITICAL)
 
 
 class TestExecutors(KutanaTest):
@@ -15,6 +19,24 @@ class TestExecutors(KutanaTest):
                     self.assertEqual(controller_type, "kutana")
 
             self.kutana.executor.register(new_update)
+
+    def test_exception(self):
+        self.called = 0
+
+        with self.dumping_controller(["message"] * 10):
+
+            async def new_update(controller_type, update, env):
+                if controller_type == "dumping":
+                    raise Exception
+
+            self.kutana.executor.register(new_update)
+
+            async def new_error(controller_type, update, env):
+                self.called += 1
+
+            self.kutana.executor.register(new_error, error=True)
+
+        self.assertEqual(self.called, 10)
 
     def test_two_dumping(self):
         self.target = ["message"] * 10

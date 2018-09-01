@@ -65,14 +65,11 @@ class Executor:
                     break
 
         except Exception as e:
-            logger.error(
+            logger.exception(
                 "\"{}::{}\"on update {} from {}".format(
                     sys.exc_info()[0].__name__, e, update, controller_type
                 )
             )
-
-            import traceback
-            traceback.print_exc()
 
             env["exception"] = e
 

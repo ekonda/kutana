@@ -7,11 +7,11 @@ import asyncio
 class Kutana:
     """Main class for constructing engine."""
 
-    def __init__(self, executor=None):
+    def __init__(self, executor=None, loop=None):
         self.controllers = []
         self.executor = executor or Executor()
 
-        self.loop = asyncio.new_event_loop()
+        self.loop = loop or asyncio.get_event_loop()
 
         self.running = True
         self.loops = []

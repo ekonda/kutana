@@ -196,7 +196,7 @@ class VKController(BasicController):
 
                         try:
                             req.set_result(res)
-                        except asyncio.InvalidStateError:
+                        except asyncio.InvalidStateError:  # pragma: no cover
                             pass
 
                 await ensure_future(clean_up())
@@ -271,7 +271,7 @@ class VKController(BasicController):
         async def update_longpoll_data():
             longpoll = await self.raw_request("groups.getLongPollServer", group_id=self.group_id)
 
-            if longpoll.error:
+            if longpoll.error:  # pragma: no cover
                 raise ValueError(
                     "Couldn't get longpoll information\n{}"
                     .format(
@@ -294,14 +294,14 @@ class VKController(BasicController):
             )) as resp:
                 try:
                     response = await resp.json()
-                except Exception:
+                except Exception:  # pragma: no cover
                     return []
 
             if "ts" in response:
                 self.longpoll["ts"] = response["ts"]
 
             if "failed" in response:
-                if response["failed"] in (2, 3, 4):
+                if response["failed"] in (2, 3, 4):  # pragma: no cover
                     await update_longpoll_data()
 
                 return

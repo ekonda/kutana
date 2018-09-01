@@ -24,8 +24,8 @@ class VKRequest(asyncio.Future):
 
 class VKController(BasicController):
     """Class for receiving updates from vk.com.
-    Controller requires group's token. You can specifi settings for
-    lgroups.setLongPollSettings ongpoll with argument `longpoll_settings`.
+    Controller requires group's token. You can specify settings for
+    groups.setLongPollSettings with argument `longpoll_settings`.
     """
 
     TYPE = "vk"

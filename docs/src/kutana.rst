@@ -38,6 +38,14 @@ kutana.kutana module
     :undoc-members:
     :show-inheritance:
 
+kutana.logger module
+--------------------
+
+.. automodule:: kutana.logger
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 kutana.shortcuts module
 -----------------------
 

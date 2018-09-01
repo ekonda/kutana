@@ -55,6 +55,12 @@ class icedict(collections.Mapping):
     def __init__(self, *args, **kwargs):
         self._store = dict(*args, **kwargs)
 
+    def __eq__(self, other):
+        if isinstance(other, icedict):
+            return self._store == other._store
+
+        return self._store == other
+
     def __iter__(self):
         return iter(self._store)
 

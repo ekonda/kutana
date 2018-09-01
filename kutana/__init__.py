@@ -1,14 +1,14 @@
 from kutana.logger import logger
 
-from kutana.kutana import *
-from kutana.executor import *
-from kutana.plugins.plugin import *
+from kutana.kutana import *  # lgtm [py/polluting-import]
+from kutana.executor import *  # lgtm [py/polluting-import]
+from kutana.plugins.plugin import *  # lgtm [py/polluting-import]
 
-from kutana.controllers.vk import *
-from kutana.controllers.dumping import *
+from kutana.controllers.vk import *  # lgtm [py/polluting-import]
+from kutana.controllers.dumping import *  # lgtm [py/polluting-import]
 
-from kutana.environments.vk import *
-from kutana.tools.functions import *
-from kutana.shortcuts import *
+from kutana.environments.vk import *  # lgtm [py/polluting-import]
+from kutana.tools.functions import *  # lgtm [py/polluting-import]
+from kutana.shortcuts import *  # lgtm [py/polluting-import]
 
 __version__ = "0.0.1"

@@ -1,7 +1,7 @@
-from kutana.plugins.data import Message, Attachment
+from kutana.plugins.data import Message
 
 
-async def prepare(arguments, update, env, extenv):
+async def convert_to_message(arguments, update, env, extenv):
     arguments["message"] = Message(
         update,
         (),

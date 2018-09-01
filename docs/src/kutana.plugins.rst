@@ -6,7 +6,7 @@ Subpackages
 
 .. toctree::
 
-    kutana.plugins.norm
+    kutana.plugins.converters
 
 Submodules
 ----------

@@ -3,8 +3,7 @@ if __name__ == '__main__':
     sys.path.append(os.getcwd())
 
 
-from kutana import Kutana, DumpingController, Plugin
-from contextlib import contextmanager
+from kutana import DumpingController, Plugin
 from test_framework import KutanaTest
 import unittest
 import time
@@ -17,13 +16,17 @@ class TestTiming(KutanaTest):
         stime = time.time()
 
         with self.dumping_controller(self.target) as plugin:
-            @plugin.on_startswith_text("echo ", "echo\n")
             async def on_echo(message, env, **kwargs):
                 self.actual.append("echo " + env.body)
 
-            @plugin.on_regexp_text(r";\)")
+            plugin.on_startswith_text("echo ", "echo\n")(on_echo)
+
+
             async def on_regexp(message, env, **kwargs):
                 self.actual.append(env.match.group(0))
+
+            plugin.on_regexp_text(r";\)")(on_regexp)
+
 
             stime = time.time()
 
@@ -38,9 +41,11 @@ class TestTiming(KutanaTest):
         self.target = ["message"] * 10000
 
         with self.dumping_controller(self.target) as plugin:
-            @plugin.on_has_text()
-            async def on_echo(message, env, **kwargs):
+            async def on_any(message, env, **kwargs):
                 self.actual.append("message")
+
+            plugin.on_has_text()(on_any)
+
 
             stime = time.time()
 

@@ -1,12 +1,11 @@
 from kutana.tools.structures import objdict
 from kutana.kutana import logger
 import sys
-import os
 
 
 class Executor:
     """Class performing update processing."""
-    
+
     def __init__(self):
         self.callbacks = []
         self.error_callbacks = []
@@ -18,7 +17,7 @@ class Executor:
 
         self.callbacks += executor.callbacks
         self.error_callbacks += executor.error_callbacks
-        
+
         self.callbacks_owners += executor.callbacks_owners
 
     def register_plugins(self, *plugins):
@@ -39,7 +38,7 @@ class Executor:
         def _register(coroutine):
             if error:
                 self.error_callbacks.append(coroutine)
-            
+
             else:
                 self.callbacks.append(coroutine)
 
@@ -48,7 +47,7 @@ class Executor:
         for callback in callbacks:
             if hasattr(callback, "__self__"):
                 self.callbacks_owners.append(callback.__self__)
-            
+
             _register(callback)
 
         return _register

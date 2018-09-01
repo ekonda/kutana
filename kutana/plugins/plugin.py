@@ -1,11 +1,11 @@
-from kutana.plugins.norm import vk, dumping 
+from kutana.plugins.converters import get_convert_to_message
 from kutana.tools.structures import objdict
 import re
 
 
 class Plugin():
     """Class for craeting extensions for kutana engine."""
-    
+
     def __init__(self):
         self.callbacks = []
         self.callbacks_raw = []
@@ -36,22 +36,25 @@ class Plugin():
             "extenv": extenv
         }
 
-        callbacks = self.callbacks
+        convert_to_message = get_convert_to_message(controller_type)
 
-        isNotMessageOrAttachment = await globals()[controller_type].prepare(
-                arguments, 
-                update, 
-                env, 
+        isNotMessageOrAttachment = await convert_to_message(
+                arguments,
+                update,
+                env,
                 extenv
         )
 
-        if isNotMessageOrAttachment:  
+        if isNotMessageOrAttachment:
             del arguments["message"]
             del arguments["attachments"]
 
             arguments["update"] = update
 
             callbacks = self.callbacks_raw
+
+        else:
+            callbacks = self.callbacks
 
         for callback in callbacks:
             comm = await callback(**arguments)
@@ -72,45 +75,45 @@ class Plugin():
             self.callbacks.append(callback)
 
     def on_dispose(self):
-        """Returns decorator for adding callbacks which is triggered when 
+        """Returns decorator for adding callbacks which is triggered when
         everything is going to shutdown.
         """
 
         def decorator(coro):
             self.callbacks_dispose.append(coro)
-            
+
             return coro
 
         return decorator
 
     def on_startup(self):
-        """Returns decorator for adding callbacks which is triggered 
-        at the startup of kutana. Decorated coroutine receives kutana 
+        """Returns decorator for adding callbacks which is triggered
+        at the startup of kutana. Decorated coroutine receives kutana
         object and some information in update.
         """
 
         def decorator(coro):
             self.callback_startup = coro
-            
+
             return coro
 
         return decorator
 
     def on_raw(self):
         """Returns decorator for adding callbacks which is triggered
-        every time when update can't be turned into `Message` or 
+        every time when update can't be turned into `Message` or
         `Attachment` object. Raw update is passed to callback.
         """
-         
+
         def decorator(coro):
             self.callbacks_raw.append(coro)
-            
+
             return coro
 
         return decorator
 
     def on_text(self, *texts):
-        """Returns decorator for adding callbacks which is triggered 
+        """Returns decorator for adding callbacks which is triggered
         when the message and any of the specified text are fully matched.
         """
 
@@ -144,7 +147,7 @@ class Plugin():
                     await coro(*args, **kwargs)
 
                     return "DONE"
-                
+
             self.add_callbacks(wrapper)
 
             return wrapper
@@ -163,7 +166,7 @@ class Plugin():
                 for text in check_texts:
                     if message.startswith(text):
                         return text
-                
+
                 return None
 
             async def wrapper(*args, **kwargs):
@@ -178,7 +181,7 @@ class Plugin():
                 await coro(*args, **kwargs)
 
                 return "DONE"
-                
+
             self.add_callbacks(wrapper)
 
             return wrapper
@@ -186,7 +189,7 @@ class Plugin():
         return decorator
 
     def on_regexp_text(self, regexp, flags=0):
-        """Returns decorator for adding callbacks which is triggered 
+        """Returns decorator for adding callbacks which is triggered
         when the message matches the specified regular expression.
         """
 
@@ -216,8 +219,8 @@ class Plugin():
         return decorator
 
     def on_attachment(self, *types):
-        """Returns decorator for adding callbacks which is triggered 
-        when the message has attachments of the specified type 
+        """Returns decorator for adding callbacks which is triggered
+        when the message has attachments of the specified type
         (if no types specified, then any attachments).
         """
 

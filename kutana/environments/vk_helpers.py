@@ -1,11 +1,11 @@
-import kutana.plugins.norm.vk as vknorm
+from kutana.plugins.converters.vk import convert_to_attachment
 import aiohttp
 import json
 
 
 class upload_doc_class():
-    """Class-method for uploading documents. 
-    
+    """Class-method for uploading documents.
+
     Pass peer_id=False to upload with docs.getWallUploadServer.
     """
 
@@ -13,18 +13,18 @@ class upload_doc_class():
         self.controller = controller
         self.peer_id = peer_id
 
-    async def __call__(self, file, peer_id=None, group_id=None, 
+    async def __call__(self, file, peer_id=None, group_id=None,
             doctype="doc", filename=None):
         if filename is None:
             filename = "file.png"
 
         if peer_id is None:
-            peer_id = self.peer_id 
+            peer_id = self.peer_id
 
         if isinstance(file, str):
             with open(file, "rb") as o:
                 file = o.read()
-        
+
         if peer_id:
             upload_data = await self.controller.request(
                 "docs.getMessagesUploadServer", peer_id=peer_id, type=doctype
@@ -32,7 +32,7 @@ class upload_doc_class():
 
         else:
             upload_data = await self.controller.request(
-                "docs.getWallUploadServer", 
+                "docs.getWallUploadServer",
                 group_id=group_id or self.controller.group_id
             )
 
@@ -50,8 +50,8 @@ class upload_doc_class():
 
         if not upload_result_resp:
             return None
-        
-        upload_result_text = await upload_result_resp.text() 
+
+        upload_result_text = await upload_result_resp.text()
 
         if not upload_result_text:
             return None
@@ -64,7 +64,7 @@ class upload_doc_class():
 
         except Exception:
             print(upload_result_text)
-            
+
             return None
 
         attachments = await self.controller.request(
@@ -74,7 +74,7 @@ class upload_doc_class():
         if not attachments.response:
             return None
 
-        return vknorm.create_attachment(
+        return convert_to_attachment(
             attachments.response[0], "doc"
         )
 
@@ -88,12 +88,12 @@ class upload_photo_class():
 
     async def __call__(self, file, peer_id=None):
         if peer_id is None:
-            peer_id = self.peer_id 
+            peer_id = self.peer_id
 
         if isinstance(file, str):
             with open(file, "rb") as o:
                 file = o.read()
-        
+
         upload_data = await self.controller.request(
             "photos.getMessagesUploadServer", peer_id=peer_id
         )
@@ -112,8 +112,8 @@ class upload_photo_class():
 
         if not upload_result_resp:
             return None
-        
-        upload_result_text = await upload_result_resp.text() 
+
+        upload_result_text = await upload_result_resp.text()
 
         if not upload_result_text:
             return None
@@ -130,6 +130,6 @@ class upload_photo_class():
         if not attachments.response:
             return None
 
-        return vknorm.create_attachment(
+        return convert_to_attachment(
             attachments.response[0], "photo"
         )

@@ -1,5 +1,6 @@
 ![Kutana logo](docs/_static/kutana-logo-512.png)
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/fd764f9034d94d1282398da1ab77638d)](https://app.codacy.com/app/michaelkrukov/kutana?utm_source=github.com&utm_medium=referral&utm_content=vk-brain/kutana&utm_campaign=Badge_Grade_Dashboard)
 [![Documentation Status](https://readthedocs.org/projects/kutana/badge/?version=latest)](https://kutana.readthedocs.io/en/latest/?badge=latest)
 [![Build Status](https://travis-ci.com/vk-brain/kutana.svg?branch=master)](https://travis-ci.com/vk-brain/kutana)
 

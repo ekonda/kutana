@@ -1,0 +1,9 @@
+language: python
+python:
+  - "3.5"
+  - "3.6"
+  - "3.7-dev"
+script:
+  - PYTHONPATH=$PWD python3 -m unittest discover -s test
+install:
+  - python3 -m pip install -r requirements.txt

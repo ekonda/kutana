@@ -1,5 +1,8 @@
 ![Kutana logo](docs/_static/kutana-logo-512.png)
 
+[![Documentation Status](https://readthedocs.org/projects/kutana/badge/?version=latest)](https://kutana.readthedocs.io/en/latest/?badge=latest)
+[![Build Status](https://travis-ci.com/vk-brain/kutana.svg?branch=master)](https://travis-ci.com/vk-brain/kutana)
+
 # Kutana
 The engine for developing bots for soc. networks, instant messengers and other systems.
 

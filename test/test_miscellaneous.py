@@ -62,7 +62,7 @@ class TestMiscellaneous(unittest.TestCase):
         self.assertEqual(loaded_plugins[0].memory, "message")
 
     def test_create_vk_env(self):
-        create_vk_env(token="123")
+        create_vk_env(token="token")
 
         with self.assertRaises(ValueError):
             create_vk_env(configuration="configuration.json.example")
@@ -71,11 +71,9 @@ class TestMiscellaneous(unittest.TestCase):
             create_vk_env(token="")
 
     def test_vk_shortcut(self):
-        vkkutana = VKKutana(token="123")
+        vkkutana = VKKutana(token="token")
 
         self.assertIsNotNone(vkkutana)
-
-        create_vk_env
 
     def test_vk_conversation(self):
         arguments = {}

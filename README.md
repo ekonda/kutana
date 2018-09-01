@@ -10,7 +10,7 @@
 # Kutana
 The engine for developing bots for soc. networks, instant messengers and other systems.
 
-## Installation
+### Installation
 - Download and install python (3.5.2+)
 
 ```
@@ -31,7 +31,7 @@ python -m pip install -r requirements.txt
 -- ...
 ```
 
-## Usage
+### Usage
 - Create `Kutana` engine and add controllers. You can use shortcuts like `VKKutana` for adding and registering controllers, callbacks and other usefull functions.
 - You can set settings in `Kutana.settings`.
 - Add or create plugins other files and register them in executor. You can import plugin from files with function `load_plugins`. Files should be a valid python modules with available `plugin` field with your plugin (`Plugin`).
@@ -76,10 +76,10 @@ async def on_message(message, attachments, env, extenv):
     await env.reply("{}!".format(env.body))
 ```
 
-## Available controllers
-- VKontakte groups (only groups)
+### Available controllers
+- VKController (vk.com groups)
 
-## Tasks
+### Tasks
 Task|Priority
 ---|---
 Find and fix all current bugs | high
@@ -88,3 +88,6 @@ Create proper documentation | medium
 Adding tests | medium
 Add module to PyPi | low
 Developing plugins | very low
+
+### Authors
+- **Michael Krukov** - [@michaelkrukov](https://github.com/michaelkrukov)

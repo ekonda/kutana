@@ -3,20 +3,22 @@ python:
   - "3.5"
   - "3.6"
   - "3.7-dev"
-deploy:
-  provider: pypi
-  user: "michaelkrukov"
-  password: $PYPI_PASSWORD
-  distributions: "sdist bdist_wheel"
-  on:
-    tags: true
-    branch: stable
-    python: '3.6'
-
-script:
-  - python3 -m unittest discover -s test
-  - coverage run --source kutana -m unittest discover -s test
-  - coveralls
 install:
   - python3 -m pip install -r requirements.txt
   - python3 -m pip install --upgrade setuptools twine wheel coveralls coverage
+script:
+  - python3 -m unittest discover -s test
+jobs:
+  - stage: deploy
+    script:
+      - coverage run --source kutana -m unittest discover -s test
+      - coveralls
+    deploy: &pypi
+      provider: pypi
+      user: "michaelkrukov"
+      password: $PYPI_PASSWORD
+      distributions: "sdist bdist_wheel"
+      server: https://test.pypi.org/legacy/
+      on:
+        tags: true
+        branch: stable

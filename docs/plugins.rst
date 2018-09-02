@@ -3,16 +3,16 @@ Plugins
 
 Available methods of :class:`.Plugin` for subscribing to specific updates.
 
-- **on_text(text, ...)** - is triggered when the message and any of the 
+- **on_text(text, ...)** - is triggered when the message and any of the
   specified text are fully matched.
-- **on_has_text(text, ...)** - is triggered when the message contains any 
+- **on_has_text(text, ...)** - is triggered when the message contains any
   of the specified texts.
-- **on_startswith_text(text, ...)** - is triggered when the message starts 
+- **on_startswith_text(text, ...)** - is triggered when the message starts
   with any of the specified texts.
-- **on_regexp_text(regexp, flags = 0)** - is triggered when the message 
+- **on_regexp_text(regexp, flags = 0)** - is triggered when the message
   matches the specified regular expression.
-- **on_attachment(type, ...)** - is triggered when the message has 
-  attachments of the specified type (if no types specified, 
+- **on_attachment(type, ...)** - is triggered when the message has
+  attachments of the specified type (if no types specified,
   then any attachments).
 
 All methods above decorates callback which should look like that:
@@ -20,34 +20,35 @@ All methods above decorates callback which should look like that:
 .. code-block:: python
 
     async def on_message(message, attachments, env, extenv):
-        # `message` is instance of Message with text, 
+        # `message` is instance of Message with text,
         # attachmnets and update information.
 
         # `attachments` is tuple of instances of Attachment
         # and update information.
 
-        # `env` is a dictionary (:class:`.objdict`) with data 
+        # `env` is a dictionary (:class:`.objdict`) with data
         # accesible from callbacks of current plugin.
 
-        # `extenv` is a dictionary (:class:`.objdict`) with 
+        # `extenv` is a dictionary (:class:`.objdict`) with
         # data accesible from callbacks of current executor.
 
         pass
 
-- **on_startup()** - is triggered at the startup of kutana. Decorated 
-  coroutine receives kutana object and some information in update. See 
+- **on_startup()** - is triggered at the startup of kutana. Decorated
+  coroutine receives kutana object and some information in update. See
   below for example.
-- **on_raw()** - is triggered every time when update can't be turned 
-  into `Message` or `Attachment` object. Arguments `env`, `extenv` 
-  and raw `update` is passed to callback.
+- **on_raw()** - is triggered every time when update can't be turned
+  into `Message` or `Attachment` object. Arguments `env`, `extenv`
+  and raw `update` is passed to callback. If callback returns "DONE", no
+  other callback will process this update any further.
 - **on_dispose()** - is triggered when everything is going to shutdown.
 
 Available fields of :class:`.Plugin`.
 
-- **order** - you can manipulate order in which plugins process updates. 
-  Lower value - earlier this plugin will get to process update. This 
-  works only when using default `load_plugins` function and only inside 
-  a single call of `load_plugins`. You should put frequently used 
+- **order** - you can manipulate order in which plugins process updates.
+  Lower value - earlier this plugin will get to process update. This
+  works only when using default `load_plugins` function and only inside
+  a single call of `load_plugins`. You should put frequently used
   plugins closer to a beginning as much as possible.
 
 See :ref:`special_updates` for special updates.

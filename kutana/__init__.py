@@ -13,4 +13,4 @@ from kutana.tools.functions import *  # lgtm [py/polluting-import]
 from kutana.shortcuts import *  # lgtm [py/polluting-import]
 
 name = "kutana"
-__version__ = "0.0.4"
+__version__ = "0.0.5"

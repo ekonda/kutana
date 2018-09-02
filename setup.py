@@ -10,7 +10,7 @@ import os
 import sys
 
 
-VERSION = "0.0.4"
+VERSION = "0.0.5"
 
 
 class VerifyVersionCommand(install):
@@ -41,7 +41,7 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/vk-brain/kutana",
-    packages=["kutana"],
+    packages=setuptools.find_packages(),
     install_requires=[
         "requests==2.19",
         "aiohttp==3.3"

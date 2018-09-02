@@ -9,16 +9,16 @@ install:
 script:
   - python3 -m unittest discover -s test
 jobs:
-  - stage: deploy
-    script:
-      - coverage run --source kutana -m unittest discover -s test
-      - coveralls
-    deploy: &pypi
-      provider: pypi
-      user: "michaelkrukov"
-      password: $PYPI_PASSWORD
-      distributions: "sdist bdist_wheel"
-      server: https://test.pypi.org/legacy/
-      on:
-        tags: true
-        branch: stable
+  include:
+    - stage: deploy
+      script:
+        - coverage run --source kutana -m unittest discover -s test
+        - coveralls
+      deploy: &pypi
+        provider: pypi
+        user: "michaelkrukov"
+        password: $PYPI_PASSWORD
+        distributions: "sdist bdist_wheel"
+        on:
+          tags: true
+          branch: stable

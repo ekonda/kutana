@@ -12,8 +12,6 @@ deploy:
     tags: true
     branch: stable
 script:
-  - python3 setup.py sdist bdist_wheel
-  - python3 setup.py install
   - python3 -m unittest discover -s test
   - coverage run --source kutana -m unittest discover -s test
   - coveralls

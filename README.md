@@ -18,18 +18,10 @@ The engine for developing bots for soc. networks, instant messengers and other s
 https://www.python.org/downloads/
 ```
 
-- Install python modules from requirements.txt using installed python (user python3 if needed)
+- Install `kutana` module (use python3 if needed)
 
 ```
-python -m pip install -r requirements.txt
-```
-
-- Put folder `kutana` into your python path or into your project (proper module in pypi will be available later).
-
-```
-- myproject/
--- kutana/
--- ...
+python -m pip install kutana
 ```
 
 ### Usage

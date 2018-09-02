@@ -14,6 +14,7 @@ jobs:
         - coverage run --source kutana -m unittest discover -s test
         - coveralls
       install:
+        - python3 -m pip install -r requirements.txt
         - python3 -m pip install --upgrade setuptools twine wheel coveralls coverage
       deploy: &pypi
         provider: pypi

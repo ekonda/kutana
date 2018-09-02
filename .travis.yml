@@ -3,11 +3,19 @@ python:
   - "3.5"
   - "3.6"
   - "3.7-dev"
+deploy:
+  provider: pypi
+  user: "michaelkrukov"
+  password: $PYPI_PASSWORD
+  distributions: "sdist bdist_wheel"
+  on:
+    tags: true
+    branch: stable
 script:
-  - PYTHONPATH=$PWD
+  - python3 setup.py install
   - python3 -m unittest discover -s test
   - coverage run --source kutana -m unittest discover -s test
   - coveralls
 install:
   - python3 -m pip install -r requirements.txt
-  - python3 -m pip install coveralls coverage
+  - python3 -m pip install setuptools twine wheel coveralls coverage

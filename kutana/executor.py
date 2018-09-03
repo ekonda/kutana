@@ -1,4 +1,3 @@
-from kutana.tools.structures import objdict
 from kutana.logger import logger
 import sys
 

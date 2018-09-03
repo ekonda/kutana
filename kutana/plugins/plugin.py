@@ -1,60 +1,70 @@
-from kutana.plugins.converters import get_convert_to_message
+from kutana.plugins.converters import get_converter
 from kutana.tools.structures import objdict
+import shlex
 import re
 
 
 class Plugin():
     """Class for craeting extensions for kutana engine."""
 
-    def __init__(self):
-        self.callbacks = []
-        self.callbacks_raw = []
-        self.callbacks_dispose = []
-        self.callback_startup = None
+    def __init__(self, **kwargs):
+        self._callbacks = []
+        self._callbacks_raw = []
+        self._callbacks_dispose = []
+        self._callback_startup = None
 
         self.order = 50
 
-        self.executor = None
+        for k, v in kwargs.items():
+            setattr(self, k, v)
 
-    async def on_message(self, controller_type, update, extenv):
+    @staticmethod
+    def done_if_none(value):
+        """Return "DONE" if value is None. Otherwise return value."""
+        if value is None:
+            return "DONE"
+
+        return value
+
+    async def proc_update(self, update, eenv):
         """Method for processing updates."""
 
-        if controller_type == "kutana":
+        if eenv.ctrl_type == "kutana":
             if update["update_type"] == "startup":
-                if self.callback_startup:
-                    await self.callback_startup(update["kutana"], update)
+                if self._callback_startup:
+                    await self._callback_startup(update["kutana"], update)
 
             return
 
-        env = objdict()
-        extenv.controller_type = controller_type
+        env = objdict(eenv=eenv, **eenv)
 
-        arguments = {
-            "message": "",
-            "attachments": [],
-            "env": env,
-            "extenv": extenv
-        }
-
-        convert_to_message = get_convert_to_message(controller_type)
-
-        isNotMessageOrAttachment = await convert_to_message(
-                arguments,
-                update,
-                env,
-                extenv
-        )
-
-        if isNotMessageOrAttachment:
-            del arguments["message"]
-            del arguments["attachments"]
-
-            arguments["update"] = update
-
-            callbacks = self.callbacks_raw
+        if eenv.get("_cached_message"):
+            message = eenv["_cached_message"]
 
         else:
-            callbacks = self.callbacks
+            message = await get_converter(eenv.ctrl_type)(update, eenv)
+
+            eenv["_cached_message"] = message
+
+        if message is None:
+            if not self._callbacks_raw:
+                return
+
+            arguments = {
+                "env": env,
+                "update": update
+            }
+
+            callbacks = self._callbacks_raw
+
+        else:
+            arguments = {
+                "env": env,
+                "message": message,
+                "attachments": message.attachments
+            }
+
+            callbacks = self._callbacks
 
         for callback in callbacks:
             comm = await callback(**arguments)
@@ -63,16 +73,16 @@ class Plugin():
                 return "DONE"
 
     async def dispose(self):
-        """Free resourses and prepare for shutdown."""
+        """Free resources and prepare for shutdown."""
 
-        for callback in self.callbacks_dispose:
+        for callback in self._callbacks_dispose:
             await callback()
 
     def add_callbacks(self, *callbacks):
         """Add callbacks for processing updates."""
 
         for callback in callbacks:
-            self.callbacks.append(callback)
+            self._callbacks.append(callback)
 
     def on_dispose(self):
         """Returns decorator for adding callbacks which is triggered when
@@ -80,7 +90,7 @@ class Plugin():
         """
 
         def decorator(coro):
-            self.callbacks_dispose.append(coro)
+            self._callbacks_dispose.append(coro)
 
             return coro
 
@@ -93,7 +103,7 @@ class Plugin():
         """
 
         def decorator(coro):
-            self.callback_startup = coro
+            self._callback_startup = coro
 
             return coro
 
@@ -102,11 +112,12 @@ class Plugin():
     def on_raw(self):
         """Returns decorator for adding callbacks which is triggered
         every time when update can't be turned into `Message` or
-        `Attachment` object. Raw update is passed to callback.
+        `Attachment` object. Arguments `env` and raw `update`
+        is passed to callback.
         """
 
         def decorator(coro):
-            self.callbacks_raw.append(coro)
+            self._callbacks_raw.append(coro)
 
             return coro
 
@@ -122,9 +133,10 @@ class Plugin():
 
             async def wrapper(*args, **kwargs):
                 if kwargs["message"].text.strip().lower() in check_texts:
-                    await coro(*args, **kwargs)
+                    comm = self.done_if_none(await coro(*args, **kwargs))
 
-                    return "DONE"
+                    if comm == "DONE":
+                        return "DONE"
 
             self.add_callbacks(wrapper)
 
@@ -135,6 +147,10 @@ class Plugin():
     def on_has_text(self, *texts):
         """Returns decorator for adding callbacks which is triggered
         when the message contains any of the specified texts.
+
+        Fills env for callback with:
+
+        - "found_text" - text found in message.
         """
 
         def decorator(coro):
@@ -143,10 +159,16 @@ class Plugin():
             async def wrapper(*args, **kwargs):
                 check_text = kwargs["message"].text.strip().lower()
 
-                if any(text in check_text for text in check_texts):
-                    await coro(*args, **kwargs)
+                for text in check_texts:
+                    if text not in check_text:
+                        continue
 
-                    return "DONE"
+                    kwargs["env"]["found_text"] = text
+
+                    comm = self.done_if_none(await coro(*args, **kwargs))
+
+                    if comm == "DONE":
+                        return "DONE"
 
             self.add_callbacks(wrapper)
 
@@ -157,6 +179,12 @@ class Plugin():
     def on_startswith_text(self, *texts):
         """Returns decorator for adding callbacks which is triggered
         when the message starts with any of the specified texts.
+
+        Fills env for callback with:
+
+        - "body" - text without prefix.
+        - "args" - text without prefix splitted in bash-like style.
+        - "prefix" - prefix.
         """
 
         def decorator(coro):
@@ -176,11 +204,13 @@ class Plugin():
                     return
 
                 kwargs["env"]["body"] = kwargs["message"].text[len(search_result):].strip()
+                kwargs["env"]["args"] = shlex.split(kwargs["env"]["body"])
                 kwargs["env"]["prefix"] = kwargs["message"].text[:len(search_result)].strip()
 
-                await coro(*args, **kwargs)
+                comm = self.done_if_none(await coro(*args, **kwargs))
 
-                return "DONE"
+                if comm == "DONE":
+                    return "DONE"
 
             self.add_callbacks(wrapper)
 
@@ -191,6 +221,10 @@ class Plugin():
     def on_regexp_text(self, regexp, flags=0):
         """Returns decorator for adding callbacks which is triggered
         when the message matches the specified regular expression.
+
+        Fills env for callback with:
+
+        - "match" - match.
         """
 
         if isinstance(regexp, str):
@@ -208,9 +242,10 @@ class Plugin():
 
                 kwargs["env"]["match"] = match
 
-                await coro(*args, **kwargs)
+                comm = self.done_if_none(await coro(*args, **kwargs))
 
-                return "DONE"
+                if comm == "DONE":
+                    return "DONE"
 
             self.add_callbacks(wrapper)
 
@@ -236,9 +271,10 @@ class Plugin():
                     else:
                         return
 
-                await coro(*args, **kwargs)
+                comm = self.done_if_none(await coro(*args, **kwargs))
 
-                return "DONE"
+                if comm == "DONE":
+                    return "DONE"
 
             self.add_callbacks(wrapper)
 

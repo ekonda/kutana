@@ -1,8 +1,6 @@
 from kutana import Plugin
 
-plugin = Plugin()
-
-plugin.name = "Plugins Lister"
+plugin = Plugin(name="Plugins")
 
 @plugin.on_startup()
 async def on_startup(kutana, update):
@@ -12,11 +10,9 @@ async def on_startup(kutana, update):
         if isinstance(pl, Plugin):
             plugin.plugins.append(pl.name)
 
-    plugin.bot_name = kutana.settings.get("bot_name", "noname")
-
 @plugin.on_startswith_text("list")
-async def on_message(message, attachments, env, extenv):
+async def on_list(message, attachments, env):
     await env.reply(
-        "Bot with name \"{}\" has:\n".format(plugin.bot_name) +
-        "; ".join(plugin.plugins)
+        "Plugins:\n" +
+        " | ".join(plugin.plugins)
     )

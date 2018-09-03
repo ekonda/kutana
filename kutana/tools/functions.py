@@ -1,6 +1,14 @@
 from kutana.logger import logger
 import importlib.util
+import json
 import os
+
+
+def load_configuration(target, path):
+    with open(path, "r") as fh:
+        config = json.load(fh)
+
+    return config.get(target)
 
 
 def import_plugin(name, path):

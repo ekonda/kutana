@@ -1,14 +1,15 @@
-from kutana import VKKutana, load_plugins
+from kutana import Kutana, VKController, load_plugins, load_configuration
 
-# Create engine with VK throught shortcut
-kutana = VKKutana(configuration="configuration.json")
+# Create engine
+kutana = Kutana()
 
-# Set your settings
-kutana.settings["bot_name"] = "V"
-kutana.settings["path_to_plugins"] = "example/plugins/"
+# Add VKController to engine
+kutana.add_controller(
+    VKController(load_configuration("vk_token", "configuration.json"))
+)
 
 # Load and register plugins
-kutana.executor.register_plugins(*load_plugins(kutana.settings.path_to_plugins))
+kutana.executor.register_plugins(*load_plugins("example/plugins/"))
 
 # Run engine
 kutana.run()

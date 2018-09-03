@@ -24,13 +24,11 @@ class Executor:
         """Register callbacks from plugins."""
 
         for plugin in plugins:
-            if hasattr(plugin, "on_message"):
-                self.register(plugin.on_message)
+            if hasattr(plugin, "proc_update"):
+                self.register(plugin.proc_update)
 
-            if hasattr(plugin, "on_error"):
-                self.register(plugin.on_error, error=True)
-
-            plugin.executor = self
+            if hasattr(plugin, "proc_error"):  # pragma: no cover
+                self.register(plugin.proc_error, error=True)
 
     def register(self, *callbacks, error=False):
         """Register callbacks."""
@@ -52,14 +50,12 @@ class Executor:
 
         return _register
 
-    async def __call__(self, controller_type, update):
+    async def __call__(self, update, eenv):
         """Process update from controller."""
-
-        env = objdict()
 
         try:
             for cb in self.callbacks:
-                comm = await cb(controller_type, update, env)
+                comm = await cb(update, eenv)
 
                 if comm == "DONE":
                     break
@@ -67,20 +63,24 @@ class Executor:
         except Exception as e:
             logger.exception(
                 "\"{}::{}\"on update {} from {}".format(
-                    sys.exc_info()[0].__name__, e, update, controller_type
+                    sys.exc_info()[0].__name__, e, update, eenv.ctrl_type
                 )
             )
 
-            env["exception"] = e
+            eenv["exception"] = e
+
+            if not self.error_callbacks:
+                if "reply" in eenv:
+                    return await eenv.reply("Произошла ошибка! Приносим свои извинения.")
 
             for cb in self.error_callbacks:
-                comm = await cb(controller_type, update, env)
+                comm = await cb(update, eenv)
 
                 if comm == "DONE":
                     break
 
     async def dispose(self):
-        """Free resourses and prepare for shutdown."""
+        """Free resources and prepare for shutdown."""
 
         for callback_owner in self.callbacks_owners:
             if hasattr(callback_owner, "dispose"):

@@ -1,5 +1,10 @@
 class BasicController:  # pragma: no cover
-    TYPE = "basic"
+    type = "basic"
+
+    async def setup_env(self, update, eenv):
+        """Installs wanted methods and values for update into eenv."""
+
+        raise NotImplementedError
 
     async def create_tasks(self, ensure_future):
         """Create tasks to be executed in background in Kutana."""
@@ -12,6 +17,6 @@ class BasicController:  # pragma: no cover
         raise NotImplementedError
 
     async def dispose(self):
-        """Free used resourses."""
+        """Free used resources."""
 
         raise NotImplementedError

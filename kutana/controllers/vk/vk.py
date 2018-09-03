@@ -1,4 +1,7 @@
+from kutana.controllers.vk.vk_helpers import \
+    upload_doc_class, upload_photo_class, reply_concrete_class
 from kutana.controllers.basiccontroller import BasicController
+from kutana.plugins.data import Message, Attachment
 from collections import namedtuple
 from kutana.logger import logger
 import asyncio
@@ -28,7 +31,7 @@ class VKController(BasicController):
     groups.setLongPollSettings with argument `longpoll_settings`.
     """
 
-    TYPE = "vk"
+    type = "vk"
 
     def __init__(self, token, longpoll_settings=None):
         if not token:
@@ -132,6 +135,52 @@ class VKController(BasicController):
                 execute_errors=""
             )
 
+    async def generic_answer(self, message, peer_id, attachment=None,
+            sticker_id=None, payload=None, keyboard=None):
+        """Send message to target peer_id wiith parameters."""
+
+        if isinstance(attachment, Attachment):
+            attachment = [attachment]
+
+        if isinstance(attachment, (list, tuple)):
+            new_attachment = ""
+
+            for a in attachment:
+                if isinstance(a, Attachment):
+                    new_attachment += \
+                        "{}{}_{}".format(a.type, a.owner_id, a.id) + \
+                        ("_" + a.access_key if a.access_key else "")
+
+                else:
+                    new_attachment += str(a)
+
+                new_attachment += ","
+
+            attachment = new_attachment
+
+        return await self.request(
+            "messages.send",
+            message=message,
+            peer_id=peer_id,
+            attachment=attachment,
+            sticker_id=sticker_id,
+            payload=sticker_id,
+            keyboard=keyboard
+        )\
+
+    async def setup_env(self, update, eenv):
+        peer_id = update["object"].get("peer_id")
+
+        if update["type"] == "message_new":
+            eenv["reply"] = reply_concrete_class(self, peer_id)
+
+        eenv["send_msg"] = self.generic_answer
+
+        eenv["upload_photo"] = upload_photo_class(self, peer_id)
+        eenv["upload_doc"] = upload_doc_class(self, peer_id)
+
+        eenv["request"] = self.request
+
     async def create_tasks(self, ensure_future):
         async def execute_loop():
             while self.running:
@@ -196,7 +245,7 @@ class VKController(BasicController):
 
                         try:
                             req.set_result(res)
-                        except asyncio.InvalidStateError:  # pragma: no cover
+                        except asyncio.InvalidStateError:
                             pass
 
                 await ensure_future(clean_up())
@@ -271,7 +320,7 @@ class VKController(BasicController):
         async def update_longpoll_data():
             longpoll = await self.raw_request("groups.getLongPollServer", group_id=self.group_id)
 
-            if longpoll.error:  # pragma: no cover
+            if longpoll.error:
                 raise ValueError(
                     "Couldn't get longpoll information\n{}"
                     .format(
@@ -294,14 +343,14 @@ class VKController(BasicController):
             )) as resp:
                 try:
                     response = await resp.json()
-                except Exception:  # pragma: no cover
+                except Exception:
                     return []
 
             if "ts" in response:
                 self.longpoll["ts"] = response["ts"]
 
             if "failed" in response:
-                if response["failed"] in (2, 3, 4):  # pragma: no cover
+                if response["failed"] in (2, 3, 4):
                     await update_longpoll_data()
 
                 return

@@ -1,6 +1,7 @@
 from kutana.plugins.data import Message, Attachment
 import re
 
+
 def convert_to_attachment(attachment, attachment_type=None):
     if "type" in attachment and attachment["type"] in attachment:
         body = attachment[attachment["type"]]
@@ -29,11 +30,11 @@ def convert_to_attachment(attachment, attachment_type=None):
 
 naive_cache = {}
 
-async def resolveScreenName(screen_name, extenv):  # pragma: no cover
+async def resolveScreenName(screen_name, eenv):  # pragma: no cover
     if screen_name in naive_cache:
         return naive_cache[screen_name]
 
-    result = await extenv.request(
+    result = await eenv.request(
         "utils.resolveScreenName",
         screen_name=screen_name
     )
@@ -43,9 +44,9 @@ async def resolveScreenName(screen_name, extenv):  # pragma: no cover
     return result
 
 
-async def convert_to_message(arguments, update, env, extenv):
+async def convert_to_message(update, eenv):
     if update["type"] != "message_new":
-        return True
+        return None
 
     obj = update["object"]
 
@@ -56,7 +57,7 @@ async def convert_to_message(arguments, update, env, extenv):
         new_text = ""
 
         for m in re.finditer(r"\[(.+?)\|.+?\]", text):
-            resp = await resolveScreenName(m.group(1), extenv)
+            resp = await resolveScreenName(m.group(1), eenv)
 
             new_text += text[cursor : m.start()]
 
@@ -71,15 +72,10 @@ async def convert_to_message(arguments, update, env, extenv):
 
         text = new_text.lstrip()
 
-    arguments["message"] = Message(
+    return Message(
         text,
         tuple(convert_to_attachment(a) for a in obj["attachments"]),
         obj.get("from_id"),
         obj.get("peer_id"),
         update
     )
-
-    arguments["attachments"] = arguments["message"].attachments
-
-    for w in ("reply", "send_msg", "request", "upload_photo", "upload_doc"):
-        env[w] = extenv[w]

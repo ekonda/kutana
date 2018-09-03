@@ -5,11 +5,17 @@ from kutana.exceptions import ExitException
 class DumpingController(BasicController):
     """Shoots target texts once."""
 
-    TYPE = "dumping"
+    type = "dumping"
 
     def __init__(self, *texts):
         self.die = False
         self.queue = list(texts)
+
+    async def async_print(self, *args, **kwargs):
+        print(*args, **kwargs)
+
+    async def setup_env(self, update, eenv):
+        eenv["reply"] = self.async_print
 
     async def create_tasks(self, ensure_future):
         return []

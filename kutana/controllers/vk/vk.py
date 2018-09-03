@@ -1,7 +1,7 @@
 from kutana.controllers.vk.vk_helpers import \
     upload_doc_class, upload_photo_class, reply_concrete_class
 from kutana.controllers.basiccontroller import BasicController
-from kutana.plugins.data import Message, Attachment
+from kutana.plugins.data import Attachment
 from collections import namedtuple
 from kutana.logger import logger
 import asyncio

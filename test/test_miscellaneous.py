@@ -1,4 +1,4 @@
-from kutana import Kutana, VKResponse, Executor, load_plugins, objdict, \
+from kutana import VKResponse, Executor, load_plugins, objdict, \
     icedict, load_configuration
 import kutana.plugins.converters.vk as converters_vk
 import unittest

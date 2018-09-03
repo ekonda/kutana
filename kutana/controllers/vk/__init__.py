@@ -1,1 +1,1 @@
-from kutana.controllers.vk.vk import *  # lgtm [py/polluting-import]
+from kutana.controllers.vk.vk import VKController, VKResponse, VKRequest

@@ -183,4 +183,3 @@ class TestControllerVk(unittest.TestCase):
 
         self.assertTrue(self.called)
         self.assertTrue(self.called_on_attachment)
-

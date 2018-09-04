@@ -4,19 +4,9 @@ Controller
 Description
 ^^^^^^^^^^^
 
-Controllers are responsible for receiving updates and sending responses.
-Often adding new source (like vk.com) requires creation of two things:
-controller and normalizer.
-
-- Controller just exchanges messages, oversees over this exchange and
-  provides means to interact with service to callbacks throught environment.
-- Normalizer turns updates from raw data to instances of classes
-  :class:`.Message` and :class:`.Attachment` if possible. These objects are
-  then passed to plugins. They should only create instances of messages
-  without editing environment.
-
-These files are placed in folders "kutana/controllers" and
-"kutana/plugins/converters".
+Controllers are responsible for receiving updates, sending responses and
+turning raw update data to instances of classes :class:`.Message` and
+:class:`.Attachment` if possible. These instances are then passed to plugins.
 
 Custom controller
 ^^^^^^^^^^^^^^^^^

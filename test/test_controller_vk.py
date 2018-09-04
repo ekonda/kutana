@@ -2,12 +2,13 @@ from kutana import Kutana, VKController, ExitException, Plugin, \
     logger
 import unittest
 import requests
+import logging
 import time
 import json
 import os
 
 
-logger.setLevel(40)  # ERROR LEVEL
+logging.disable(logging.INFO)
 
 
 # These tests requires internet and token of VK user account as well as VK group.
@@ -39,8 +40,8 @@ class TestControllerVk(unittest.TestCase):
         if not cls.conf["vk_token"] or not cls.conf["vk_utoken"]:
             raise unittest.SkipTest("No authorization found for this tests.")
 
-        async def create_receiver(self):
-            actual_reci = await self.original_create_receiver()
+        async def get_receiver_coroutine_function(self):
+            actual_reci = await self.original_get_receiver_coroutine_function()
 
             empty_if_done = [1]
 
@@ -71,15 +72,15 @@ class TestControllerVk(unittest.TestCase):
 
             return reci
 
-        VKController.original_create_receiver = VKController.create_receiver
-        VKController.create_receiver = create_receiver
+        VKController.original_get_receiver_coroutine_function = VKController.get_receiver_coroutine_function
+        VKController.get_receiver_coroutine_function = get_receiver_coroutine_function
 
         cls.kutana = Kutana()
 
         cls.kutana.add_controller(
             VKController(
                 token=cls.conf["vk_token"],
-            longpoll_settings={"message_typing_state": 1}
+                longpoll_settings={"message_typing_state": 1}
             )
         )
 
@@ -105,7 +106,7 @@ class TestControllerVk(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        VKController.create_receiver = VKController.original_create_receiver
+        VKController.get_receiver_coroutine_function = VKController.original_get_receiver_coroutine_function
 
     def tearDown(self):
         if self.messages_to_delete:

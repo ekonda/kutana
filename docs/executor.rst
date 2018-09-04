@@ -5,12 +5,12 @@ Description
 ^^^^^^^^^^^
 
 This class collects coroutines for updates processing and calls
-them with the appropriate data. These coroutines receive the update itself
-and the dictionary-like environment with data that could be written
-there by previous and read by next coroutine calls. You can register
-These callbacks with executor's :func:`subscribe` as method or decorator.
-Environment has "ctrl_type" set to the type of update's controller
-(VKontakte, Telegram, etc.).
+them with the appropriate data. These coroutines receive the update
+itself and the dictionary-like environment with data that could be
+written there by previous and read by next coroutine calls. You can
+register these callbacks with executor's :func:`subscribe`
+as method or decorator. Environment has "ctrl_type" set to the type of
+update's controller (VKontakte, Telegram, etc.).
 
 .. code-block:: python
 

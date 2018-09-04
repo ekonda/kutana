@@ -1,1 +1,2 @@
-from kutana.controllers.vk.vk import VKController, VKResponse, VKRequest
+from .vkcontrollerdata import VKRequest, VKResponse
+from .vkcontroller import VKController

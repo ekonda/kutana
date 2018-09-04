@@ -1,4 +1,5 @@
-from kutana.controllers.basiccontroller import BasicController
+from kutana.controllers.basic import BasicController
+from kutana.plugindata import Message
 from kutana.exceptions import ExitException
 
 
@@ -17,10 +18,16 @@ class DumpingController(BasicController):
     async def setup_env(self, update, eenv):
         eenv["reply"] = self.async_print
 
-    async def create_tasks(self, ensure_future):
+    @staticmethod
+    async def convert_to_message(update, eenv):
+        return Message(
+            update, (), "U", "KU", update
+        )
+
+    async def get_background_coroutines(self, ensure_future):
         return []
 
-    async def create_receiver(self):
+    async def get_receiver_coroutine_function(self):
         async def rec():
             if self.die:
                 raise ExitException

@@ -1,6 +1,6 @@
-from kutana import VKResponse, Executor, load_plugins, objdict, \
-    icedict, load_configuration
-import kutana.plugins.converters.vk as converters_vk
+from kutana import VKResponse, DumpingController, Executor, load_plugins, \
+    objdict, icedict, load_configuration
+import kutana.controllers.vk.converter as vk_converter
 import unittest
 import asyncio
 
@@ -57,9 +57,13 @@ class TestMiscellaneous(unittest.TestCase):
         executor.register_plugins(*loaded_plugins)
 
         loop = asyncio.get_event_loop()
+
         loop.run_until_complete(
             executor(
-                "message", objdict(ctrl_type="dumping")
+                "message", objdict(
+                    ctrl_type="dumping",
+                    convert_to_message=DumpingController.convert_to_message
+                )
             )
         )
 
@@ -78,13 +82,13 @@ class TestMiscellaneous(unittest.TestCase):
         async def fake_resolveScreenName(*args, **kwargs):
             return VKResponse(False, "", "", {"object_id": 1}, "")
 
-        resolveScreenName = converters_vk.resolveScreenName
-        converters_vk.resolveScreenName = fake_resolveScreenName
+        resolveScreenName = vk_converter.resolveScreenName
+        vk_converter.resolveScreenName = fake_resolveScreenName
 
         loop = asyncio.get_event_loop()
 
         message = loop.run_until_complete(
-            converters_vk.convert_to_message(
+            vk_converter.convert_to_message(
                 {"object": {"date": 1, "random_id": 0, "fwd_messages": [],
                 "important": False, "peer_id": 1,
                 "text": "echo [club1|\u0421\u043e] 123", "attachments": [],
@@ -100,7 +104,7 @@ class TestMiscellaneous(unittest.TestCase):
         self.assertEqual(message.attachments, ())
 
         message = loop.run_until_complete(
-            converters_vk.convert_to_message(
+            vk_converter.convert_to_message(
                 {"object": {"date": 1, "random_id": 0, "fwd_messages": [],
                 "important": False, "peer_id": 1,
                 "text": "echo [club1|\u0421\u043e] 123", "attachments": [],
@@ -115,7 +119,7 @@ class TestMiscellaneous(unittest.TestCase):
         self.assertEqual(message.text, "echo [club1|\u0421\u043e] 123")
         self.assertEqual(message.attachments, ())
 
-        converters_vk.resolveScreenName = resolveScreenName
+        vk_converter.resolveScreenName = resolveScreenName
 
 
 if __name__ == '__main__':

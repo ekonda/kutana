@@ -141,4 +141,3 @@ class TestExecutors(KutanaTest):
         self.assertEqual(exec1.callbacks, [cor1, cor2])
         self.assertEqual(exec1.error_callbacks, [])
         self.assertEqual(exec1.callbacks_owners, [1, 2])
-

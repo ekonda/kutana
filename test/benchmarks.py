@@ -1,6 +1,10 @@
 if __name__ == '__main__':
-    import sys, os
+    import sys
+    import os
+
+
     sys.path.append(os.getcwd())
+
 
 from test_framework import KutanaTest
 import unittest

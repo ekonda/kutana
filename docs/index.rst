@@ -47,7 +47,7 @@ Example "run.py"
 
     # Load and register plugins
     kutana.executor.register_plugins(
-        *load_plugins("example/plugins/")
+        *load_plugins("plugins/")
     )
 
     # Run engine

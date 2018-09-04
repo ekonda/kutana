@@ -40,8 +40,6 @@ kutana = Kutana()
 kutana.add_controller(
     VKController(load_configuration("vk_token", "configuration.json"))
 )
-# configuration.json:
-# {"vk_token": "API token here"}
 
 # Load and register plugins
 kutana.executor.register_plugins(*load_plugins("plugins/"))

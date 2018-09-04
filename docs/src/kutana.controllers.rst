@@ -11,10 +11,10 @@ Subpackages
 Submodules
 ----------
 
-kutana.controllers.basiccontroller module
------------------------------------------
+kutana.controllers.basic module
+-------------------------------
 
-.. automodule:: kutana.controllers.basiccontroller
+.. automodule:: kutana.controllers.basic
     :members:
     :undoc-members:
     :show-inheritance:

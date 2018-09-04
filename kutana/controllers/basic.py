@@ -7,8 +7,8 @@ class BasicController:  # pragma: no cover
         raise NotImplementedError
 
     async def convert_to_message(self, update, eenv):
-        """Converts raw update to instances of :class:`plugin.Message`
-        and :class:`plugin.Attachmnet` for plugins.
+        """Converts raw update to instances of :class:`.Message`
+        and :class:`.Attachmnet` for plugins.
         """
 
         raise NotImplementedError

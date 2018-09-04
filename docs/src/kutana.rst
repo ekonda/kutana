@@ -7,7 +7,6 @@ Subpackages
 .. toctree::
 
     kutana.controllers
-    kutana.plugins
     kutana.tools
 
 Submodules
@@ -41,6 +40,22 @@ kutana.logger module
 --------------------
 
 .. automodule:: kutana.logger
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+kutana.plugin module
+--------------------
+
+.. automodule:: kutana.plugin
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+kutana.plugindata module
+------------------------
+
+.. automodule:: kutana.plugindata
     :members:
     :undoc-members:
     :show-inheritance:

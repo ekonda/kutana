@@ -1,12 +1,15 @@
-from kutana import Executor
+from kutana import Executor, logger
 from test_framework import KutanaTest
 import logging
 
 
-logging.disable(logging.CRITICAL)
+logging.disable(logging.INFO)
 
 
 class TestExecutors(KutanaTest):
+    def tearDown(self):
+        logger.setLevel(logging.ERROR)
+
     def test_just_dumping(self):
         self.target = ["message"] * 5
 
@@ -45,6 +48,8 @@ class TestExecutors(KutanaTest):
             self.kutana.executor.register(new_error, error=True)
             self.kutana.executor.register(new_error_no, error=True)
 
+            logger.setLevel(logging.CRITICAL)
+
         self.assertEqual(self.called, 5)
 
     def test_default_exception_handle(self):
@@ -62,6 +67,8 @@ class TestExecutors(KutanaTest):
                     raise Exception
 
             self.kutana.executor.register(new_update)
+
+            logger.setLevel(logging.CRITICAL)
 
         self.assertEqual(self.called, 5)
 

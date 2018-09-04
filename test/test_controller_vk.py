@@ -2,12 +2,13 @@ from kutana import Kutana, VKController, ExitException, Plugin, \
     logger
 import unittest
 import requests
+import logging
 import time
 import json
 import os
 
 
-# logger.setLevel(40)  # ERROR LEVEL
+logging.disable(logging.INFO)
 
 
 # These tests requires internet and token of VK user account as well as VK group.

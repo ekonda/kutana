@@ -1,3 +1,4 @@
+from kutana.controllers.vk.converter import convert_to_attachment
 import aiohttp
 import json
 

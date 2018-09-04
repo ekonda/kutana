@@ -1,4 +1,3 @@
-from kutana.plugins.converters.vk import convert_to_attachment
 import aiohttp
 import json
 
@@ -36,7 +35,7 @@ class reply_concrete_class():
         self.peer_id = peer_id
 
     async def __call__(self, message, attachment=None, sticker_id=None, payload=None, keyboard=None):
-        return await self.ctrl.generic_answer(
+        return await self.ctrl.send_message(
             message,
             self.peer_id,
             attachment,

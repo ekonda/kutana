@@ -1,4 +1,4 @@
-from kutana import Executor, get_converter
+from kutana import Executor
 from test_framework import KutanaTest
 import logging
 
@@ -7,13 +7,6 @@ logging.disable(logging.CRITICAL)
 
 
 class TestExecutors(KutanaTest):
-    def test_get_converter(self):
-        self.assertIsNotNone(get_converter("vk"))
-        self.assertIsNotNone(get_converter("dumping"))
-
-        with self.assertRaises(RuntimeError):
-            get_converter("")
-
     def test_just_dumping(self):
         self.target = ["message"] * 5
 

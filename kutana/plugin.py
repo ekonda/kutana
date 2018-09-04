@@ -1,4 +1,3 @@
-from kutana.plugins.converters import get_converter
 from kutana.tools.structures import objdict
 import shlex
 import re
@@ -21,6 +20,7 @@ class Plugin():
     @staticmethod
     def done_if_none(value):
         """Return "DONE" if value is None. Otherwise return value."""
+
         if value is None:
             return "DONE"
 
@@ -42,7 +42,7 @@ class Plugin():
             message = eenv["_cached_message"]
 
         else:
-            message = await get_converter(eenv.ctrl_type)(update, eenv)
+            message = await eenv.convert_to_message(update, eenv)
 
             eenv["_cached_message"] = message
 

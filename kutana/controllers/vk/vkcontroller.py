@@ -1,28 +1,14 @@
-from kutana.controllers.vk.vk_helpers import \
+from kutana.controllers.vk.methodclasses import (
     upload_doc_class, upload_photo_class, reply_concrete_class
-from kutana.controllers.basiccontroller import BasicController
-from kutana.plugins.data import Attachment
-from collections import namedtuple
+)
+from kutana.controllers.vk.converter import convert_to_message
+from kutana.controllers.vk.vkcontrollerdata import VKRequest, VKResponse
+from kutana.controllers.basic import BasicController
+from kutana.plugindata import Attachment
 from kutana.logger import logger
 import asyncio
 import aiohttp
 import json
-
-
-VKResponse = namedtuple(
-    "VKResponse",
-    "error kutana_error response_error response execute_errors"
-)
-
-
-class VKRequest(asyncio.Future):
-    __slots__ = ("mthod", "kwargs")
-
-    def __init__(self, method, **kwargs):
-        super().__init__()
-
-        self.method = method
-        self.kwargs = kwargs
 
 
 class VKController(BasicController):
@@ -135,7 +121,7 @@ class VKController(BasicController):
                 execute_errors=""
             )
 
-    async def generic_answer(self, message, peer_id, attachment=None,
+    async def send_message(self, message, peer_id, attachment=None,
             sticker_id=None, payload=None, keyboard=None):
         """Send message to target peer_id wiith parameters."""
 
@@ -174,85 +160,135 @@ class VKController(BasicController):
         if update["type"] == "message_new":
             eenv["reply"] = reply_concrete_class(self, peer_id)
 
-        eenv["send_msg"] = self.generic_answer
+        eenv["send_message"] = self.send_message
 
         eenv["upload_photo"] = upload_photo_class(self, peer_id)
         eenv["upload_doc"] = upload_doc_class(self, peer_id)
 
         eenv["request"] = self.request
 
-    async def create_tasks(self, ensure_future):
-        async def execute_loop():
-            while self.running:
-                requests = []
+    async def convert_to_message(self, update, eenv):
+        return await convert_to_message(update, eenv)
 
-                await asyncio.sleep(0)
+    @staticmethod
+    async def _set_results_to_requests(result, requests):
+        err_no = 0
 
-                for _ in range(25):
-                    if not self.requests_queue:
-                        break
+        for res, req in zip(result.response, requests):
+            if res is False:
+                if len(result.execute_errors) > err_no:
+                    known_error = result.execute_errors[err_no]
+                    err_no += 1
 
-                    requests.append(self.requests_queue.pop(0))
+                else:
+                    known_error = ""
 
-                if not requests:
-                    continue
+                res = VKResponse(
+                    error=True,
+                    kutana_error=("", ""),
+                    response_error=(
+                        "Error" if known_error else "Unknown error",
+                        known_error
+                    ),
+                    response="",
+                    execute_errors=result.execute_errors
+                )
 
-                code = "return ["
+            else:
+                res = VKResponse(
+                    error=False,
+                    kutana_error=("", ""),
+                    response_error=("", ""),
+                    response=res,
+                    execute_errors=""
+                )
 
-                for r in requests:
-                    code += "API.{}({})".format(
-                        r.method, json.dumps(r.kwargs, ensure_ascii=False)
-                    )
+            try:
+                req.set_result(res)
+            except asyncio.InvalidStateError:
+                pass
 
-                code += "];"
+    async def _msg_exec_loop(self, ensure_future):
+        while self.running:
+            requests = []
 
-                result = await self.raw_request("execute", code=code)
+            await asyncio.sleep(0)
 
-                if result.error:
-                    logger.error(result.kutana_error + result.response_error)
+            for _ in range(25):
+                if not self.requests_queue:
+                    break
 
-                async def clean_up():
-                    err_no = 0
+                requests.append(self.requests_queue.pop(0))
 
-                    for res, req in zip(result.response, requests):
-                        if res is False:
-                            if len(result.execute_errors) > err_no:
-                                known_error = result.execute_errors[err_no]
-                                err_no += 1
+            if not requests:
+                continue
 
-                            else:
-                                known_error = ""
+            code = "return ["
 
-                            res = VKResponse(
-                                error=True,
-                                kutana_error=("", ""),
-                                response_error=(
-                                    "Error" if known_error else "Unknown error",
-                                    known_error
-                                ),
-                                response="",
-                                execute_errors=result.execute_errors
-                            )
+            for r in requests:
+                code += "API.{}({}),".format(
+                    r.method, json.dumps(r.kwargs, ensure_ascii=False)
+                )
 
-                        else:
-                            res = VKResponse(
-                                error=False,
-                                kutana_error=("", ""),
-                                response_error=("", ""),
-                                response=res,
-                                execute_errors=""
-                            )
+            code += "];"
 
-                        try:
-                            req.set_result(res)
-                        except asyncio.InvalidStateError:
-                            pass
+            result = await self.raw_request("execute", code=code)
 
-                await ensure_future(clean_up())
+            if result.error:
+                logger.error(result.kutana_error + result.response_error)
 
-        return (execute_loop,)
+            await ensure_future(self._set_results_to_requests(result, requests))
 
-    async def create_receiver(self):
+    async def get_background_coroutines(self, ensure_future):
+        return (self._msg_exec_loop(ensure_future),)
+
+    async def update_longpoll_data(self):
+        longpoll = await self.raw_request("groups.getLongPollServer", group_id=self.group_id)
+
+        if longpoll.error:
+            raise ValueError(
+                "Couldn't get longpoll information\n{}"
+                .format(
+                    longpoll.kutana_error +
+                    longpoll.response_error
+                )
+            )
+
+        self.longpoll = {
+            **longpoll.response
+        }
+
+    async def receiver(self):
+        async with self.session.post(self.longpoll_url.format(
+            self.longpoll["server"],
+            self.longpoll["key"],
+            self.longpoll["ts"],
+        )) as resp:
+            try:
+                response = await resp.json()
+            except Exception:
+                return []
+
+        if "ts" in response:
+            self.longpoll["ts"] = response["ts"]
+
+        if "failed" in response:
+            if response["failed"] in (2, 3, 4):
+                await self.update_longpoll_data()
+
+            return
+
+        updates = []
+
+        for update in response["updates"]:
+            if "type" not in update or "object" not in update:
+                continue
+
+            updates.append(update)
+
+        return updates
+
+    async def get_receiver_coroutine_function(self):
         self.session = aiohttp.ClientSession()
 
         current_group_s = await self.raw_request("groups.getById")
@@ -317,60 +353,14 @@ class VKController(BasicController):
             }
         )
 
-        async def update_longpoll_data():
-            longpoll = await self.raw_request("groups.getLongPollServer", group_id=self.group_id)
-
-            if longpoll.error:
-                raise ValueError(
-                    "Couldn't get longpoll information\n{}"
-                    .format(
-                        longpoll.kutana_error +
-                        longpoll.response_error
-                    )
-                )
-
-            self.longpoll = {
-                **longpoll.response
-            }
-
-        await update_longpoll_data()
-
-        async def receiver():
-            async with self.session.post(self.longpoll_url.format(
-                self.longpoll["server"],
-                self.longpoll["key"],
-                self.longpoll["ts"],
-            )) as resp:
-                try:
-                    response = await resp.json()
-                except Exception:
-                    return []
-
-            if "ts" in response:
-                self.longpoll["ts"] = response["ts"]
-
-            if "failed" in response:
-                if response["failed"] in (2, 3, 4):
-                    await update_longpoll_data()
-
-                return
-
-            updates = []
-
-            for update in response["updates"]:
-                if "type" not in update or "object" not in update:
-                    continue
-
-                updates.append(update)
-
-            return updates
+        await self.update_longpoll_data()
 
         logger.info("logged in as \"{}\" ( https://vk.com/id{} )".format(
             current_group_s.response[0]["name"],
             current_group_s.response[0]["id"]
         ))
 
-        return receiver
+        return self.receiver
 
     async def dispose(self):
         self.running = False

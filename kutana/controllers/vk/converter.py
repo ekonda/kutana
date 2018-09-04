@@ -1,4 +1,4 @@
-from kutana.plugins.data import Message, Attachment
+from kutana.plugindata import Message, Attachment
 import re
 
 

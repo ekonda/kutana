@@ -26,7 +26,10 @@ class Kutana:
     async def process_update(self, ctrl, update):
         """Prepare environment and process update from controller."""
 
-        eenv = objdict(ctrl_type=ctrl.type)
+        eenv = objdict(
+            ctrl_type=ctrl.type,
+            convert_to_message=ctrl.convert_to_message
+        )
 
         await ctrl.setup_env(update, eenv)
 
@@ -40,7 +43,7 @@ class Kutana:
     async def loop_for_controller(self, ctrl):
         """Receive and process updated from target controller."""
 
-        receiver = await ctrl.create_receiver()
+        receiver = await ctrl.get_receiver_coroutine_function()
 
         while self.running:
             for update in await receiver():
@@ -63,19 +66,21 @@ class Kutana:
             self.loops.append(self.loop_for_controller(controller))
 
             awaitables = self.loop.run_until_complete(
-                controller.create_tasks(self.ensure_future)
+                controller.get_background_coroutines(self.ensure_future)
             )
 
             for awaitable in awaitables:
-                self.loops.append(awaitable())
+                self.loops.append(awaitable)
 
-        self.loop.run_until_complete(self.executor(
-            {
-                "kutana": self, "update_type": "startup",
-                "callbacks_owners": self.executor.callbacks_owners
-            },
-            objdict(ctrl_type="kutana")
-        ))
+        self.loop.run_until_complete(
+            self.executor(
+                {
+                    "kutana": self, "update_type": "startup",
+                    "callbacks_owners": self.executor.callbacks_owners
+                },
+                objdict(ctrl_type="kutana")
+            )
+        )
 
         try:
             self.gathered = asyncio.gather(*self.loops, *self.tasks)

@@ -1,14 +1,25 @@
-from kutana.controllers.vk.methodclasses import (
-    upload_doc_class, upload_photo_class, reply_concrete_class
-)
-from kutana.controllers.vk.converter import convert_to_message
-from kutana.controllers.vk.vkcontrollerdata import VKRequest, VKResponse
-from kutana.controllers.basic import BasicController
-from kutana.plugindata import Attachment
+from kutana.controllers.basiccontroller import BasicController
+from collections import namedtuple
 from kutana.logger import logger
 import asyncio
 import aiohttp
 import json
+
+
+VKResponse = namedtuple(
+    "VKResponse",
+    "error kutana_error response_error response execute_errors"
+)
+
+
+class VKRequest(asyncio.Future):
+    __slots__ = ("mthod", "kwargs")
+
+    def __init__(self, method, **kwargs):
+        super().__init__()
+
+        self.method = method
+        self.kwargs = kwargs
 
 
 class VKController(BasicController):
@@ -17,7 +28,7 @@ class VKController(BasicController):
     groups.setLongPollSettings with argument `longpoll_settings`.
     """
 
-    type = "vk"
+    TYPE = "vk"
 
     def __init__(self, token, longpoll_settings=None):
         if not token:
@@ -121,174 +132,78 @@ class VKController(BasicController):
                 execute_errors=""
             )
 
-    async def send_message(self, message, peer_id, attachment=None,
-            sticker_id=None, payload=None, keyboard=None):
-        """Send message to target peer_id wiith parameters."""
+    async def create_tasks(self, ensure_future):
+        async def execute_loop():
+            while self.running:
+                requests = []
 
-        if isinstance(attachment, Attachment):
-            attachment = [attachment]
+                await asyncio.sleep(0)
 
-        if isinstance(attachment, (list, tuple)):
-            new_attachment = ""
+                for _ in range(25):
+                    if not self.requests_queue:
+                        break
 
-            for a in attachment:
-                if isinstance(a, Attachment):
-                    new_attachment += \
-                        "{}{}_{}".format(a.type, a.owner_id, a.id) + \
-                        ("_" + a.access_key if a.access_key else "")
+                    requests.append(self.requests_queue.pop(0))
 
-                else:
-                    new_attachment += str(a)
+                if not requests:
+                    continue
 
-                new_attachment += ","
+                code = "return ["
 
-            attachment = new_attachment
+                for r in requests:
+                    code += "API.{}({})".format(
+                        r.method, json.dumps(r.kwargs, ensure_ascii=False)
+                    )
 
-        return await self.request(
-            "messages.send",
-            message=message,
-            peer_id=peer_id,
-            attachment=attachment,
-            sticker_id=sticker_id,
-            payload=sticker_id,
-            keyboard=keyboard
-        )\
+                code += "];"
 
-    async def setup_env(self, update, eenv):
-        peer_id = update["object"].get("peer_id")
+                result = await self.raw_request("execute", code=code)
 
-        if update["type"] == "message_new":
-            eenv["reply"] = reply_concrete_class(self, peer_id)
+                if result.error:
+                    logger.error(result.kutana_error + result.response_error)
 
-        eenv["send_message"] = self.send_message
+                async def clean_up():
+                    err_no = 0
 
-        eenv["upload_photo"] = upload_photo_class(self, peer_id)
-        eenv["upload_doc"] = upload_doc_class(self, peer_id)
+                    for res, req in zip(result.response, requests):
+                        if res is False:
+                            if len(result.execute_errors) > err_no:
+                                known_error = result.execute_errors[err_no]
+                                err_no += 1
 
-        eenv["request"] = self.request
+                            else:
+                                known_error = ""
 
-    async def convert_to_message(self, update, eenv):
-        return await convert_to_message(update, eenv)
+                            res = VKResponse(
+                                error=True,
+                                kutana_error=("", ""),
+                                response_error=(
+                                    "Error" if known_error else "Unknown error",
+                                    known_error
+                                ),
+                                response="",
+                                execute_errors=result.execute_errors
+                            )
 
-    @staticmethod
-    async def _set_results_to_requests(result, requests):
-        err_no = 0
+                        else:
+                            res = VKResponse(
+                                error=False,
+                                kutana_error=("", ""),
+                                response_error=("", ""),
+                                response=res,
+                                execute_errors=""
+                            )
 
-        for res, req in zip(result.response, requests):
-            if res is False:
-                if len(result.execute_errors) > err_no:
-                    known_error = result.execute_errors[err_no]
-                    err_no += 1
+                        try:
+                            req.set_result(res)
+                        except asyncio.InvalidStateError:  # pragma: no cover
+                            pass
 
-                else:
-                    known_error = ""
+                await ensure_future(clean_up())
 
-                res = VKResponse(
-                    error=True,
-                    kutana_error=("", ""),
-                    response_error=(
-                        "Error" if known_error else "Unknown error",
-                        known_error
-                    ),
-                    response="",
-                    execute_errors=result.execute_errors
-                )
+        return (execute_loop,)
 
-            else:
-                res = VKResponse(
-                    error=False,
-                    kutana_error=("", ""),
-                    response_error=("", ""),
-                    response=res,
-                    execute_errors=""
-                )
-
-            try:
-                req.set_result(res)
-            except asyncio.InvalidStateError:
-                pass
-
-    async def _msg_exec_loop(self, ensure_future):
-        while self.running:
-            requests = []
-
-            await asyncio.sleep(0)
-
-            for _ in range(25):
-                if not self.requests_queue:
-                    break
-
-                requests.append(self.requests_queue.pop(0))
-
-            if not requests:
-                continue
-
-            code = "return ["
-
-            for r in requests:
-                code += "API.{}({}),".format(
-                    r.method, json.dumps(r.kwargs, ensure_ascii=False)
-                )
-
-            code += "];"
-
-            result = await self.raw_request("execute", code=code)
-
-            if result.error:
-                logger.error(result.kutana_error + result.response_error)
-
-            await ensure_future(self._set_results_to_requests(result, requests))
-
-    async def get_background_coroutines(self, ensure_future):
-        return (self._msg_exec_loop(ensure_future),)
-
-    async def update_longpoll_data(self):
-        longpoll = await self.raw_request("groups.getLongPollServer", group_id=self.group_id)
-
-        if longpoll.error:
-            raise ValueError(
-                "Couldn't get longpoll information\n{}"
-                .format(
-                    longpoll.kutana_error +
-                    longpoll.response_error
-                )
-            )
-
-        self.longpoll = {
-            **longpoll.response
-        }
-
-    async def receiver(self):
-        async with self.session.post(self.longpoll_url.format(
-            self.longpoll["server"],
-            self.longpoll["key"],
-            self.longpoll["ts"],
-        )) as resp:
-            try:
-                response = await resp.json()
-            except Exception:
-                return []
-
-        if "ts" in response:
-            self.longpoll["ts"] = response["ts"]
-
-        if "failed" in response:
-            if response["failed"] in (2, 3, 4):
-                await self.update_longpoll_data()
-
-            return
-
-        updates = []
-
-        for update in response["updates"]:
-            if "type" not in update or "object" not in update:
-                continue
-
-            updates.append(update)
-
-        return updates
-
-    async def get_receiver_coroutine_function(self):
+    async def create_receiver(self):
         self.session = aiohttp.ClientSession()
 
         current_group_s = await self.raw_request("groups.getById")
@@ -353,14 +268,60 @@ class VKController(BasicController):
             }
         )
 
-        await self.update_longpoll_data()
+        async def update_longpoll_data():
+            longpoll = await self.raw_request("groups.getLongPollServer", group_id=self.group_id)
+
+            if longpoll.error:  # pragma: no cover
+                raise ValueError(
+                    "Couldn't get longpoll information\n{}"
+                    .format(
+                        longpoll.kutana_error +
+                        longpoll.response_error
+                    )
+                )
+
+            self.longpoll = {
+                **longpoll.response
+            }
+
+        await update_longpoll_data()
+
+        async def receiver():
+            async with self.session.post(self.longpoll_url.format(
+                self.longpoll["server"],
+                self.longpoll["key"],
+                self.longpoll["ts"],
+            )) as resp:
+                try:
+                    response = await resp.json()
+                except Exception:  # pragma: no cover
+                    return []
+
+            if "ts" in response:
+                self.longpoll["ts"] = response["ts"]
+
+            if "failed" in response:
+                if response["failed"] in (2, 3, 4):  # pragma: no cover
+                    await update_longpoll_data()
+
+                return
+
+            updates = []
+
+            for update in response["updates"]:
+                if "type" not in update or "object" not in update:
+                    continue
+
+                updates.append(update)
+
+            return updates
 
         logger.info("logged in as \"{}\" ( https://vk.com/id{} )".format(
             current_group_s.response[0]["name"],
             current_group_s.response[0]["id"]
         ))
 
-        return self.receiver
+        return receiver
 
     async def dispose(self):
         self.running = False

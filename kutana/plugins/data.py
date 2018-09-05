@@ -14,4 +14,4 @@ Attachment = namedtuple(
     "type id owner_id access_key link raw_attachment"
 )
 
-Attachment.__doc__ = "Detailed information about attachment."
+Message.__doc__ = "Detailed information about attachment."

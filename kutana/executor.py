@@ -1,3 +1,4 @@
+from kutana.tools.structures import objdict
 from kutana.logger import logger
 import sys
 
@@ -23,11 +24,13 @@ class Executor:
         """Register callbacks from plugins."""
 
         for plugin in plugins:
-            if hasattr(plugin, "proc_update"):
-                self.register(plugin.proc_update)
+            if hasattr(plugin, "on_message"):
+                self.register(plugin.on_message)
 
-            if hasattr(plugin, "proc_error"):  # pragma: no cover
-                self.register(plugin.proc_error, error=True)
+            if hasattr(plugin, "on_error"):
+                self.register(plugin.on_error, error=True)
+
+            plugin.executor = self
 
     def register(self, *callbacks, error=False):
         """Register callbacks."""
@@ -49,12 +52,14 @@ class Executor:
 
         return _register
 
-    async def __call__(self, update, eenv):
+    async def __call__(self, controller_type, update):
         """Process update from controller."""
+
+        env = objdict()
 
         try:
             for cb in self.callbacks:
-                comm = await cb(update, eenv)
+                comm = await cb(controller_type, update, env)
 
                 if comm == "DONE":
                     break
@@ -62,24 +67,20 @@ class Executor:
         except Exception as e:
             logger.exception(
                 "\"{}::{}\"on update {} from {}".format(
-                    sys.exc_info()[0].__name__, e, update, eenv.ctrl_type
+                    sys.exc_info()[0].__name__, e, update, controller_type
                 )
             )
 
-            eenv["exception"] = e
-
-            if not self.error_callbacks:
-                if "reply" in eenv:
-                    return await eenv.reply("Произошла ошибка! Приносим свои извинения.")
+            env["exception"] = e
 
             for cb in self.error_callbacks:
-                comm = await cb(update, eenv)
+                comm = await cb(controller_type, update, env)
 
                 if comm == "DONE":
                     break
 
     async def dispose(self):
-        """Free resources and prepare for shutdown."""
+        """Free resourses and prepare for shutdown."""
 
         for callback_owner in self.callbacks_owners:
             if hasattr(callback_owner, "dispose"):

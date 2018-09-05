@@ -1,6 +1,6 @@
-from kutana import VKResponse, DumpingController, Executor, load_plugins, \
-    objdict, icedict, load_configuration
-import kutana.controllers.vk.converter as vk_converter
+from kutana import VKKutana, VKResponse, Executor, load_plugins, objdict, \
+    icedict, create_vk_env
+import kutana.plugins.converters.vk as converters_vk
 import unittest
 import asyncio
 
@@ -57,69 +57,72 @@ class TestMiscellaneous(unittest.TestCase):
         executor.register_plugins(*loaded_plugins)
 
         loop = asyncio.get_event_loop()
-
-        loop.run_until_complete(
-            executor(
-                "message", objdict(
-                    ctrl_type="dumping",
-                    convert_to_message=DumpingController.convert_to_message
-                )
-            )
-        )
+        loop.run_until_complete(executor("dumping", "message"))
 
         self.assertEqual(loaded_plugins[0].memory, "message")
 
-    def test_load_configuration(self):
-        value = load_configuration("key", "test/test_assets/sample.json")
+    def test_create_vk_env(self):
+        create_vk_env(token="token")
 
-        self.assertEqual(value, "value")
+        with self.assertRaises(ValueError):
+            create_vk_env(configuration="configuration.json.example")
 
-        value = load_configuration("key2", "test/test_assets/sample.json")
+        with self.assertRaises(ValueError):
+            create_vk_env(token="")
 
-        self.assertEqual(value, {"keynkey": "hvalue"})
+    def test_vk_shortcut(self):
+        vkkutana = VKKutana(token="token")
+
+        self.assertIsNotNone(vkkutana)
 
     def test_vk_conversation(self):
+        arguments = {}
+
         async def fake_resolveScreenName(*args, **kwargs):
             return VKResponse(False, "", "", {"object_id": 1}, "")
 
-        resolveScreenName = vk_converter.resolveScreenName
-        vk_converter.resolveScreenName = fake_resolveScreenName
+        resolveScreenName = converters_vk.resolveScreenName
+        converters_vk.resolveScreenName = fake_resolveScreenName
 
         loop = asyncio.get_event_loop()
 
-        message = loop.run_until_complete(
-            vk_converter.convert_to_message(
+        loop.run_until_complete(
+            converters_vk.convert_to_message(
+                arguments,
                 {"object": {"date": 1, "random_id": 0, "fwd_messages": [],
                 "important": False, "peer_id": 1,
                 "text": "echo [club1|\u0421\u043e] 123", "attachments": [],
                 "conversation_message_id": 1411, "out": 0, "from_id": 1,
                 "id": 0, "is_hidden": False}, "group_id": 1,
                 "type": "message_new"},
+                {},
                 {w: 1 for w in ("reply", "send_msg", "request",
                 "upload_photo", "upload_doc")}
             )
         )
 
-        self.assertEqual(message.text, "echo  123")
-        self.assertEqual(message.attachments, ())
+        self.assertEqual(arguments["message"].text, "echo  123")
+        self.assertEqual(arguments["attachments"], ())
 
-        message = loop.run_until_complete(
-            vk_converter.convert_to_message(
+        loop.run_until_complete(
+            converters_vk.convert_to_message(
+                arguments,
                 {"object": {"date": 1, "random_id": 0, "fwd_messages": [],
                 "important": False, "peer_id": 1,
                 "text": "echo [club1|\u0421\u043e] 123", "attachments": [],
                 "conversation_message_id": 1411, "out": 0, "from_id": 1,
                 "id": 0, "is_hidden": False}, "group_id": 2,
                 "type": "message_new"},
+                {},
                 {w: 1 for w in ("reply", "send_msg", "request",
                 "upload_photo", "upload_doc")}
             )
         )
 
-        self.assertEqual(message.text, "echo [club1|\u0421\u043e] 123")
-        self.assertEqual(message.attachments, ())
+        self.assertEqual(arguments["message"].text, "echo [club1|\u0421\u043e] 123")
+        self.assertEqual(arguments["attachments"], ())
 
-        vk_converter.resolveScreenName = resolveScreenName
+        converters_vk.resolveScreenName = resolveScreenName
 
 
 if __name__ == '__main__':

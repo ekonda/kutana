@@ -25,26 +25,34 @@ python -m pip install kutana
 ```
 
 ### Usage
-- Create `Kutana` engine and add controllers.
-- Register your plugins in the executor. You can import plugin from folders with function `load_plugins`. Files should be a valid python modules with available `plugin` field with your plugin (`Plugin`).
+- Create `Kutana` engine and add controllers. You can use shortcuts like `VKKutana` for adding and registering controllers, callbacks and other usefull functions.
+- You can set settings in `Kutana.settings`.
+- Add or create plugins other files and register them in executor. You can import plugin from files with function `load_plugins`. Files should be a valid python modules with available `plugin` field with your plugin (`Plugin`).
 - Start engine.
 
 Example `run.py`
 ```py
-from Kutana import *
+from kutana import Kutana, VKKutana, load_plugins
 
-# Create engine
-kutana = Kutana()
+# Creation
+kutana = VKKutana(configuration="configuration.json")
 
-# Add VKController to engine
-kutana.add_controller(
-    VKController(load_configuration("vk_token", "configuration.json"))
-)
+# Settings
+kutana.settings["MOTD_MESSAGE"] = "Greetings, traveler."
 
-# Load and register plugins
+# Create simple plugin
+plugin = Plugin()
+
+@self.plugin.on_text("hi", "hi!")
+async def greet(message, attachments, env, extenv):
+    await env.reply("Hello!")
+
+kutana.executor.register_plugins(plugin)
+
+# Load plugins from folder
 kutana.executor.register_plugins(*load_plugins("plugins/"))
 
-# Run engine
+# Start kutana
 kutana.run()
 ```
 
@@ -52,11 +60,13 @@ Example `plugins/echo.py`
 ```py
 from kutana import Plugin
 
-plugin = Plugin(name="Echo")
+plugin = Plugin()
+
+plugin.name = "Echo"
 
 @plugin.on_startswith_text("echo")
-async def on_echo(message, attachments, env):
-    await env.reply("{}".format(env.body))
+async def on_message(message, attachments, env, extenv):
+    await env.reply("{}!".format(env.body))
 ```
 
 ### Available controllers
@@ -67,6 +77,9 @@ Task|Priority
 ---|---
 Find and fix all current bugs | high
 Find and fix grammar and semantic errors | high
+Create proper documentation | medium
+Adding tests | medium
+Add module to PyPi | low
 Developing plugins | very low
 
 ### Authors

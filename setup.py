@@ -20,10 +20,11 @@ class VerifyVersionCommand(install):
     def run(self):
         tag = os.getenv('TRAVIS_TAG')
 
-        if tag != VERSION:
+        if tag != "v" + VERSION:
             info = "Git tag: {0} does not match the version of this app: {1}".format(
                 tag, VERSION
             )
+
             sys.exit(info)
 
 

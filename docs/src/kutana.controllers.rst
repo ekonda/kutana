@@ -1,13 +1,20 @@
 kutana.controllers package
 ==========================
 
+Subpackages
+-----------
+
+.. toctree::
+
+    kutana.controllers.vk
+
 Submodules
 ----------
 
-kutana.controllers.basiccontroller module
------------------------------------------
+kutana.controllers.basic module
+-------------------------------
 
-.. automodule:: kutana.controllers.basiccontroller
+.. automodule:: kutana.controllers.basic
     :members:
     :undoc-members:
     :show-inheritance:
@@ -16,14 +23,6 @@ kutana.controllers.dumping module
 ---------------------------------
 
 .. automodule:: kutana.controllers.dumping
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-kutana.controllers.vk module
-----------------------------
-
-.. automodule:: kutana.controllers.vk
     :members:
     :undoc-members:
     :show-inheritance:

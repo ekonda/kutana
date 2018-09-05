@@ -18,39 +18,42 @@ class Kutana:
         self.tasks = []
         self.gathered_loops = None
 
-        self.settings = objdict()
-
     def add_controller(self, controller):
         """Adding controller to engine."""
 
         self.controllers.append(controller)
 
-    def apply_environment(self, environment):
-        """Shortcut for adding controller and updating executor."""
+    async def process_update(self, ctrl, update):
+        """Prepare environment and process update from controller."""
 
-        self.add_controller(environment["controller"])
-        self.executor.add_callbacks_from(environment["executor"])
+        eenv = objdict(
+            ctrl_type=ctrl.type,
+            convert_to_message=ctrl.convert_to_message
+        )
 
-    async def shedule_update_process(self, controller_type, update):
-        """Shedule update to be processed."""
+        await ctrl.setup_env(update, eenv)
 
-        await self.ensure_future(self.executor(controller_type, update))
+        await self.executor(update, eenv)
 
     async def ensure_future(self, awaitable):
         """Shurtcut for asyncio.ensure_loop with curretn loop."""
 
         await asyncio.ensure_future(awaitable, loop=self.loop)
 
-    async def loop_for_controller(self, controller):
+    async def loop_for_controller(self, ctrl):
         """Receive and process updated from target controller."""
 
-        receiver = await controller.create_receiver()
+        receiver = await ctrl.get_receiver_coroutine_function()
 
         while self.running:
             for update in await receiver():
-                await self.shedule_update_process(controller.TYPE, update)
+                await self.ensure_future(
+                    self.process_update(
+                        ctrl, update
+                    )
+                )
 
-            await asyncio.sleep(0.05)
+            await asyncio.sleep(0.051)
 
     def run(self):
         """Start engine."""
@@ -63,19 +66,21 @@ class Kutana:
             self.loops.append(self.loop_for_controller(controller))
 
             awaitables = self.loop.run_until_complete(
-                controller.create_tasks(self.ensure_future)
+                controller.get_background_coroutines(self.ensure_future)
             )
 
             for awaitable in awaitables:
-                self.loops.append(awaitable())
+                self.loops.append(awaitable)
 
-        self.loop.run_until_complete(self.shedule_update_process(
-            "kutana",
-            {
-                "kutana": self, "update_type": "startup",
-                "callbacks_owners": self.executor.callbacks_owners
-            }
-        ))
+        self.loop.run_until_complete(
+            self.executor(
+                {
+                    "kutana": self, "update_type": "startup",
+                    "callbacks_owners": self.executor.callbacks_owners
+                },
+                objdict(ctrl_type="kutana")
+            )
+        )
 
         try:
             self.gathered = asyncio.gather(*self.loops, *self.tasks)
@@ -87,7 +92,7 @@ class Kutana:
         self.loop.run_until_complete(self.dispose())
 
     async def dispose(self):
-        """Free resourses and prepare for shutdown."""
+        """Free resources and prepare for shutdown."""
 
         await self.executor.dispose()
 

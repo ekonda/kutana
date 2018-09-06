@@ -48,8 +48,6 @@ class reply_concrete_class():
 
 class upload_doc_class():
     """Class-method for uploading documents.
-
-    Pass peer_id=False to upload with docs.getWallUploadServer.
     """
 
     def __init__(self, ctrl, peer_id):
@@ -58,6 +56,8 @@ class upload_doc_class():
 
     async def __call__(self, file, peer_id=None, group_id=None,
             doctype="doc", filename=None):
+        """Pass peer_id=False to upload with docs.getWallUploadServer."""
+
         if filename is None:
             filename = "file.png"
 

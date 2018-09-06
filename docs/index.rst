@@ -72,8 +72,15 @@ Example "plugins/echo.py"
 
     plugin
     controller
+    environment
     special-updates
     executor
+
+.. toctree::
+    :maxdepth: 1
+    :caption: Tips and tricks
+
+    recipes
 
 .. toctree::
     :maxdepth: 1

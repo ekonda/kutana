@@ -30,16 +30,13 @@ def load_plugins(plugins_folder, verbose=True):
             if "_" == filename[:1] or ".py" != filename[-3:]:
                 continue
 
-            path_to_module = os.path.join(plugins_folder, filename)
+            path_to_module = os.path.join(pack[0], filename)
 
             if verbose:
                 logger.info("Loading plugin \"{}\"".format(path_to_module))
 
-            plugin = import_plugin(path_to_module, path_to_module)
-
-            found_plugins.append(plugin)
-
-        for folder in pack[1]:
-            found_plugins += load_plugins(os.path.join(plugins_folder, folder))
+            found_plugins.append(
+                import_plugin(path_to_module, path_to_module)
+            )
 
     return sorted(found_plugins, key=lambda pl: pl.order)

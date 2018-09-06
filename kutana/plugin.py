@@ -4,7 +4,7 @@ import re
 
 
 class Plugin():
-    """Class for craeting extensions for kutana engine."""
+    """Class for creating extensions for kutana engine."""
 
     def __init__(self, **kwargs):
         self._callbacks = []

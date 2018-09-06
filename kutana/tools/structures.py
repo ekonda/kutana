@@ -23,7 +23,7 @@ class objdict(collections.MutableMapping):
         return self._store[key]
 
     def __setitem__(self, key, value):
-        if isinstance(value, (dict, objdict)):
+        if isinstance(value, dict):
             self._store[key] = objdict(value)
         else:
             self._store[key] = value

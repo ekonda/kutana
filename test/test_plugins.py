@@ -146,9 +146,41 @@ class TestPlugins(KutanaTest):
         with self.dumping_controller(self.target) as plugin:
             async def on_echo(message, env, **kwargs):
                 self.assertIsNotNone(env.reply)
+                await env.reply(";)")
                 self.actual.append(message.text)
 
             plugin.on_startswith_text("echo")(on_echo)
+
+    def test_environments(self):
+        self.target = ["echo 123"]
+
+        with self.dumping_controller(self.target):
+            plugin1 = Plugin()
+            plugin2 = Plugin()
+
+            self.plugins = (plugin1, plugin2)
+
+            async def do_skip(env, **kwargs):
+                env.A = "A"
+                env.eenv.B = "B"
+
+                return "GOON"
+
+            async def do_check_one(env, **kwargs):
+                self.assertEqual(env.get("A"), "A")
+
+                return "GOON"
+
+            plugin1.on_has_text()(do_skip)
+            plugin1.on_has_text()(do_check_one)
+
+            async def do_check(env, **kwargs):
+                self.assertIsNone(env.get("A"))
+                self.assertEqual(env.eenv.get("B"), "B")
+
+                self.actual.append("echo 123")
+
+            plugin2.on_has_text()(do_check)
 
     def test_plugin_onstar(self):
         queue = ["привет", "отлично привет", "ecHo", "ab", "ae", "hello"]

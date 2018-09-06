@@ -9,14 +9,18 @@ class DumpingController(BasicController):
     type = "dumping"
 
     def __init__(self, *texts):
-        self.die = False
+        self.replies = []
         self.queue = list(texts)
+        self.dead = False
 
-    async def async_print(self, *args, **kwargs):
-        print(*args, **kwargs)
+    async def reply(self, msg, print_msg=False):
+        self.replies.append(msg)
+
+        if print_msg:
+            print(msg)
 
     async def setup_env(self, update, eenv):
-        eenv["reply"] = self.async_print
+        eenv["reply"] = self.reply
 
     @staticmethod
     async def convert_to_message(update, eenv):
@@ -29,10 +33,10 @@ class DumpingController(BasicController):
 
     async def get_receiver_coroutine_function(self):
         async def rec():
-            if self.die:
+            if self.dead:
                 raise ExitException
 
-            self.die = True
+            self.dead = True
 
             return self.queue
 

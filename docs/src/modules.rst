@@ -5,4 +5,3 @@ kutana
    :maxdepth: 4
 
    kutana
-   setup

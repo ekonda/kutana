@@ -7,7 +7,7 @@ async def on_startup(kutana, update):
     plugin.plugins = []
 
     for pl in update["callbacks_owners"]:
-        if isinstance(pl, Plugin):
+        if isinstance(pl, Plugin) and hasattr(pl, "name"):
             plugin.plugins.append(pl.name)
 
 @plugin.on_startswith_text("list")

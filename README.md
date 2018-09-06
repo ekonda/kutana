@@ -10,6 +10,7 @@
 
 # Kutana
 The engine for developing bots for soc. networks, instant messengers and other systems.
+You can find repository with plugins for kutana [here](https://github.com/vk-brain/kutana-plugins).
 
 ### Installation
 - Download and install python (3.5.2+)

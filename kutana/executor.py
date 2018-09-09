@@ -23,28 +23,37 @@ class Executor:
         """Register callbacks from plugins."""
 
         for plugin in plugins:
-            if hasattr(plugin, "proc_update"):
-                self.register(plugin.proc_update)
+            if hasattr(plugin, "_prepare_callbacks"):
+                self.register(*plugin._prepare_callbacks())
 
-            if hasattr(plugin, "proc_error"):  # pragma: no cover
-                self.register(plugin.proc_error, error=True)
+            if hasattr(plugin, "_prepare_callbacks_error"):  # pragma: no cover
+                self.register(*plugin._prepare_callbacks_error(), error=True)
 
-    def register(self, *callbacks, error=False):
+    def register(self, *callbacks, priority=50, error=False):
         """Register callbacks."""
 
         def _register(coroutine):
-            if error:
-                self.error_callbacks.append(coroutine)
+            callbacks = self.error_callbacks if error else self.callbacks
 
-            else:
-                self.callbacks.append(coroutine)
+            callbacks.append(coroutine)
+
+            if hasattr(coroutine, "__self__"):
+                self.callbacks_owners.append(coroutine.__self__)
+
+            def get_priority(cb):
+                if hasattr(cb, "__self__"):
+                    return -cb.__self__.priority
+
+                elif hasattr(cb, "priority"):
+                    return -cb.priority
+
+                return -priority
+
+            callbacks.sort(key=get_priority)
 
             return coroutine
 
         for callback in callbacks:
-            if hasattr(callback, "__self__"):
-                self.callbacks_owners.append(callback.__self__)
-
             _register(callback)
 
         return _register

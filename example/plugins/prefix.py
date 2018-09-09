@@ -1,13 +1,13 @@
 from kutana import Plugin, Message
 
-plugin = Plugin(name="Prefix", order=25)
+plugin = Plugin(name="Prefix", priority=75)
 
 PREFIX = "/"
 
 @plugin.on_has_text()
 async def on_has_text(message, env, **kwargs):
     if not message.text.startswith(PREFIX):
-        return "DONE"  # "GOON" if you want to just keep message
+        return "DONE"
 
     env.eenv._cached_message = Message(
         message.text[len(PREFIX):],

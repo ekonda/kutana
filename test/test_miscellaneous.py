@@ -1,4 +1,4 @@
-from kutana import VKResponse, DumpingController, Executor, load_plugins, \
+from kutana import VKResponse, DebugController, Executor, load_plugins, \
     objdict, icedict, load_configuration
 import kutana.controllers.vk.converter as vk_converter
 import unittest
@@ -61,8 +61,8 @@ class TestMiscellaneous(unittest.TestCase):
         loop.run_until_complete(
             executor(
                 "message", objdict(
-                    ctrl_type="dumping",
-                    convert_to_message=DumpingController.convert_to_message
+                    ctrl_type="debug",
+                    convert_to_message=DebugController.convert_to_message
                 )
             )
         )

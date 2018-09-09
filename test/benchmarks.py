@@ -17,7 +17,7 @@ class TestTiming(KutanaTest):
 
         stime = time.time()
 
-        with self.dumping_controller(self.target) as plugin:
+        with self.debug_controller(self.target) as plugin:
             async def on_echo(message, env, **kwargs):
                 self.actual.append("echo " + env.body)
 
@@ -41,7 +41,7 @@ class TestTiming(KutanaTest):
     def test_raw_exec_time(self):
         self.target = ["message"] * 10000
 
-        with self.dumping_controller(self.target) as plugin:
+        with self.debug_controller(self.target) as plugin:
             async def on_any(message, env, **kwargs):
                 self.actual.append("message")
 

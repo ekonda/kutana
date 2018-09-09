@@ -61,13 +61,18 @@ All methods above decorates callback which should look like that:
 Available fields
 ^^^^^^^^^^^^^^^^
 
-- **order** - you can manipulate order in which plugins process updates.
-  Lower value - earlier this plugin will get to process update. This
-  works only when using default `load_plugins` function and only inside
-  a single call of `load_plugins`. You should put often used
-  plugins closer to a beginning as much as possible.
+- **priority** - you can manipulate order in which plugins process updates.
+  Lower priority - later this plugin will get to process update.  You should
+  put often used plugins closer to a beginning as much as possible. You can
+  set this value to your callback function.
 
-See :ref:`special_updates` for special updates.
+
+.. note::
+
+    See :ref:`environment` for information about environment
+    (`reply`, `upload_doc`, etc.)
+
+    See :ref:`special_updates` for special updates.
 
 Examples
 ^^^^^^^^

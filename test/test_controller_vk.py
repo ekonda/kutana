@@ -127,6 +127,7 @@ class TestControllerVk(unittest.TestCase):
         plugin = Plugin()
 
         self.called = False
+        self.called_on_raw = False
         self.called_on_attachment = False
 
         async def on_attachment(*args, **kwargs):
@@ -173,6 +174,8 @@ class TestControllerVk(unittest.TestCase):
         plugin.on_regexp_text(r"echo (.+)")(on_regexp)
 
         async def on_raw(*args, **kwargs):
+            self.called_on_raw = True
+
             return "GOON"
 
         plugin.on_raw()(on_raw)
@@ -182,4 +185,5 @@ class TestControllerVk(unittest.TestCase):
         self.kutana.run()
 
         self.assertTrue(self.called)
+        self.assertTrue(self.called_on_raw)
         self.assertTrue(self.called_on_attachment)

@@ -9,7 +9,7 @@ Check for prefix
     from kutana import Plugin, Message  # don't forget to import Message
 
     # this plugin should run before other plugins
-    plugin = Plugin(name="Prefix", order=15)
+    plugin = Plugin(name="Prefix", priority=75)
 
     # you can import this value from your settings or something like that
     PREFIX = "/"

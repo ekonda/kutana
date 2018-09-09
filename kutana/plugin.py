@@ -10,15 +10,17 @@ class Plugin():
         self._callbacks = []
         self._callbacks_raw = []
         self._callbacks_dispose = []
+        self._callbacks_special = []
+
         self._callback_startup = None
 
-        self.order = 50
+        self.priority = 50
 
         for k, v in kwargs.items():
             setattr(self, k, v)
 
     @staticmethod
-    def done_if_none(value):
+    def _done_if_none(value):
         """Return "DONE" if value is None. Otherwise return value."""
 
         if value is None:
@@ -26,14 +28,33 @@ class Plugin():
 
         return value
 
-    async def proc_update(self, update, eenv):
+    def _prepare_callbacks(self):
+        """Return callbacks for registration in executor."""
+
+        callbacks = []
+
+        if self._callback_startup:
+            callbacks.append(self._proc_startup)
+
+        if self._callbacks or self._callbacks_raw:
+            callbacks.append(self._proc_update)
+
+        callbacks += self._callbacks_special
+
+        return callbacks
+
+    async def _proc_startup(self, update, eenv):
+        if eenv.ctrl_type != "kutana":
+            return
+
+        if update["update_type"] == "startup":
+            if self._callback_startup:
+                await self._callback_startup(update["kutana"], update)
+
+    async def _proc_update(self, update, eenv):
         """Method for processing updates."""
 
         if eenv.ctrl_type == "kutana":
-            if update["update_type"] == "startup":
-                if self._callback_startup:
-                    await self._callback_startup(update["kutana"], update)
-
             return
 
         env = objdict(eenv=eenv, **eenv)
@@ -71,12 +92,6 @@ class Plugin():
 
             if comm == "DONE":
                 return "DONE"
-
-    async def dispose(self):
-        """Free resources and prepare for shutdown."""
-
-        for callback in self._callbacks_dispose:
-            await callback()
 
     def add_callbacks(self, *callbacks):
         """Add callbacks for processing updates."""
@@ -133,7 +148,7 @@ class Plugin():
 
             async def wrapper(*args, **kwargs):
                 if kwargs["message"].text.strip().lower() in check_texts:
-                    comm = self.done_if_none(await coro(*args, **kwargs))
+                    comm = self._done_if_none(await coro(*args, **kwargs))
 
                     if comm == "DONE":
                         return "DONE"
@@ -165,7 +180,7 @@ class Plugin():
 
                     kwargs["env"]["found_text"] = text
 
-                    comm = self.done_if_none(await coro(*args, **kwargs))
+                    comm = self._done_if_none(await coro(*args, **kwargs))
 
                     if comm == "DONE":
                         return "DONE"
@@ -207,7 +222,7 @@ class Plugin():
                 kwargs["env"]["args"] = shlex.split(kwargs["env"]["body"])
                 kwargs["env"]["prefix"] = kwargs["message"].text[:len(search_result)].strip()
 
-                comm = self.done_if_none(await coro(*args, **kwargs))
+                comm = self._done_if_none(await coro(*args, **kwargs))
 
                 if comm == "DONE":
                     return "DONE"
@@ -242,7 +257,7 @@ class Plugin():
 
                 kwargs["env"]["match"] = match
 
-                comm = self.done_if_none(await coro(*args, **kwargs))
+                comm = self._done_if_none(await coro(*args, **kwargs))
 
                 if comm == "DONE":
                     return "DONE"
@@ -271,7 +286,7 @@ class Plugin():
                     else:
                         return
 
-                comm = self.done_if_none(await coro(*args, **kwargs))
+                comm = self._done_if_none(await coro(*args, **kwargs))
 
                 if comm == "DONE":
                     return "DONE"
@@ -281,3 +296,9 @@ class Plugin():
             return wrapper
 
         return decorator
+
+    async def dispose(self):
+        """Free resources and prepare for shutdown."""
+
+        for callback in self._callbacks_dispose:
+            await callback()

@@ -68,16 +68,7 @@ class VKController(BasicController):
                 execute_errors=""
             )
 
-        if raw_respose is None or not isinstance(raw_respose, dict):
-            return VKResponse(
-                error=True,
-                kutana_error=("", ""),
-                response_error=("Unknown response", raw_respose),
-                response="",
-                execute_errors=raw_respose.get("execute_errors", "")
-            )
-
-        if not raw_respose.get("response") or raw_respose.get("error"):
+        if raw_respose.get("error"):
             return VKResponse(
                 error=True,
                 kutana_error=("", ""),

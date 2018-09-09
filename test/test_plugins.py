@@ -10,23 +10,23 @@ class TestPlugins(KutanaTest):
         self.assertEqual(plugin.name, "Name")  # pylint: disable=E1101
         self.assertEqual(plugin.cmds, ["cmd1", "cmd2"])  # pylint: disable=E1101
 
-        plugin = Plugin(order=5)
+        plugin = Plugin(priority=95)
 
     def test_echo_plugin(self):
         queue = ["message", "echo message", "echonotecho"] * 5
 
         self.target = ["message"] * 5
 
-        with self.dumping_controller(queue) as plugin:
+        with self.debug_controller(queue) as plugin:
             async def on_echo(message, env, **kwargs):
-                self.actual.append(env.body)
+                await env.reply(env.body)
 
             plugin.on_startswith_text("echo ", "echo\n")(on_echo)
 
     def test_plugin_on_startup(self):
         self.called = 0
 
-        with self.dumping_controller("message") as plugin:
+        with self.debug_controller(["message"]) as plugin:
             async def on_startup(message, env, **kwargs):
                 self.called += 1
 
@@ -41,7 +41,7 @@ class TestPlugins(KutanaTest):
             ["a", "b", "c"], ["a", "b c"], ["a", "\"", "b", "c"]
         ]
 
-        with self.dumping_controller(queue) as plugin:
+        with self.debug_controller(queue) as plugin:
             async def on_startswith_text(message, env, **kwargs):
                 self.assertEqual(env.args, queue_answer.pop(0))
 
@@ -52,7 +52,7 @@ class TestPlugins(KutanaTest):
     def test_plugins_callbacks_done(self):
         self.counter = 0
 
-        with self.dumping_controller(["123"] * 5) as plugin:
+        with self.debug_controller(["123"] * 5) as plugin:
 
             async def on_has_text(message, **kwargs):
                 self.counter += 1
@@ -71,7 +71,7 @@ class TestPlugins(KutanaTest):
     def test_plugins_callbacks_not_done(self):
         self.counter = 0
 
-        with self.dumping_controller(["123"] * 5) as plugin:
+        with self.debug_controller(["123"] * 5) as plugin:
 
             async def on_has_text(message, **kwargs):
                 self.counter += 1
@@ -90,7 +90,7 @@ class TestPlugins(KutanaTest):
     def test_multiple_plugins(self):
         self.counter = 0
 
-        with self.dumping_controller(["msg"] * 2):
+        with self.debug_controller(["msg"] * 2):
             self.plugins.append(Plugin())
             self.plugins.append(Plugin())
 
@@ -111,7 +111,7 @@ class TestPlugins(KutanaTest):
         self.disposed = 0
         self.counter = 0
 
-        with self.dumping_controller(["123"] * 5 + ["321"]) as plugin:
+        with self.debug_controller(["123"] * 5 + ["321"]) as plugin:
             async def on_123(message, **kwargs):
                 self.assertEqual(message.text, "123")
                 self.counter += 1
@@ -143,18 +143,17 @@ class TestPlugins(KutanaTest):
     def test_environment_reply(self):
         self.target = ["echo 123"]
 
-        with self.dumping_controller(self.target) as plugin:
+        with self.debug_controller(self.target) as plugin:
             async def on_echo(message, env, **kwargs):
                 self.assertIsNotNone(env.reply)
-                await env.reply(";)")
-                self.actual.append(message.text)
+                await env.reply(message.text)
 
             plugin.on_startswith_text("echo")(on_echo)
 
     def test_environments(self):
         self.target = ["echo 123"]
 
-        with self.dumping_controller(self.target):
+        with self.debug_controller(self.target):
             plugin1 = Plugin()
             plugin2 = Plugin()
 
@@ -178,7 +177,7 @@ class TestPlugins(KutanaTest):
                 self.assertIsNone(env.get("A"))
                 self.assertEqual(env.eenv.get("B"), "B")
 
-                self.actual.append("echo 123")
+                await env.reply("echo 123")
 
             plugin2.on_has_text()(do_check)
 
@@ -186,7 +185,7 @@ class TestPlugins(KutanaTest):
         queue = ["привет", "отлично привет", "ecHo", "ab", "ae", "hello"]
         self.result = 0
 
-        with self.dumping_controller(queue) as plugin:
+        with self.debug_controller(queue) as plugin:
             async def no_trigger(message, **kwargs):
                 self.assertTrue(False)
 

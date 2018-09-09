@@ -1,4 +1,4 @@
-from kutana import Kutana, DumpingController, Plugin
+from kutana import Kutana, DebugController, Plugin
 from contextlib import contextmanager
 import unittest
 
@@ -6,16 +6,14 @@ import unittest
 class KutanaTest(unittest.TestCase):
     def setUp(self):
         self.kutana = None
-
         self.target = []
-        self.actual = []
 
     @contextmanager
-    def dumping_controller(self, queue):
+    def debug_controller(self, queue):
         if self.kutana is None:
             self.kutana = Kutana()
 
-        self.controller = DumpingController(*queue)
+        self.controller = DebugController(*queue)
 
         self.kutana.add_controller(self.controller)
 
@@ -31,4 +29,4 @@ class KutanaTest(unittest.TestCase):
 
             self.kutana.run()
 
-        self.assertEqual(self.target, self.actual)
+        self.assertEqual(self.target, self.controller.replies)

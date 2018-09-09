@@ -10,27 +10,51 @@ class TestExecutors(KutanaTest):
     def tearDown(self):
         logger.setLevel(logging.ERROR)
 
-    def test_just_dumping(self):
+    def test_just_debug(self):
         self.target = ["message"] * 5
 
-        with self.dumping_controller(self.target):
+        with self.debug_controller(self.target):
 
             async def new_update(update, eenv):
-                if eenv.ctrl_type == "dumping":
-                    self.actual.append(update)
+                if eenv.ctrl_type == "debug":
+                    await eenv.reply(update)
 
                 else:
                     self.assertEqual(eenv.ctrl_type, "kutana")
 
             self.kutana.executor.register(new_update)
 
+    def test_priority(self):
+        self.called_1 = 0
+        self.called_2 = 0
+
+        with self.debug_controller(["message", "message"]):
+
+            async def prc1(update, eenv):
+                if eenv.ctrl_type == "debug":
+                    self.called_1 += 1
+                    return "DONE"
+
+            prc1.priority = 49
+
+            async def prc2(update, eenv):
+                if eenv.ctrl_type == "debug":
+                    self.called_2 += 1
+                    return "DONE"
+
+            self.kutana.executor.register(prc1)
+            self.kutana.executor.register(prc2, priority=100)
+
+        self.assertEqual(self.called_1, 0)
+        self.assertEqual(self.called_2, 2)
+
     def test_exception(self):
         self.called = 0
 
-        with self.dumping_controller(["message"] * 5):
+        with self.debug_controller(["message"] * 5):
 
             async def new_update(update, eenv):
-                if eenv.ctrl_type == "dumping":
+                if eenv.ctrl_type == "debug":
                     raise Exception
 
             self.kutana.executor.register(new_update)
@@ -59,10 +83,10 @@ class TestExecutors(KutanaTest):
             self.assertEqual(mes, "Произошла ошибка! Приносим свои извинения.")
             self.called += 1
 
-        with self.dumping_controller(["message"] * 5):
+        with self.debug_controller(["message"] * 5):
 
             async def new_update(update, eenv):
-                if eenv.ctrl_type == "dumping":
+                if eenv.ctrl_type == "debug":
                     eenv.reply = my_faked_reply
                     raise Exception
 
@@ -73,50 +97,58 @@ class TestExecutors(KutanaTest):
         self.assertEqual(self.called, 5)
 
 
-    def test_two_dumping(self):
+    def test_two_debug(self):
         self.target = ["message"] * 5
+        self.called = 0
 
-        with self.dumping_controller(self.target):
-            with self.dumping_controller(self.target):
-                self.target *= 2
+        with self.debug_controller(self.target):
+            with self.debug_controller(self.target):
 
                 async def new_update(update, eenv):
-                    if eenv.ctrl_type == "dumping":
-                        self.actual.append(update)
+                    if eenv.ctrl_type == "debug":
+                        await eenv.reply(update)
+                        self.called += 1
 
                     else:
                         self.assertEqual(eenv.ctrl_type, "kutana")
 
                 self.kutana.executor.register(new_update)
 
-    def test_two_callbacks_and_two_dumpings(self):
-            self.target = ["message"] * 5
+        self.assertEqual(self.called, 10)
 
-            with self.dumping_controller(self.target):
-                with self.dumping_controller(self.target):
-                    self.target *= 4
+    def test_two_callbacks_and_two_debugs(self):
+            self.target = ["message"] * 5
+            self.called = 0
+
+            with self.debug_controller(self.target):
+                with self.debug_controller(self.target):
+                    self.target *= 2
 
                     async def new_update_1(update, eenv):
-                        if eenv.ctrl_type == "dumping":
-                            self.actual.append(update)
+                        if eenv.ctrl_type == "debug":
+                            await eenv.reply(update)
+                            self.called += 1
 
                     async def new_update_2(update, eenv):
-                        if eenv.ctrl_type == "dumping":
-                            self.actual.append(update)
+                        if eenv.ctrl_type == "debug":
+                            await eenv.reply(update)
+                            self.called += 1
 
                     self.kutana.executor.register(new_update_1)
                     self.kutana.executor.register(new_update_2)
 
+            self.assertEqual(self.called, 20)
+
     def test_decorate_or_call(self):
         self.target = ["message"] * 5
 
-        with self.dumping_controller(self.target):
+        with self.debug_controller(self.target):
             self.target *= 2
 
             @self.kutana.executor.register()
             async def new_update(update, eenv):
-                if eenv.ctrl_type == "dumping":
-                    self.actual.append(update)
+                if eenv.ctrl_type == "debug":
+                    await eenv.reply(update)
 
             self.kutana.executor.register(new_update)
 

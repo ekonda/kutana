@@ -32,7 +32,7 @@ Same as
 
 All coroutine callbacks will be sorted by their "priority" (desc) field
 until one of the coroutines returns **"DONE"** or none coroutines left.
-Default value for "priority" field is 45.
+Default value for "priority" field is 400.
 
 Example of callback that will be executed earlier than other plugins without
 priority.
@@ -43,7 +43,7 @@ priority.
     if "reply" in eenv:
       await eenv.reply("Early bird!")
 
-  prc.priority = 60
+  prc.priority = 600
 
   kutana.executor.register(prc)
 
@@ -51,7 +51,7 @@ You can pass "priority" to register decorator too.
 
 .. code-block:: python
 
-  @kutana.executor.register(prc, priority=60)
+  @kutana.executor.register(prc, priority=600)
   async def prc(update, eenv):
     if "reply" in eenv:
       await eenv.reply("Early bird!")

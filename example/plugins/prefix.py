@@ -1,11 +1,11 @@
 from kutana import Plugin, Message
 
-plugin = Plugin(name="Prefix", priority=50)
+plugin = Plugin(name="Prefix", priority=500)
 
 # Priority:
-# 45 is normal plugins (usually)
-# 55 is early callbacks (45 + 10)
-# 50 is between
+# 400 is normal plugins (usually)
+# 600 is early callbacks (400 + 200)
+# 500 is between
 #
 # That means early plugins works without prefix!
 

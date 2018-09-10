@@ -10,7 +10,7 @@ class TestPlugins(KutanaTest):
         self.assertEqual(plugin.name, "Name")  # pylint: disable=E1101
         self.assertEqual(plugin.cmds, ["cmd1", "cmd2"])  # pylint: disable=E1101
 
-        plugin = Plugin(priority=95)
+        plugin = Plugin(priority=1000)
 
     def test_echo_plugin(self):
         queue = ["message", "echo message", "echonotecho"] * 5
@@ -57,7 +57,7 @@ class TestPlugins(KutanaTest):
         self.answers = []
 
         with self.debug_controller(["message"]) as plugin1:
-            plugin2 = Plugin(priority=50)
+            plugin2 = Plugin(priority=500)
 
             self.plugins.append(plugin2)
 

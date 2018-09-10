@@ -71,8 +71,8 @@ Available fields
 - **priority** - you can manipulate order in which plugins process updates.
   Lower priority - later this plugin will get to process update.  You should
   put often used plugins closer to a beginning as much as possible. You can
-  set this value to your callback function. Default value is 45. Plugin's
-  early callbacks executed with priority 10 greater than non-early callbacks.
+  set this value to your callback function. Default value is 400. Plugin's
+  early callbacks executed with priority 200 greater than non-early callbacks.
 
 
 .. note::

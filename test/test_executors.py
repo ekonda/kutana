@@ -50,7 +50,7 @@ class TestExecutors(KutanaTest):
                     self.called_1 += 1
                     return "DONE"
 
-            prc1.priority = 49
+            prc1.priority = 0  # very low
 
             async def prc2(update, eenv):
                 if eenv.ctrl_type == "debug":
@@ -58,7 +58,7 @@ class TestExecutors(KutanaTest):
                     return "DONE"
 
             self.kutana.executor.register(prc1)
-            self.kutana.executor.register(prc2, priority=100)
+            self.kutana.executor.register(prc2, priority=1000)  # very high
 
         self.assertEqual(self.called_1, 0)
         self.assertEqual(self.called_2, 2)

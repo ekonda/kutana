@@ -23,7 +23,7 @@ class Executor:
 
             self.registered_plugins.append(plugin)
 
-    def register(self, *callbacks, priority=45, error=False):
+    def register(self, *callbacks, priority=400, error=False):
         """Register callbacks."""
 
         def _register(coroutine):

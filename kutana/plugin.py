@@ -18,7 +18,7 @@ class Plugin():
         self._callbacks_dispose = []
         self._callback_startup = None
 
-        self.priority = 45
+        self.priority = 400
 
         for k, v in kwargs.items():
             setattr(self, k, v)
@@ -52,7 +52,7 @@ class Plugin():
                     update, eenv, (self._ecallbacks, self._ecallbacks_raw)
                 )
 
-            wrapper_for_early.priority = self.priority + 10
+            wrapper_for_early.priority = self.priority + 200
 
             callbacks.append(wrapper_for_early)
 
@@ -150,7 +150,7 @@ class Plugin():
         """
 
         def _register_special(callback):
-            callback.priority = self.priority + 10 * early
+            callback.priority = self.priority + 200 * early
 
             self._callbacks_special.append(callback)
 

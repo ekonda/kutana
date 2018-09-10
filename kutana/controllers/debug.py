@@ -14,16 +14,26 @@ class DebugController(BasicController):
         self.queue = list(texts)
         self.dead = False
 
+    async def upload_thing(self, thing, **kwargs):
+        return thing
+
     async def reply(self, message, attachment=None):
-        self.replies.append(message)
+        if message:
+            self.replies.append(message)
 
         if attachment:
-            for a in attachment:
-                self.replies.append(a)
+            if isinstance(attachment, (list, tuple)):
+                for a in attachment:
+                    self.replies.append(a)
+
+            else:
+                self.replies.append(attachment)
 
     async def setup_env(self, update, eenv):
         eenv["reply"] = self.reply
-        # TODO
+
+        eenv["upload_doc"] = self.upload_thing
+        eenv["upload_photo"] = self.upload_thing
 
     @staticmethod
     async def convert_to_message(update, eenv):

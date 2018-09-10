@@ -9,15 +9,7 @@ class Executor:
         self.callbacks = []
         self.error_callbacks = []
 
-        self.callbacks_owners = []
-
-    def add_callbacks_from(self, executor):
-        """Updates with callbacks from other executor."""
-
-        self.callbacks += executor.callbacks
-        self.error_callbacks += executor.error_callbacks
-
-        self.callbacks_owners += executor.callbacks_owners
+        self.registered_plugins = []
 
     def register_plugins(self, *plugins):
         """Register callbacks from plugins."""
@@ -29,7 +21,9 @@ class Executor:
             if hasattr(plugin, "_prepare_callbacks_error"):  # pragma: no cover
                 self.register(*plugin._prepare_callbacks_error(), error=True)
 
-    def register(self, *callbacks, priority=50, error=False):
+            self.registered_plugins.append(plugin)
+
+    def register(self, *callbacks, priority=45, error=False):
         """Register callbacks."""
 
         def _register(coroutine):
@@ -37,14 +31,8 @@ class Executor:
 
             callbacks.append(coroutine)
 
-            if hasattr(coroutine, "__self__"):
-                self.callbacks_owners.append(coroutine.__self__)
-
             def get_priority(cb):
-                if hasattr(cb, "__self__"):
-                    return -cb.__self__.priority
-
-                elif hasattr(cb, "priority"):
+                if hasattr(cb, "priority") and cb.priority is not None:
                     return -cb.priority
 
                 return -priority
@@ -90,6 +78,6 @@ class Executor:
     async def dispose(self):
         """Free resources and prepare for shutdown."""
 
-        for callback_owner in self.callbacks_owners:
+        for callback_owner in self.registered_plugins:
             if hasattr(callback_owner, "dispose"):
                 await callback_owner.dispose()

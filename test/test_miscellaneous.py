@@ -80,7 +80,7 @@ class TestMiscellaneous(unittest.TestCase):
 
     def test_vk_conversation(self):
         async def fake_resolveScreenName(*args, **kwargs):
-            return VKResponse(False, "", "", {"object_id": 1}, "")
+            return VKResponse(False, (), {"object_id": 1})
 
         resolveScreenName = vk_converter.resolveScreenName
         vk_converter.resolveScreenName = fake_resolveScreenName

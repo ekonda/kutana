@@ -6,11 +6,11 @@ plugin = Plugin(name="Plugins")
 async def on_startup(kutana, update):
     plugin.plugins = []
 
-    for pl in update["callbacks_owners"]:
+    for pl in update["registered_plugins"]:
         if isinstance(pl, Plugin) and hasattr(pl, "name"):
             plugin.plugins.append(pl.name)
 
-@plugin.on_startswith_text("list")
+@plugin.on_text("list")
 async def on_list(message, attachments, env):
     await env.reply(
         "Plugins:\n" +

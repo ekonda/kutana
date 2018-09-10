@@ -30,10 +30,9 @@ Same as
 
   kutana.executor.register(prc)
 
-All coroutine callbacks will be sorted by their "priority" (desc) field (you
-can set field for functions in python) until one of the coroutines
-returns **"DONE"** or none coroutines left. Default value for "priority"
-field is 50.
+All coroutine callbacks will be sorted by their "priority" (desc) field
+until one of the coroutines returns **"DONE"** or none coroutines left.
+Default value for "priority" field is 45.
 
 Example of callback that will be executed earlier than other plugins without
 priority.

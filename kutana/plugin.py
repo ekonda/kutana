@@ -9,12 +9,16 @@ class Plugin():
     def __init__(self, **kwargs):
         self._callbacks = []
         self._callbacks_raw = []
-        self._callbacks_dispose = []
+
+        self._ecallbacks = []
+        self._ecallbacks_raw = []
+
         self._callbacks_special = []
 
+        self._callbacks_dispose = []
         self._callback_startup = None
 
-        self.priority = 50
+        self.priority = 45
 
         for k, v in kwargs.items():
             setattr(self, k, v)
@@ -34,10 +38,34 @@ class Plugin():
         callbacks = []
 
         if self._callback_startup:
-            callbacks.append(self._proc_startup)
+            async def wrapper_for_startup(update, eenv):
+                await self._proc_startup(update, eenv)
+
+            wrapper_for_startup.priority = self.priority
+
+            callbacks.append(wrapper_for_startup)
+
+        if self._ecallbacks or self._ecallbacks_raw:
+
+            async def wrapper_for_early(update, eenv):
+                return await self._proc_update(
+                    update, eenv, (self._ecallbacks, self._ecallbacks_raw)
+                )
+
+            wrapper_for_early.priority = self.priority + 10
+
+            callbacks.append(wrapper_for_early)
 
         if self._callbacks or self._callbacks_raw:
-            callbacks.append(self._proc_update)
+
+            async def wrapper(update, eenv):
+                return await self._proc_update(
+                    update, eenv, (self._callbacks, self._callbacks_raw)
+                )
+
+            wrapper.priority = self.priority
+
+            callbacks.append(wrapper)
 
         callbacks += self._callbacks_special
 
@@ -51,15 +79,21 @@ class Plugin():
             if self._callback_startup:
                 await self._callback_startup(update["kutana"], update)
 
-    async def _proc_update(self, update, eenv):
-        """Method for processing updates."""
+    @staticmethod
+    async def _proc_update(update, eenv, cbs=None):
+        """Process update with eenv and target callbacks.
+        If no callbacks passed raises RuntimeException.
+        """
+
+        if cbs is None:
+            raise RuntimeError
 
         if eenv.ctrl_type == "kutana":
             return
 
         env = objdict(eenv=eenv, **eenv)
 
-        if eenv.get("_cached_message"):
+        if "_cached_message" in eenv:
             message = eenv["_cached_message"]
 
         else:
@@ -68,7 +102,7 @@ class Plugin():
             eenv["_cached_message"] = message
 
         if message is None:
-            if not self._callbacks_raw:
+            if not cbs[1]:
                 return
 
             arguments = {
@@ -76,7 +110,7 @@ class Plugin():
                 "update": update
             }
 
-            callbacks = self._callbacks_raw
+            callbacks = cbs[1]
 
         else:
             arguments = {
@@ -85,7 +119,7 @@ class Plugin():
                 "attachments": message.attachments
             }
 
-            callbacks = self._callbacks
+            callbacks = cbs[0]
 
         for callback in callbacks:
             comm = await callback(**arguments)
@@ -93,11 +127,37 @@ class Plugin():
             if comm == "DONE":
                 return "DONE"
 
-    def add_callbacks(self, *callbacks):
-        """Add callbacks for processing updates."""
+    def register(self, *callbacks, early=False):
+        """Register for processing updates in this plugin.
+
+        If early is True, this callbacks will be executed
+        before callbacks (from other plugins too) with `early=False`.
+        """
+
+        callbacks_list = self._ecallbacks if early else self._callbacks
 
         for callback in callbacks:
-            self._callbacks.append(callback)
+            callbacks_list.append(callback)
+
+    def register_special(self, *callbacks, early=False):
+        """Register callback for processing updates in this plugins's
+        executor. Return decorator for registering callback.
+
+        Arguments `env` and raw `update` is passed to callback.
+
+        If `early` is True, this callbacks will be executed
+        before callbacks (from other plugins too) with `early=False`.
+        """
+
+        def _register_special(callback):
+            callback.priority = self.priority + 10 * early
+
+            self._callbacks_special.append(callback)
+
+        for callback in callbacks:
+            _register_special(callback)
+
+        return _register_special
 
     def on_dispose(self):
         """Returns decorator for adding callbacks which is triggered when
@@ -124,23 +184,30 @@ class Plugin():
 
         return decorator
 
-    def on_raw(self):
+    def on_raw(self, early=False):
         """Returns decorator for adding callbacks which is triggered
         every time when update can't be turned into `Message` or
         `Attachment` object. Arguments `env` and raw `update`
         is passed to callback.
+
+        See :func:`Plugin.register` for info about `early`.
         """
 
         def decorator(coro):
+            if early:
+                self._ecallbacks_raw.append(coro)
+
             self._callbacks_raw.append(coro)
 
             return coro
 
         return decorator
 
-    def on_text(self, *texts):
+    def on_text(self, *texts, early=False):
         """Returns decorator for adding callbacks which is triggered
         when the message and any of the specified text are fully matched.
+
+        See :func:`Plugin.register` for info about `early`.
         """
 
         def decorator(coro):
@@ -153,19 +220,21 @@ class Plugin():
                     if comm == "DONE":
                         return "DONE"
 
-            self.add_callbacks(wrapper)
+            self.register(wrapper, early=early)
 
             return wrapper
 
         return decorator
 
-    def on_has_text(self, *texts):
+    def on_has_text(self, *texts, early=False):
         """Returns decorator for adding callbacks which is triggered
         when the message contains any of the specified texts.
 
         Fills env for callback with:
 
         - "found_text" - text found in message.
+
+        See :func:`Plugin.register` for info about `early`.
         """
 
         def decorator(coro):
@@ -185,13 +254,13 @@ class Plugin():
                     if comm == "DONE":
                         return "DONE"
 
-            self.add_callbacks(wrapper)
+            self.register(wrapper, early=early)
 
             return wrapper
 
         return decorator
 
-    def on_startswith_text(self, *texts):
+    def on_startswith_text(self, *texts, early=False):
         """Returns decorator for adding callbacks which is triggered
         when the message starts with any of the specified texts.
 
@@ -200,6 +269,8 @@ class Plugin():
         - "body" - text without prefix.
         - "args" - text without prefix splitted in bash-like style.
         - "prefix" - prefix.
+
+        See :func:`Plugin.register` for info about `early`.
         """
 
         def decorator(coro):
@@ -227,19 +298,21 @@ class Plugin():
                 if comm == "DONE":
                     return "DONE"
 
-            self.add_callbacks(wrapper)
+            self.register(wrapper, early=early)
 
             return wrapper
 
         return decorator
 
-    def on_regexp_text(self, regexp, flags=0):
+    def on_regexp_text(self, regexp, flags=0, early=False):
         """Returns decorator for adding callbacks which is triggered
         when the message matches the specified regular expression.
 
         Fills env for callback with:
 
         - "match" - match.
+
+        See :func:`Plugin.register` for info about `early`.
         """
 
         if isinstance(regexp, str):
@@ -262,16 +335,18 @@ class Plugin():
                 if comm == "DONE":
                     return "DONE"
 
-            self.add_callbacks(wrapper)
+            self.register(wrapper, early=early)
 
             return wrapper
 
         return decorator
 
-    def on_attachment(self, *types):
+    def on_attachment(self, *types, early=False):
         """Returns decorator for adding callbacks which is triggered
         when the message has attachments of the specified type
         (if no types specified, then any attachments).
+
+        See :func:`Plugin.register` for info about `early`.
         """
 
         def decorator(coro):
@@ -291,7 +366,7 @@ class Plugin():
                 if comm == "DONE":
                     return "DONE"
 
-            self.add_callbacks(wrapper)
+            self.register(wrapper, early=early)
 
             return wrapper
 

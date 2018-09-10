@@ -9,7 +9,15 @@ Check for prefix
     from kutana import Plugin, Message  # don't forget to import Message
 
     # this plugin should run before other plugins
-    plugin = Plugin(name="Prefix", priority=75)
+    plugin = Plugin(name="Prefix", priority=50)
+
+    # Priority:
+    # 45 is normal plugins (usually)
+    # 55 is early callbacks (45 + 10)
+    # 50 is between
+    #
+    # That means early plugins works without prefix!
+
 
     # you can import this value from your settings or something like that
     PREFIX = "/"

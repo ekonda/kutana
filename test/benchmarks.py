@@ -19,13 +19,13 @@ class TestTiming(KutanaTest):
 
         with self.debug_controller(self.target) as plugin:
             async def on_echo(message, env, **kwargs):
-                self.actual.append("echo " + env.body)
+                await env.reply("echo " + env.body)
 
             plugin.on_startswith_text("echo ", "echo\n")(on_echo)
 
 
             async def on_regexp(message, env, **kwargs):
-                self.actual.append(env.match.group(0))
+                await env.reply(env.match.group(0))
 
             plugin.on_regexp_text(r"message")(on_regexp)
 
@@ -43,7 +43,7 @@ class TestTiming(KutanaTest):
 
         with self.debug_controller(self.target) as plugin:
             async def on_any(message, env, **kwargs):
-                self.actual.append("message")
+                await env.reply("message")
 
             plugin.on_has_text()(on_any)
 

@@ -24,6 +24,21 @@ class TestExecutors(KutanaTest):
 
             self.kutana.executor.register(new_update)
 
+    def test_debug_upload(self):
+        self.target = ["file"]
+
+        with self.debug_controller(self.target):
+
+            async def new_update(update, eenv):
+                if eenv.ctrl_type == "debug":
+                    attachment = await eenv.upload_doc("file")
+                    await eenv.reply("", attachment=attachment)
+
+                else:
+                    self.assertEqual(eenv.ctrl_type, "kutana")
+
+            self.kutana.executor.register(new_update)
+
     def test_priority(self):
         self.called_1 = 0
         self.called_2 = 0
@@ -151,25 +166,3 @@ class TestExecutors(KutanaTest):
                     await eenv.reply(update)
 
             self.kutana.executor.register(new_update)
-
-    def test_merge_executors(self):
-        exec1 = Executor()
-        exec2 = Executor()
-
-        async def cor1(*args, **kwargs):
-            pass
-
-        async def cor2(*args, **kwargs):
-            pass
-
-        exec1.register(cor1)
-        exec2.register(cor2)
-
-        exec1.callbacks_owners.append(1)
-        exec2.callbacks_owners.append(2)
-
-        exec1.add_callbacks_from(exec2)
-
-        self.assertEqual(exec1.callbacks, [cor1, cor2])
-        self.assertEqual(exec1.error_callbacks, [])
-        self.assertEqual(exec1.callbacks_owners, [1, 2])

@@ -10,6 +10,13 @@ use any specific feature, but you have to know what these features
 are. You can specify any amount of callbacks that will process updates
 inside of plugin.
 
+Callbacks registration
+^^^^^^^^^^^^^^^^^^^^^^
+
+.. automethod:: kutana.Plugin.register
+
+.. automethod:: kutana.Plugin.register_special
+
 Available decorators
 ^^^^^^^^^^^^^^^^^^^^
 
@@ -64,7 +71,8 @@ Available fields
 - **priority** - you can manipulate order in which plugins process updates.
   Lower priority - later this plugin will get to process update.  You should
   put often used plugins closer to a beginning as much as possible. You can
-  set this value to your callback function.
+  set this value to your callback function. Default value is 45. Plugin's
+  early callbacks executed with priority 10 greater than non-early callbacks.
 
 
 .. note::
@@ -104,7 +112,7 @@ Not quite simple "lister.py"
         plugin.plugins = []  # create list in plugins's memory
 
         # check all callback owners (possible plugins)
-        for pl in update["callbacks_owners"]:
+        for pl in update["registered_plugins"]:
 
             # check if we're working with plugin
             if isinstance(pl, Plugin):

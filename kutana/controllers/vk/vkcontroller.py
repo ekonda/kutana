@@ -1,5 +1,5 @@
-from kutana.controllers.vk.methodclasses import (
-    upload_doc_class, upload_photo_class, reply_concrete_class
+from kutana.controllers.vk.vkwrappers import (
+    WrapperUploadDoc, WrapperUploadPhoto, WrapperReply
 )
 from kutana.controllers.vk.converter import convert_to_message
 from kutana.controllers.vk.vkcontrollerdata import VKRequest, VKResponse
@@ -62,27 +62,24 @@ class VKController(BasicController):
         except Exception as e:
             return VKResponse(
                 error=True,
-                kutana_error=(type(e), str(e)),
-                response_error=("", ""),
-                response="",
-                execute_errors=""
+                errors=(("Kutana", str(type(e)) + ": " + str(e)),),
+                response=""
             )
 
         if raw_respose.get("error"):
             return VKResponse(
                 error=True,
-                kutana_error=("", ""),
-                response_error=("Error", raw_respose["error"]),
-                response=raw_respose.get("response", ""),
-                execute_errors=raw_respose.get("execute_errors", "")
+                errors=(
+                    ("VK_req", raw_respose["error"]),
+                    ("VK_exe", raw_respose.get("execute_errors", ""))
+                ),
+                response=raw_respose.get("response", "")
             )
 
         return VKResponse(
             error=False,
-            kutana_error=("", ""),
-            response_error=("", ""),
-            response=raw_respose["response"],
-            execute_errors=raw_respose.get("execute_errors", "")
+            errors=(),
+            response=raw_respose["response"]
         )
 
     async def request(self, method, **kwargs):
@@ -103,13 +100,10 @@ class VKController(BasicController):
         except asyncio.TimeoutError:
             return VKResponse(
                 error=True,
-                kutana_error=(
-                    "Timeout",
-                    "Request took too long and was forgotten."
+                errors=(
+                    ("Kutana", "Request took too long and was forgotten.")
                 ),
-                response_error=("", ""),
-                response="",
-                execute_errors=""
+                response=""
             )
 
     async def send_message(self, message, peer_id, attachment=None,
@@ -149,12 +143,12 @@ class VKController(BasicController):
         peer_id = update["object"].get("peer_id")
 
         if update["type"] == "message_new":
-            eenv["reply"] = reply_concrete_class(self, peer_id)
+            eenv["reply"] = WrapperReply(self, peer_id)
 
         eenv["send_message"] = self.send_message
 
-        eenv["upload_photo"] = upload_photo_class(self, peer_id)
-        eenv["upload_doc"] = upload_doc_class(self, peer_id)
+        eenv["upload_photo"] = WrapperUploadPhoto(self, peer_id)
+        eenv["upload_doc"] = WrapperUploadDoc(self, peer_id)
 
         eenv["request"] = self.request
 
@@ -165,10 +159,16 @@ class VKController(BasicController):
     async def _set_results_to_requests(result, requests):
         err_no = 0
 
+        if result.errors and result.errors[0][0] == "VK_exe":
+            execute_errors = result.errors[0][1]
+
+        else:
+            execute_errors = []
+
         for res, req in zip(result.response, requests):
             if res is False:
-                if len(result.execute_errors) > err_no:
-                    known_error = result.execute_errors[err_no]
+                if len(execute_errors) > err_no:
+                    known_error = execute_errors[err_no]
                     err_no += 1
 
                 else:
@@ -176,22 +176,15 @@ class VKController(BasicController):
 
                 res = VKResponse(
                     error=True,
-                    kutana_error=("", ""),
-                    response_error=(
-                        "Error" if known_error else "Unknown error",
-                        known_error
-                    ),
-                    response="",
-                    execute_errors=result.execute_errors
+                    errors=(("VK_req", known_error),),
+                    response=""
                 )
 
             else:
                 res = VKResponse(
                     error=False,
-                    kutana_error=("", ""),
-                    response_error=("", ""),
-                    response=res,
-                    execute_errors=""
+                    errors=(),
+                    response=res
                 )
 
             try:

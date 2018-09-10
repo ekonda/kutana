@@ -30,10 +30,13 @@ class TestControllerVk(unittest.TestCase):
                 cls.conf = json.load(o)
 
         except FileNotFoundError:
-            cls.conf = {
-                "vk_token": os.environ.get("TEST_TOKEN", ""),
-                "vk_utoken": os.environ.get("TEST_UTOKEN", ""),
-            }
+            cls.conf = {}
+
+        if "vk_token" not in cls.conf:
+            cls.conf["vk_token"] = os.environ.get("TEST_TOKEN", "")
+
+        if "vk_utoken" not in cls.conf:
+            cls.conf["vk_utoken"] = os.environ.get("TEST_UTOKEN", "")
 
         cls.messages_to_delete = set()
 

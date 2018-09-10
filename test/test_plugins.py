@@ -34,6 +34,48 @@ class TestPlugins(KutanaTest):
 
         self.assertEqual(self.called, 1)
 
+    def test_plugin_register_special(self):
+        self.answers = []
+
+        with self.debug_controller(["message"]) as plugin:
+            async def cb_1(message, env, **kwargs):
+                self.answers.append(1)
+
+            async def cb_2(message, env, **kwargs):
+                self.answers.append(2)
+
+            async def cb_3(message, env, **kwargs):
+                self.answers.append(3)
+
+            plugin.register_special()(cb_1)
+            plugin.register_special(cb_2, early=True)
+            plugin.register_special(cb_3)
+
+        self.assertEqual(self.answers, [2, 1, 3] * 2)  # kutana's startup too
+
+    def test_plugin_register_special_two_plugins(self):
+        self.answers = []
+
+        with self.debug_controller(["message"]) as plugin1:
+            plugin2 = Plugin(priority=50)
+
+            self.plugins.append(plugin2)
+
+            async def cb_1(message, env, **kwargs):
+                self.answers.append(1)
+
+            async def cb_2(message, env, **kwargs):
+                self.answers.append(2)
+
+            async def cb_3(message, env, **kwargs):
+                self.answers.append(3)
+
+            plugin1.register_special()(cb_1)
+            plugin1.register_special(cb_2, early=True)
+            plugin2.register_special(cb_3)
+
+        self.assertEqual(self.answers, [2, 3, 1] * 2)  # kutana's startup too
+
     def test_args_on_startswith_text(self):
         queue = ["pr a b c", "pr a \"b c\"", "pr a \"\\\"\" b c"]
 
@@ -106,6 +148,26 @@ class TestPlugins(KutanaTest):
                 pl.on_has_text()(on_has_text)
 
         self.assertEqual(self.counter, 6)
+
+    def test_early_callbacks(self):
+        self.answers = []
+
+        with self.debug_controller(["msg"]):
+            self.plugins.append(Plugin())
+
+            async def on_has_text_early(message, env, **kwargs):
+                self.answers.append("early")
+
+                return "GOON"
+
+            async def on_has_text(message, env, **kwargs):
+                self.answers.append("late")
+
+            for pl in self.plugins:
+                pl.on_has_text()(on_has_text)
+                pl.on_has_text(early=True)(on_has_text_early)
+
+        self.assertEqual(self.answers, ["early", "early", "late"])
 
     def test_plugin_callbacks(self):
         self.disposed = 0

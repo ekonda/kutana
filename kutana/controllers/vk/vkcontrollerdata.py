@@ -19,7 +19,7 @@ happened.
 class VKRequest(asyncio.Future):
     __slots__ = ("mthod", "kwargs")
 
-    def __init__(self, method, **kwargs):
+    def __init__(self, method, kwargs):
         super().__init__()
 
         self.method = method

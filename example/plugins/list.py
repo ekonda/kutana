@@ -3,7 +3,7 @@ from kutana import Plugin
 plugin = Plugin(name="Plugins")
 
 @plugin.on_startup()
-async def on_startup(kutana, update):
+async def on_startup(update, env):
     plugin.plugins = []
 
     for pl in update["registered_plugins"]:

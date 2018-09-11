@@ -12,7 +12,7 @@ plugin = Plugin(name="Prefix", priority=500)
 PREFIX = "/"
 
 @plugin.on_has_text()
-async def on_has_text(message, env, **kwargs):
+async def on_has_text(message, attachments, env):
     if not message.text.startswith(PREFIX):
         return "DONE"
 

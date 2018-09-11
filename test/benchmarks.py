@@ -18,13 +18,13 @@ class TestTiming(KutanaTest):
         stime = time.time()
 
         with self.debug_controller(self.target) as plugin:
-            async def on_echo(message, env, **kwargs):
+            async def on_echo(message, attachments, env):
                 await env.reply("echo " + env.body)
 
             plugin.on_startswith_text("echo ", "echo\n")(on_echo)
 
 
-            async def on_regexp(message, env, **kwargs):
+            async def on_regexp(message, attachments, env):
                 await env.reply(env.match.group(0))
 
             plugin.on_regexp_text(r"message")(on_regexp)
@@ -42,7 +42,7 @@ class TestTiming(KutanaTest):
         self.target = ["message"] * 10000
 
         with self.debug_controller(self.target) as plugin:
-            async def on_any(message, env, **kwargs):
+            async def on_any(message, attachments, env):
                 await env.reply("message")
 
             plugin.on_has_text()(on_any)

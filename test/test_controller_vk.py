@@ -133,13 +133,13 @@ class TestControllerVk(unittest.TestCase):
         self.called_on_raw = False
         self.called_on_attachment = False
 
-        async def on_attachment(*args, **kwargs):
+        async def on_attachment(message, attachments, env):
             self.called_on_attachment = True
             return "GOON"
 
         plugin.on_attachment("photo")(on_attachment)
 
-        async def on_regexp(message, attachments, env, **kwargs):
+        async def on_regexp(message, attachments, env):
             # Test receiving
             self.assertEqual(env.match.group(1), "message")
             self.assertEqual(env.match.group(0), "echo message")
@@ -176,7 +176,7 @@ class TestControllerVk(unittest.TestCase):
 
         plugin.on_regexp_text(r"echo (.+)")(on_regexp)
 
-        async def on_raw(*args, **kwargs):
+        async def on_raw(update, env):
             self.called_on_raw = True
 
             return "GOON"

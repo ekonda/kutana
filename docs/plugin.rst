@@ -108,7 +108,7 @@ Not quite simple "lister.py"
     plugin = Plugin(name="Plugins")
 
     @plugin.on_startup()
-    async def on_startup(kutana, update):
+    async def on_startup(update, env):
         plugin.plugins = []  # create list in plugins's memory
 
         # check all callback owners (possible plugins)

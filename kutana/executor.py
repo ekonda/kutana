@@ -58,7 +58,7 @@ class Executor:
 
         except Exception as e:
             logger.exception(
-                "\"{}::{}\"on update {} from {}".format(
+                "\"{}::{}\" on update {} from {}".format(
                     sys.exc_info()[0].__name__, e, update, eenv.ctrl_type
                 )
             )

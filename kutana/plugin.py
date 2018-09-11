@@ -77,7 +77,10 @@ class Plugin():
 
         if update["update_type"] == "startup":
             if self._callback_startup:
-                await self._callback_startup(update["kutana"], update)
+                await self._callback_startup(
+                    update,
+                    objdict(eenv=eenv, **eenv)
+                )
 
     @staticmethod
     async def _proc_update(update, eenv, cbs=None):
@@ -105,24 +108,27 @@ class Plugin():
             if not cbs[1]:
                 return
 
-            arguments = {
-                "env": env,
-                "update": update
-            }
+            async def call(cb):
+                return await cb(
+                    update,
+                    env
+                )
 
             callbacks = cbs[1]
 
         else:
-            arguments = {
-                "env": env,
-                "message": message,
-                "attachments": message.attachments
-            }
+
+            async def call(cb):
+                return await cb(
+                    message,
+                    message.attachments,
+                    env,
+                )
 
             callbacks = cbs[0]
 
         for callback in callbacks:
-            comm = await callback(**arguments)
+            comm = await call(callback)
 
             if comm == "DONE":
                 return "DONE"
@@ -173,8 +179,9 @@ class Plugin():
 
     def on_startup(self):
         """Returns decorator for adding callbacks which is triggered
-        at the startup of kutana. Decorated coroutine receives kutana
-        object and some information in update.
+        at the startup of kutana. Decorated coroutine receives update and
+        plugin environment (although this env is only accessible in startup by
+        only this decoraed coroutine).
         """
 
         def decorator(coro):
@@ -187,7 +194,7 @@ class Plugin():
     def on_raw(self, early=False):
         """Returns decorator for adding callbacks which is triggered
         every time when update can't be turned into `Message` or
-        `Attachment` object. Arguments `env` and raw `update`
+        `Attachment` object. Arguments raw `update` and `env`
         is passed to callback.
 
         See :func:`Plugin.register` for info about `early`.
@@ -213,9 +220,11 @@ class Plugin():
         def decorator(coro):
             check_texts = list(text.strip().lower() for text in texts)
 
-            async def wrapper(*args, **kwargs):
-                if kwargs["message"].text.strip().lower() in check_texts:
-                    comm = self._done_if_none(await coro(*args, **kwargs))
+            async def wrapper(message, attachments, env):
+                if message.text.strip().lower() in check_texts:
+                    comm = self._done_if_none(
+                        await coro(message, attachments, env)
+                    )
 
                     if comm == "DONE":
                         return "DONE"
@@ -240,16 +249,18 @@ class Plugin():
         def decorator(coro):
             check_texts = tuple(text.strip().lower() for text in texts) or ("",)
 
-            async def wrapper(*args, **kwargs):
-                check_text = kwargs["message"].text.strip().lower()
+            async def wrapper(message, attachments, env):
+                check_text = message.text.strip().lower()
 
                 for text in check_texts:
                     if text not in check_text:
                         continue
 
-                    kwargs["env"]["found_text"] = text
+                    env["found_text"] = text
 
-                    comm = self._done_if_none(await coro(*args, **kwargs))
+                    comm = self._done_if_none(
+                        await coro(message, attachments, env)
+                    )
 
                     if comm == "DONE":
                         return "DONE"
@@ -283,17 +294,19 @@ class Plugin():
 
                 return None
 
-            async def wrapper(*args, **kwargs):
-                search_result = search_prefix(kwargs["message"].text.lower())
+            async def wrapper(message, attachments, env):
+                search_result = search_prefix(message.text.lower())
 
                 if search_result is None:
                     return
 
-                kwargs["env"]["body"] = kwargs["message"].text[len(search_result):].strip()
-                kwargs["env"]["args"] = shlex.split(kwargs["env"]["body"])
-                kwargs["env"]["prefix"] = kwargs["message"].text[:len(search_result)].strip()
+                env["body"] = message.text[len(search_result):].strip()
+                env["args"] = shlex.split(env["body"])
+                env["prefix"] = message.text[:len(search_result)].strip()
 
-                comm = self._done_if_none(await coro(*args, **kwargs))
+                comm = self._done_if_none(
+                    await coro(message, attachments, env)
+                )
 
                 if comm == "DONE":
                     return "DONE"
@@ -322,15 +335,17 @@ class Plugin():
             compiled = regexp
 
         def decorator(coro):
-            async def wrapper(*args, **kwargs):
-                match = compiled.match(kwargs["message"].text)
+            async def wrapper(message, attachments, env):
+                match = compiled.match(message.text)
 
                 if not match:
                     return
 
-                kwargs["env"]["match"] = match
+                env["match"] = match
 
-                comm = self._done_if_none(await coro(*args, **kwargs))
+                comm = self._done_if_none(
+                    await coro(message, attachments, env)
+                )
 
                 if comm == "DONE":
                     return "DONE"
@@ -350,18 +365,20 @@ class Plugin():
         """
 
         def decorator(coro):
-            async def wrapper(*args, **kwargs):
-                if not kwargs["attachments"]:
+            async def wrapper(message, attachments, env):
+                if not attachments:
                     return
 
                 if types:
-                    for a in kwargs["attachments"]:
+                    for a in attachments:
                         if a.type in types:
                             break
                     else:
                         return
 
-                comm = self._done_if_none(await coro(*args, **kwargs))
+                comm = self._done_if_none(
+                    await coro(message, attachments, env)
+                )
 
                 if comm == "DONE":
                     return "DONE"

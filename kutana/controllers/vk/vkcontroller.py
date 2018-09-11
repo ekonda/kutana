@@ -87,7 +87,7 @@ class VKController(BasicController):
 
         request = VKRequest(
             method,
-            **kwargs
+            kwargs
         )
 
         self.requests_queue.append(request)

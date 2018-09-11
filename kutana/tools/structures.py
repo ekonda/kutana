@@ -8,7 +8,9 @@ class objdict(collections.MutableMapping):
 
     def __init__(self, *args, **kwargs):
         self._store = dict()
-        self.update(dict(*args, **kwargs))
+
+        self.update(dict(*args))
+        self.update(kwargs)
 
     def __getattr__(self, name):
         return self.__getitem__(name)
@@ -53,7 +55,8 @@ class icedict(collections.Mapping):
     __slots__ = ("_store",)
 
     def __init__(self, *args, **kwargs):
-        self._store = dict(*args, **kwargs)
+        self._store = dict(*args)
+        self._store.update(kwargs)
 
     def __eq__(self, other):
         if isinstance(other, icedict):

@@ -23,7 +23,7 @@ Check for prefix
     PREFIX = "/"
 
     @plugin.on_has_text()
-    async def on_has_text(message, env, **kwargs):
+    async def on_has_text(message, attachments, env):
         if not message.text.startswith(PREFIX):
             return "DONE"  # "GOON" if you want to just keep message
 

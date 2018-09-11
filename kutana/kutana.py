@@ -53,7 +53,7 @@ class Kutana:
                     )
                 )
 
-            await asyncio.sleep(0.051)
+            await asyncio.sleep(0.01)
 
     def run(self):
         """Start engine."""

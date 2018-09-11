@@ -194,9 +194,9 @@ class VKController(BasicController):
 
     async def _msg_exec_loop(self, ensure_future):
         while self.running:
-            requests = []
+            await asyncio.sleep(0.05)
 
-            await asyncio.sleep(0)
+            requests = []
 
             for _ in range(25):
                 if not self.requests_queue:

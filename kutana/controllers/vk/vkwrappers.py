@@ -28,8 +28,10 @@ async def upload_file_to_vk(ctrl, upload_url, data):
     return upload_result
 
 
-class reply_concrete_class():
+class WrapperReply:
     """Class-method for replying to messages."""
+
+    __slots__ = ("ctrl", "peer_id")
 
     def __init__(self, ctrl, peer_id):
         self.ctrl = ctrl
@@ -46,9 +48,10 @@ class reply_concrete_class():
         )
 
 
-class upload_doc_class():
-    """Class-method for uploading documents.
-    """
+class WrapperUploadDoc:
+    """Class-method for uploading documents."""
+
+    __slots__ = ("ctrl", "peer_id")
 
     def __init__(self, ctrl, peer_id):
         self.ctrl = ctrl
@@ -104,8 +107,10 @@ class upload_doc_class():
         )
 
 
-class upload_photo_class():
+class WrapperUploadPhoto():
     """Class-method for uploading documents."""
+
+    __slots__ = ("ctrl", "peer_id")
 
     def __init__(self, ctrl, peer_id):
         self.ctrl = ctrl

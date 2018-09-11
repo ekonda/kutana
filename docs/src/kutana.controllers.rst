@@ -19,10 +19,10 @@ kutana.controllers.basic module
     :undoc-members:
     :show-inheritance:
 
-kutana.controllers.dumping module
----------------------------------
+kutana.controllers.debug module
+-------------------------------
 
-.. automodule:: kutana.controllers.dumping
+.. automodule:: kutana.controllers.debug
     :members:
     :undoc-members:
     :show-inheritance:

@@ -14,22 +14,47 @@ update's controller (VKontakte, Telegram, etc.).
 
 .. code-block:: python
 
-  @kutana.executor.subscribe()
+  @kutana.executor.register()
   async def prc(update, eenv):
-    # eenv stands for "executor's environment"
-    await eenv.reply("Ого, эхо!")
+    if "reply" in eenv:
+      # eenv stands for "executor's environment"
+      await eenv.reply("Ого, эхо!")
 
 Same as
 
 .. code-block:: python
 
   async def prc(update, eenv):
-    await env.reply("Ого, эхо!")
+    if "reply" in eenv:
+      await eenv.reply("Ого, эхо!")
 
-  kutana.executor.subscribe(prc)
+  kutana.executor.register(prc)
 
-All coroutine callbacks will be called in order they were added until
-one of the coroutines returns **"DONE"** or none coroutines left.
+All coroutine callbacks will be sorted by their "priority" (desc) field
+until one of the coroutines returns **"DONE"** or none coroutines left.
+Default value for "priority" field is 400.
+
+Example of callback that will be executed earlier than other plugins without
+priority.
+
+.. code-block:: python
+
+  async def prc(update, eenv):
+    if "reply" in eenv:
+      await eenv.reply("Early bird!")
+
+  prc.priority = 600
+
+  kutana.executor.register(prc)
+
+You can pass "priority" to register decorator too.
+
+.. code-block:: python
+
+  @kutana.executor.register(prc, priority=600)
+  async def prc(update, eenv):
+    if "reply" in eenv:
+      await eenv.reply("Early bird!")
 
 You can register callbacks on exceptions in normal callbacks like that.
 Exception accesible from eenv.exception in error callbacks.

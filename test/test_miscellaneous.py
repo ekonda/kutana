@@ -1,4 +1,4 @@
-from kutana import VKResponse, DumpingController, Executor, load_plugins, \
+from kutana import VKResponse, DebugController, Executor, load_plugins, \
     objdict, icedict, load_configuration
 import kutana.controllers.vk.converter as vk_converter
 import unittest
@@ -61,8 +61,8 @@ class TestMiscellaneous(unittest.TestCase):
         loop.run_until_complete(
             executor(
                 "message", objdict(
-                    ctrl_type="dumping",
-                    convert_to_message=DumpingController.convert_to_message
+                    ctrl_type="debug",
+                    convert_to_message=DebugController.convert_to_message
                 )
             )
         )
@@ -80,7 +80,7 @@ class TestMiscellaneous(unittest.TestCase):
 
     def test_vk_conversation(self):
         async def fake_resolveScreenName(*args, **kwargs):
-            return VKResponse(False, "", "", {"object_id": 1}, "")
+            return VKResponse(False, (), {"object_id": 1})
 
         resolveScreenName = vk_converter.resolveScreenName
         vk_converter.resolveScreenName = fake_resolveScreenName

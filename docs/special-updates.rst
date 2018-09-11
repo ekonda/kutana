@@ -19,5 +19,5 @@ When kutana starts, it sends update with some data
         "update_type": "startup",
 
         # list of registered callbacks owners
-        "callbacks_owners": self.executor.callbacks_owners
+        "registered_plugins": self.executor.registered_plugins
     }

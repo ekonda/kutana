@@ -36,7 +36,7 @@ Example "run.py"
     # Create engine
     kutana = Kutana()
 
-    # Add VKController to engine
+    # Create and add VKController to engine
     kutana.add_controller(
         VKController(
             load_configuration(

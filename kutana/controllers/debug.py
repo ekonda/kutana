@@ -3,24 +3,37 @@ from kutana.plugindata import Message
 from kutana.exceptions import ExitException
 
 
-class DumpingController(BasicController):
+class DebugController(BasicController):
     """Shoots target texts once."""
 
-    type = "dumping"
+    type = "debug"
 
     def __init__(self, *texts):
         self.replies = []
+
         self.queue = list(texts)
         self.dead = False
 
-    async def reply(self, msg, print_msg=False):
-        self.replies.append(msg)
+    async def upload_thing(self, thing, **kwargs):
+        return thing
 
-        if print_msg:
-            print(msg)
+    async def reply(self, message, attachment=None):
+        if message:
+            self.replies.append(message)
+
+        if attachment:
+            if isinstance(attachment, (list, tuple)):
+                for a in attachment:
+                    self.replies.append(a)
+
+            else:
+                self.replies.append(attachment)
 
     async def setup_env(self, update, eenv):
         eenv["reply"] = self.reply
+
+        eenv["upload_doc"] = self.upload_thing
+        eenv["upload_photo"] = self.upload_thing
 
     @staticmethod
     async def convert_to_message(update, eenv):

@@ -9,13 +9,21 @@ Check for prefix
     from kutana import Plugin, Message  # don't forget to import Message
 
     # this plugin should run before other plugins
-    plugin = Plugin(name="Prefix", order=15)
+    plugin = Plugin(name="Prefix", priority=500)
+
+    # Priority:
+    # 400 is normal plugins (usually)
+    # 600 is early callbacks (400 + 200)
+    # 500 is between
+    #
+    # That means early plugins works without prefix!
+
 
     # you can import this value from your settings or something like that
     PREFIX = "/"
 
     @plugin.on_has_text()
-    async def on_has_text(message, env, **kwargs):
+    async def on_has_text(message, attachments, env):
         if not message.text.startswith(PREFIX):
             return "DONE"  # "GOON" if you want to just keep message
 
@@ -30,3 +38,46 @@ Check for prefix
 
         # tell executor to keep processing current update
         return "GOON"
+
+Initiate with controller
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: python
+
+    from kutana import Kutana, VKController, load_plugins, \
+        load_configuration
+
+    # Create engine
+    kutana = Kutana()
+
+    # Create VKController
+    controller = VKController(
+        load_configuration("vk_token", "configuration.json")
+    )
+
+    # Do your things
+    async def my_init():
+        async with controller:
+            await controller.raw_request("users.get")
+
+        # also possible
+        async with VKController(token="token") as ctrl:
+            await ctrl.raw_request("users.get")
+
+    # It's important to use "raw_request" and not "request".
+    # Method "request" is not working outside of running engine.
+
+    kutana.loop.run_until_complete(my_init())
+
+    # Add controller to engine
+    kutana.add_controller(controller)
+
+    # Load and register plugins
+    kutana.executor.register_plugins(
+        *load_plugins("example/plugins/")
+    )
+
+    # Run engine
+    kutana.run()
+
+    # You can also do your things here after bot stopped.

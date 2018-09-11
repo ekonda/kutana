@@ -39,4 +39,4 @@ def load_plugins(plugins_folder, verbose=True):
                 import_plugin(path_to_module, path_to_module)
             )
 
-    return sorted(found_plugins, key=lambda pl: pl.order)
+    return found_plugins

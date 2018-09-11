@@ -30,10 +30,13 @@ class TestControllerVk(unittest.TestCase):
                 cls.conf = json.load(o)
 
         except FileNotFoundError:
-            cls.conf = {
-                "vk_token": os.environ.get("TEST_TOKEN", ""),
-                "vk_utoken": os.environ.get("TEST_UTOKEN", ""),
-            }
+            cls.conf = {}
+
+        if "vk_token" not in cls.conf:
+            cls.conf["vk_token"] = os.environ.get("TEST_TOKEN", "")
+
+        if "vk_utoken" not in cls.conf:
+            cls.conf["vk_utoken"] = os.environ.get("TEST_UTOKEN", "")
 
         cls.messages_to_delete = set()
 
@@ -114,28 +117,77 @@ class TestControllerVk(unittest.TestCase):
 
             self.messages_to_delete.clear()
 
-    def test_exceptions(self):
+    def test_vk_exceptions(self):
         with self.assertRaises(ValueError):
             VKController("")
 
-        with self.assertRaises(RuntimeError):
-            self.kutana.loop.run_until_complete(
-                VKController("token").raw_request("any.method")
-            )
+    def test_vk_controller_raw_request(self):
+        async def test():
+            async with VKController("token") as ctrl:
+                return await ctrl.raw_request("any.method", a1="v1", a2="v2")
+
+        response = self.kutana.loop.run_until_complete(test())
+
+        self.assertEqual(response.errors[0][1]["error_code"], 5)
+
+    def test_vk_controller_raw_request_nested(self):
+        results = []
+
+        async def test():
+            ctrl = VKController(self.conf["vk_token"])
+
+            async with ctrl:
+                results.append(await ctrl.raw_request("users.get"))
+
+                self.assertEqual(len(ctrl.subsessions), 1)
+                self.assertIsNone(ctrl.subsessions[0])
+
+                async with ctrl:
+                    results.append(await ctrl.raw_request("users.get"))
+
+                    self.assertEqual(len(ctrl.subsessions), 2)
+                    self.assertIsNone(ctrl.subsessions[0])
+
+                    session_m2 = ctrl.subsessions[-1]
+
+                    async with ctrl:
+                        self.assertEqual(len(ctrl.subsessions), 3)
+                        self.assertIsNone(ctrl.subsessions[0])
+
+                        results.append(await ctrl.raw_request("users.get"))
+
+                        session_m1 = ctrl.subsessions[-1]
+
+                    self.assertEqual(len(ctrl.subsessions), 2)
+                    self.assertEqual(ctrl.session, session_m1)
+                    self.assertIsNone(ctrl.subsessions[0])
+
+                self.assertEqual(ctrl.session, session_m2)
+
+            self.assertIsNone(ctrl.session)
+            self.assertFalse(ctrl.subsessions)
+
+        self.kutana.loop.run_until_complete(test())
+
+        self.assertTrue(results)
+
+        for r in results:
+            self.assertFalse(r.error)
 
     def test_vk_full(self):
         plugin = Plugin()
 
         self.called = False
+        self.called_on_raw = False
         self.called_on_attachment = False
 
-        async def on_attachment(*args, **kwargs):
+        async def on_attachment(message, attachments, env):
             self.called_on_attachment = True
             return "GOON"
 
         plugin.on_attachment("photo")(on_attachment)
 
-        async def on_regexp(message, attachments, env, **kwargs):
+        async def on_regexp(message, attachments, env):
             # Test receiving
             self.assertEqual(env.match.group(1), "message")
             self.assertEqual(env.match.group(0), "echo message")
@@ -163,16 +215,20 @@ class TestControllerVk(unittest.TestCase):
             self.assertTrue(resp.response)
 
             # Test failed request
-            resp = await env.request("wrong.method")
+            resp = await env.request("messages.send")
 
             self.assertTrue(resp.error)
+            self.assertTrue(resp.errors[0][1])
+            self.assertEqual(resp.errors[0][0], "VK_req")
             self.assertFalse(resp.response)
 
             self.called = True
 
         plugin.on_regexp_text(r"echo (.+)")(on_regexp)
 
-        async def on_raw(*args, **kwargs):
+        async def on_raw(update, env):
+            self.called_on_raw = True
+
             return "GOON"
 
         plugin.on_raw()(on_raw)
@@ -182,4 +238,5 @@ class TestControllerVk(unittest.TestCase):
         self.kutana.run()
 
         self.assertTrue(self.called)
+        self.assertTrue(self.called_on_raw)
         self.assertTrue(self.called_on_attachment)

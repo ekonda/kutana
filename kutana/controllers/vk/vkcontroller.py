@@ -1,5 +1,5 @@
-from kutana.controllers.vk.methodclasses import (
-    upload_doc_class, upload_photo_class, reply_concrete_class
+from kutana.controllers.vk.vkwrappers import (
+    WrapperUploadDoc, WrapperUploadPhoto, WrapperReply
 )
 from kutana.controllers.vk.converter import convert_to_message
 from kutana.controllers.vk.vkcontrollerdata import VKRequest, VKResponse
@@ -30,6 +30,8 @@ class VKController(BasicController):
         self.group_id = None
         self.longpoll = None
 
+        self.subsessions = []
+
         self.running = True
         self.requests_queue = []
 
@@ -41,11 +43,25 @@ class VKController(BasicController):
             .format(self.token, self.version)
         self.longpoll_url = "{}?act=a_check&key={}&wait=25&ts={}"
 
+    async def __aenter__(self):
+        self.subsessions.append(self.session)
+
+        self.session = aiohttp.ClientSession()
+
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb):
+        if not self.session.closed:
+
+            await self.session.close()
+
+        self.session = self.subsessions.pop(-1)
+
     async def raw_request(self, method, **kwargs):
         """Perform api request to vk.com"""
 
         if not self.session:
-            raise RuntimeError("Session is not created yet")
+            self.session = aiohttp.ClientSession()
 
         url = self.api_url.format(method)
 
@@ -62,36 +78,27 @@ class VKController(BasicController):
         except Exception as e:
             return VKResponse(
                 error=True,
-                kutana_error=(type(e), str(e)),
-                response_error=("", ""),
-                response="",
-                execute_errors=""
+                errors=(("Kutana", str(type(e)) + ": " + str(e)),),
+                response=""
             )
 
-        if raw_respose is None or not isinstance(raw_respose, dict):
+        if "error" in raw_respose:
             return VKResponse(
                 error=True,
-                kutana_error=("", ""),
-                response_error=("Unknown response", raw_respose),
-                response="",
-                execute_errors=raw_respose.get("execute_errors", "")
-            )
-
-        if not raw_respose.get("response") or raw_respose.get("error"):
-            return VKResponse(
-                error=True,
-                kutana_error=("", ""),
-                response_error=("Error", raw_respose["error"]),
-                response=raw_respose.get("response", ""),
-                execute_errors=raw_respose.get("execute_errors", "")
+                errors=(
+                    ("VK_req", raw_respose.get("error","")),
+                    ("VK_exe", raw_respose.get("execute_errors", ""))
+                ),
+                response=raw_respose.get("response", "")
             )
 
         return VKResponse(
             error=False,
-            kutana_error=("", ""),
-            response_error=("", ""),
-            response=raw_respose["response"],
-            execute_errors=raw_respose.get("execute_errors", "")
+            errors=(
+                ("VK_req", raw_respose.get("error","")),
+                ("VK_exe", raw_respose.get("execute_errors", ""))
+            ),
+            response=raw_respose["response"]
         )
 
     async def request(self, method, **kwargs):
@@ -99,7 +106,7 @@ class VKController(BasicController):
 
         request = VKRequest(
             method,
-            **kwargs
+            kwargs
         )
 
         self.requests_queue.append(request)
@@ -112,13 +119,10 @@ class VKController(BasicController):
         except asyncio.TimeoutError:
             return VKResponse(
                 error=True,
-                kutana_error=(
-                    "Timeout",
-                    "Request took too long and was forgotten."
+                errors=(
+                    ("Kutana", "Request took too long and was forgotten.")
                 ),
-                response_error=("", ""),
-                response="",
-                execute_errors=""
+                response=""
             )
 
     async def send_message(self, message, peer_id, attachment=None,
@@ -152,18 +156,18 @@ class VKController(BasicController):
             sticker_id=sticker_id,
             payload=sticker_id,
             keyboard=keyboard
-        )\
+        )
 
     async def setup_env(self, update, eenv):
         peer_id = update["object"].get("peer_id")
 
         if update["type"] == "message_new":
-            eenv["reply"] = reply_concrete_class(self, peer_id)
+            eenv["reply"] = WrapperReply(self, peer_id)
 
         eenv["send_message"] = self.send_message
 
-        eenv["upload_photo"] = upload_photo_class(self, peer_id)
-        eenv["upload_doc"] = upload_doc_class(self, peer_id)
+        eenv["upload_photo"] = WrapperUploadPhoto(self, peer_id)
+        eenv["upload_doc"] = WrapperUploadDoc(self, peer_id)
 
         eenv["request"] = self.request
 
@@ -174,10 +178,16 @@ class VKController(BasicController):
     async def _set_results_to_requests(result, requests):
         err_no = 0
 
+        if result.errors and result.errors[-1][0] == "VK_exe":
+            execute_errors = result.errors[-1][1]
+
+        else:
+            execute_errors = []
+
         for res, req in zip(result.response, requests):
             if res is False:
-                if len(result.execute_errors) > err_no:
-                    known_error = result.execute_errors[err_no]
+                if len(execute_errors) > err_no:
+                    known_error = execute_errors[err_no]
                     err_no += 1
 
                 else:
@@ -185,22 +195,15 @@ class VKController(BasicController):
 
                 res = VKResponse(
                     error=True,
-                    kutana_error=("", ""),
-                    response_error=(
-                        "Error" if known_error else "Unknown error",
-                        known_error
-                    ),
-                    response="",
-                    execute_errors=result.execute_errors
+                    errors=(("VK_req", known_error),),
+                    response=""
                 )
 
             else:
                 res = VKResponse(
                     error=False,
-                    kutana_error=("", ""),
-                    response_error=("", ""),
-                    response=res,
-                    execute_errors=""
+                    errors=(),
+                    response=res
                 )
 
             try:
@@ -210,9 +213,9 @@ class VKController(BasicController):
 
     async def _msg_exec_loop(self, ensure_future):
         while self.running:
-            requests = []
+            await asyncio.sleep(0.05)
 
-            await asyncio.sleep(0)
+            requests = []
 
             for _ in range(25):
                 if not self.requests_queue:
@@ -259,15 +262,18 @@ class VKController(BasicController):
         }
 
     async def receiver(self):
-        async with self.session.post(self.longpoll_url.format(
-            self.longpoll["server"],
-            self.longpoll["key"],
-            self.longpoll["ts"],
-        )) as resp:
-            try:
+        try:
+            async with self.session.post(
+                self.longpoll_url.format(
+                    self.longpoll["server"],
+                    self.longpoll["key"],
+                    self.longpoll["ts"],
+                )
+            ) as resp:
                 response = await resp.json()
-            except Exception:
-                return []
+
+        except Exception:
+            return []
 
         if "ts" in response:
             self.longpoll["ts"] = response["ts"]
@@ -276,7 +282,7 @@ class VKController(BasicController):
             if response["failed"] in (2, 3, 4):
                 await self.update_longpoll_data()
 
-            return
+            return await self.receiver()
 
         updates = []
 
@@ -289,7 +295,8 @@ class VKController(BasicController):
         return updates
 
     async def get_receiver_coroutine_function(self):
-        self.session = aiohttp.ClientSession()
+        if not self.session:
+            self.session = aiohttp.ClientSession()
 
         current_group_s = await self.raw_request("groups.getById")
 

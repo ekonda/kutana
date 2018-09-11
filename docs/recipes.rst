@@ -38,3 +38,39 @@ Check for prefix
 
         # tell executor to keep processing current update
         return "GOON"
+
+Initiate with controller
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: python
+
+    from kutana import Kutana, VKController, load_plugins, \
+        load_configuration
+
+    # Create engine
+    kutana = Kutana()
+
+    # Create VKController
+    controller = VKController(
+        load_configuration("vk_token", "configuration.json")
+    )
+
+    # Do your things
+    async def my_init():
+        print(await controller.raw_request("users.get"))
+
+    # It's important to use "raw_request" and not "request".
+    # Method "request" is not working outside of running engine.
+
+    kutana.loop.run_until_complete(my_init())
+
+    # Add controller to engine
+    kutana.add_controller(controller)
+
+    # Load and register plugins
+    kutana.executor.register_plugins(
+        *load_plugins("example/plugins/")
+    )
+
+    # Run engine
+    kutana.run()

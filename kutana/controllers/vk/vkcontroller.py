@@ -45,7 +45,7 @@ class VKController(BasicController):
         """Perform api request to vk.com"""
 
         if not self.session:
-            raise RuntimeError("Session is not created yet")
+            self.session = aiohttp.ClientSession()
 
         url = self.api_url.format(method)
 
@@ -137,7 +137,7 @@ class VKController(BasicController):
             sticker_id=sticker_id,
             payload=sticker_id,
             keyboard=keyboard
-        )\
+        )
 
     async def setup_env(self, update, eenv):
         peer_id = update["object"].get("peer_id")
@@ -243,15 +243,18 @@ class VKController(BasicController):
         }
 
     async def receiver(self):
-        async with self.session.post(self.longpoll_url.format(
-            self.longpoll["server"],
-            self.longpoll["key"],
-            self.longpoll["ts"],
-        )) as resp:
-            try:
+        try:
+            async with self.session.post(
+                self.longpoll_url.format(
+                    self.longpoll["server"],
+                    self.longpoll["key"],
+                    self.longpoll["ts"],
+                )
+            ) as resp:
                 response = await resp.json()
-            except Exception:
-                return []
+
+        except Exception:
+            return []
 
         if "ts" in response:
             self.longpoll["ts"] = response["ts"]
@@ -273,7 +276,8 @@ class VKController(BasicController):
         return updates
 
     async def get_receiver_coroutine_function(self):
-        self.session = aiohttp.ClientSession()
+        if not self.session:
+            self.session = aiohttp.ClientSession()
 
         current_group_s = await self.raw_request("groups.getById")
 

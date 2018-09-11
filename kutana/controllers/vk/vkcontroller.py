@@ -82,11 +82,11 @@ class VKController(BasicController):
                 response=""
             )
 
-        if raw_respose.get("error"):
+        if "error" in raw_respose:
             return VKResponse(
                 error=True,
                 errors=(
-                    ("VK_req", raw_respose["error"]),
+                    ("VK_req", raw_respose.get("error","")),
                     ("VK_exe", raw_respose.get("execute_errors", ""))
                 ),
                 response=raw_respose.get("response", "")
@@ -94,7 +94,10 @@ class VKController(BasicController):
 
         return VKResponse(
             error=False,
-            errors=(),
+            errors=(
+                ("VK_req", raw_respose.get("error","")),
+                ("VK_exe", raw_respose.get("execute_errors", ""))
+            ),
             response=raw_respose["response"]
         )
 
@@ -175,8 +178,8 @@ class VKController(BasicController):
     async def _set_results_to_requests(result, requests):
         err_no = 0
 
-        if result.errors and result.errors[0][0] == "VK_exe":
-            execute_errors = result.errors[0][1]
+        if result.errors and result.errors[-1][0] == "VK_exe":
+            execute_errors = result.errors[-1][1]
 
         else:
             execute_errors = []

@@ -215,9 +215,11 @@ class TestControllerVk(unittest.TestCase):
             self.assertTrue(resp.response)
 
             # Test failed request
-            resp = await env.request("wrong.method")
+            resp = await env.request("messages.send")
 
             self.assertTrue(resp.error)
+            self.assertTrue(resp.errors[0][1])
+            self.assertEqual(resp.errors[0][0], "VK_req")
             self.assertFalse(resp.response)
 
             self.called = True

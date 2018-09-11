@@ -57,7 +57,12 @@ Initiate with controller
 
     # Do your things
     async def my_init():
-        print(await controller.raw_request("users.get"))
+        async with controller:
+            await controller.raw_request("users.get")
+
+        # also possible
+        async with VKController(token="token") as ctrl:
+            await ctrl.raw_request("users.get")
 
     # It's important to use "raw_request" and not "request".
     # Method "request" is not working outside of running engine.
@@ -74,3 +79,5 @@ Initiate with controller
 
     # Run engine
     kutana.run()
+
+    # You can also do your things here after bot stopped.

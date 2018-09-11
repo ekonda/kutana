@@ -30,6 +30,8 @@ class VKController(BasicController):
         self.group_id = None
         self.longpoll = None
 
+        self.subsessions = []
+
         self.running = True
         self.requests_queue = []
 
@@ -40,6 +42,20 @@ class VKController(BasicController):
         self.api_url = "https://api.vk.com/method/{{}}?access_token={}&v={}" \
             .format(self.token, self.version)
         self.longpoll_url = "{}?act=a_check&key={}&wait=25&ts={}"
+
+    async def __aenter__(self):
+        self.subsessions.append(self.session)
+
+        self.session = aiohttp.ClientSession()
+
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb):
+        if not self.session.closed:
+
+            await self.session.close()
+
+        self.session = self.subsessions.pop(-1)
 
     async def raw_request(self, method, **kwargs):
         """Perform api request to vk.com"""
@@ -263,7 +279,7 @@ class VKController(BasicController):
             if response["failed"] in (2, 3, 4):
                 await self.update_longpoll_data()
 
-            return
+            return await self.receiver()
 
         updates = []
 

@@ -63,7 +63,7 @@ async def convert_to_message(update, eenv):
 
             cursor = m.end()
 
-            if resp.error or resp.response["object_id"] == update["group_id"]:
+            if not resp.response or resp.response["object_id"] == update["group_id"]:
                 continue
 
             new_text += text[m.start() : m.end()]

@@ -10,6 +10,13 @@ use any specific feature, but you have to know what these features
 are. You can specify any amount of callbacks that will process updates
 inside of plugin.
 
+Callbacks registration
+^^^^^^^^^^^^^^^^^^^^^^
+
+.. automethod:: kutana.Plugin.register
+
+.. automethod:: kutana.Plugin.register_special
+
 Available decorators
 ^^^^^^^^^^^^^^^^^^^^
 
@@ -61,13 +68,19 @@ All methods above decorates callback which should look like that:
 Available fields
 ^^^^^^^^^^^^^^^^
 
-- **order** - you can manipulate order in which plugins process updates.
-  Lower value - earlier this plugin will get to process update. This
-  works only when using default `load_plugins` function and only inside
-  a single call of `load_plugins`. You should put often used
-  plugins closer to a beginning as much as possible.
+- **priority** - you can manipulate order in which plugins process updates.
+  Lower priority - later this plugin will get to process update.  You should
+  put often used plugins closer to a beginning as much as possible. You can
+  set this value to your callback function. Default value is 400. Plugin's
+  early callbacks executed with priority 200 greater than non-early callbacks.
 
-See :ref:`special_updates` for special updates.
+
+.. note::
+
+    See :ref:`environment` for information about environment
+    (`reply`, `upload_doc`, etc.)
+
+    See :ref:`special_updates` for special updates.
 
 Examples
 ^^^^^^^^
@@ -95,11 +108,11 @@ Not quite simple "lister.py"
     plugin = Plugin(name="Plugins")
 
     @plugin.on_startup()
-    async def on_startup(kutana, update):
+    async def on_startup(update, env):
         plugin.plugins = []  # create list in plugins's memory
 
         # check all callback owners (possible plugins)
-        for pl in update["callbacks_owners"]:
+        for pl in update["registered_plugins"]:
 
             # check if we're working with plugin
             if isinstance(pl, Plugin):

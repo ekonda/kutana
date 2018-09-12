@@ -12,14 +12,6 @@ kutana.controllers.vk.converter module
     :undoc-members:
     :show-inheritance:
 
-kutana.controllers.vk.methodclasses module
-------------------------------------------
-
-.. automodule:: kutana.controllers.vk.methodclasses
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 kutana.controllers.vk.vkcontroller module
 -----------------------------------------
 
@@ -32,6 +24,14 @@ kutana.controllers.vk.vkcontrollerdata module
 ---------------------------------------------
 
 .. automodule:: kutana.controllers.vk.vkcontrollerdata
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+kutana.controllers.vk.vkwrappers module
+---------------------------------------
+
+.. automodule:: kutana.controllers.vk.vkwrappers
     :members:
     :undoc-members:
     :show-inheritance:

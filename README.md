@@ -5,11 +5,13 @@
 [![CodeFactor](https://www.codefactor.io/repository/github/vk-brain/kutana/badge)](https://www.codefactor.io/repository/github/vk-brain/kutana)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/3119bfb791604b9db38e8e7a13e1d415)](https://www.codacy.com/app/michaelkrukov/kutana?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=vk-brain/kutana&amp;utm_campaign=Badge_Grade)
 [![Coverage Status](https://coveralls.io/repos/github/vk-brain/kutana/badge.svg?branch=master)](https://coveralls.io/github/vk-brain/kutana?branch=master)
-[![Total alerts](https://img.shields.io/lgtm/alerts/g/vk-brain/kutana.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/vk-brain/kutana/alerts/)
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/vk-brain/kutana.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/vk-brain/kutana/alerts)
 [![PyPI version](https://badge.fury.io/py/kutana.svg)](https://badge.fury.io/py/kutana)
+[![Plugins repo](https://img.shields.io/badge/plugins-repo-green.svg)](https://github.com/vk-brain/kutana-plugins)
 
 # Kutana
 The engine for developing bots for soc. networks, instant messengers and other systems.
+You can find repository with plugins for kutana [here](https://github.com/vk-brain/kutana-plugins).
 
 ### Installation
 - Download and install python (3.5.2+)

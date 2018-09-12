@@ -9,42 +9,39 @@ class Executor:
         self.callbacks = []
         self.error_callbacks = []
 
-        self.callbacks_owners = []
-
-    def add_callbacks_from(self, executor):
-        """Updates with callbacks from other executor."""
-
-        self.callbacks += executor.callbacks
-        self.error_callbacks += executor.error_callbacks
-
-        self.callbacks_owners += executor.callbacks_owners
+        self.registered_plugins = []
 
     def register_plugins(self, *plugins):
         """Register callbacks from plugins."""
 
         for plugin in plugins:
-            if hasattr(plugin, "proc_update"):
-                self.register(plugin.proc_update)
+            if hasattr(plugin, "_prepare_callbacks"):
+                self.register(*plugin._prepare_callbacks())
 
-            if hasattr(plugin, "proc_error"):  # pragma: no cover
-                self.register(plugin.proc_error, error=True)
+            if hasattr(plugin, "_prepare_callbacks_error"):  # pragma: no cover
+                self.register(*plugin._prepare_callbacks_error(), error=True)
 
-    def register(self, *callbacks, error=False):
+            self.registered_plugins.append(plugin)
+
+    def register(self, *callbacks, priority=400, error=False):
         """Register callbacks."""
 
         def _register(coroutine):
-            if error:
-                self.error_callbacks.append(coroutine)
+            callbacks = self.error_callbacks if error else self.callbacks
 
-            else:
-                self.callbacks.append(coroutine)
+            callbacks.append(coroutine)
+
+            def get_priority(cb):
+                if hasattr(cb, "priority") and cb.priority is not None:
+                    return -cb.priority
+
+                return -priority
+
+            callbacks.sort(key=get_priority)
 
             return coroutine
 
         for callback in callbacks:
-            if hasattr(callback, "__self__"):
-                self.callbacks_owners.append(callback.__self__)
-
             _register(callback)
 
         return _register
@@ -61,7 +58,7 @@ class Executor:
 
         except Exception as e:
             logger.exception(
-                "\"{}::{}\"on update {} from {}".format(
+                "\"{}::{}\" on update {} from {}".format(
                     sys.exc_info()[0].__name__, e, update, eenv.ctrl_type
                 )
             )
@@ -81,6 +78,6 @@ class Executor:
     async def dispose(self):
         """Free resources and prepare for shutdown."""
 
-        for callback_owner in self.callbacks_owners:
+        for callback_owner in self.registered_plugins:
             if hasattr(callback_owner, "dispose"):
                 await callback_owner.dispose()

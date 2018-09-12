@@ -53,7 +53,7 @@ class Kutana:
                     )
                 )
 
-            await asyncio.sleep(0.051)
+            await asyncio.sleep(0.01)
 
     def run(self):
         """Start engine."""
@@ -76,7 +76,7 @@ class Kutana:
             self.executor(
                 {
                     "kutana": self, "update_type": "startup",
-                    "callbacks_owners": self.executor.callbacks_owners
+                    "registered_plugins": self.executor.registered_plugins
                 },
                 objdict(ctrl_type="kutana")
             )

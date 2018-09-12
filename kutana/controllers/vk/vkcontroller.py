@@ -282,7 +282,7 @@ class VKController(BasicController):
             if response["failed"] in (2, 3, 4):
                 await self.update_longpoll_data()
 
-            return await self.receiver()
+            return []
 
         updates = []
 

@@ -16,6 +16,7 @@ class Kutana:
         self.running = True
         self.loops = []
         self.tasks = []
+        self.prcss = []
         self.gathered_loops = None
 
     def add_controller(self, controller):
@@ -38,7 +39,11 @@ class Kutana:
     async def ensure_future(self, awaitable):
         """Shurtcut for asyncio.ensure_loop with curretn loop."""
 
-        await asyncio.ensure_future(awaitable, loop=self.loop)
+        _awaitable =  asyncio.ensure_future(awaitable, loop=self.loop)
+
+        self.prcss.append(_awaitable)
+
+        return _awaitable
 
     async def loop_for_controller(self, ctrl):
         """Receive and process updated from target controller."""
@@ -93,6 +98,8 @@ class Kutana:
 
     async def dispose(self):
         """Free resources and prepare for shutdown."""
+
+        await asyncio.gather(*self.prcss)
 
         await self.executor.dispose()
 

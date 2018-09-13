@@ -4,7 +4,21 @@ import json
 import os
 
 
+def get_path(rootpath, wantedpath):
+    """Return path to wantedpath relative to rootpath."""
+
+    if wantedpath.startswith("/"):
+        wantedpath = wantedpath[1:]
+
+    return os.path.join(
+        os.path.dirname(rootpath),
+        wantedpath
+    )
+
+
 def load_configuration(target, path):
+    """Load specified in target key from json file in specified path."""
+
     with open(path, "r") as fh:
         config = json.load(fh)
 

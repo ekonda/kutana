@@ -19,7 +19,7 @@ class VKController(BasicController):
 
     type = "vk"
 
-    def __init__(self, token, longpoll_settings=None):
+    def __init__(self, token, execute_pause=0.05, longpoll_settings=None):
         if not token:
             raise ValueError("No `token` specified")
 
@@ -37,6 +37,7 @@ class VKController(BasicController):
 
         self.version = "5.80"
         self.token = token
+        self.execute_pause = execute_pause
         self.longpoll_settings = longpoll_settings
 
         self.api_url = "https://api.vk.com/method/{{}}?access_token={}&v={}" \
@@ -213,7 +214,7 @@ class VKController(BasicController):
 
     async def _msg_exec_loop(self, ensure_future):
         while self.running:
-            await asyncio.sleep(0.05)
+            await asyncio.sleep(self.execute_pause)
 
             requests = []
 
@@ -318,6 +319,7 @@ class VKController(BasicController):
             enabled=1,
             **{
                 **dict(
+                    message_new=1,
                     message_reply=0,
                     message_allow=0,
                     message_deny=0,
@@ -362,7 +364,7 @@ class VKController(BasicController):
 
         await self.update_longpoll_data()
 
-        logger.info("logged in as \"{}\" ( https://vk.com/id{} )".format(
+        logger.info("logged in as \"{}\" ( https://vk.com/club{} )".format(
             current_group_s.response[0]["name"],
             current_group_s.response[0]["id"]
         ))

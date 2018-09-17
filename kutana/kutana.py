@@ -1,6 +1,7 @@
-from kutana.executor import Executor
+from concurrent.futures import ProcessPoolExecutor
 from kutana.exceptions import ExitException
-from kutana.tools.structures import objdict
+from kutana.structures import objdict
+from kutana.executor import Executor
 import asyncio
 
 
@@ -12,6 +13,7 @@ class Kutana:
         self.executor = executor or Executor()
 
         self.loop = loop or asyncio.get_event_loop()
+        self.ppexecutor = ProcessPoolExecutor()
 
         self.running = True
         self.loops = []

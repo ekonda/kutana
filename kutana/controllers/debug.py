@@ -1,5 +1,5 @@
 from kutana.controllers.basic import BasicController
-from kutana.plugindata import Message
+from kutana.plugin import Message
 from kutana.exceptions import ExitException
 
 

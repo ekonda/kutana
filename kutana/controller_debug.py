@@ -1,4 +1,4 @@
-from kutana.controllers.basic import BasicController
+from kutana.controller_basic import BasicController
 from kutana.plugin import Message
 from kutana.exceptions import ExitException
 

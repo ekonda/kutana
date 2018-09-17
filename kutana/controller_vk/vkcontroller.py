@@ -1,9 +1,9 @@
-from kutana.controllers.vk.vkwrappers import (
+from kutana.controller_vk.vkwrappers import (
     WrapperUploadDoc, WrapperUploadPhoto, WrapperReply
 )
-from kutana.controllers.vk.converter import convert_to_message
-from kutana.controllers.vk.vkcontrollerdata import VKRequest, VKResponse
-from kutana.controllers.basic import BasicController
+from kutana.controller_vk.converter import convert_to_message
+from kutana.controller_vk.vkcontrollerdata import VKRequest, VKResponse
+from kutana.controller_basic import BasicController
 from kutana.plugin import Attachment
 from kutana.logger import logger
 import asyncio

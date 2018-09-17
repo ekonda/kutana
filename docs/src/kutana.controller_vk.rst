@@ -1,37 +1,37 @@
-kutana.controllers.vk package
+kutana.controller\_vk package
 =============================
 
 Submodules
 ----------
 
-kutana.controllers.vk.converter module
+kutana.controller\_vk.converter module
 --------------------------------------
 
-.. automodule:: kutana.controllers.vk.converter
+.. automodule:: kutana.controller_vk.converter
     :members:
     :undoc-members:
     :show-inheritance:
 
-kutana.controllers.vk.vkcontroller module
+kutana.controller\_vk.vkcontroller module
 -----------------------------------------
 
-.. automodule:: kutana.controllers.vk.vkcontroller
+.. automodule:: kutana.controller_vk.vkcontroller
     :members:
     :undoc-members:
     :show-inheritance:
 
-kutana.controllers.vk.vkcontrollerdata module
+kutana.controller\_vk.vkcontrollerdata module
 ---------------------------------------------
 
-.. automodule:: kutana.controllers.vk.vkcontrollerdata
+.. automodule:: kutana.controller_vk.vkcontrollerdata
     :members:
     :undoc-members:
     :show-inheritance:
 
-kutana.controllers.vk.vkwrappers module
+kutana.controller\_vk.vkwrappers module
 ---------------------------------------
 
-.. automodule:: kutana.controllers.vk.vkwrappers
+.. automodule:: kutana.controller_vk.vkwrappers
     :members:
     :undoc-members:
     :show-inheritance:
@@ -40,7 +40,7 @@ kutana.controllers.vk.vkwrappers module
 Module contents
 ---------------
 
-.. automodule:: kutana.controllers.vk
+.. automodule:: kutana.controller_vk
     :members:
     :undoc-members:
     :show-inheritance:

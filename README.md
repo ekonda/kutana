@@ -64,12 +64,5 @@ async def on_echo(message, attachments, env):
 ### Available controllers
 - VKController (vk.com groups)
 
-### Tasks
-Task|Priority
----|---
-Find and fix all current bugs | high
-Find and fix grammar and semantic errors | high
-Developing plugins | very low
-
 ### Authors
 - **Michael Krukov** - [@michaelkrukov](https://github.com/michaelkrukov)

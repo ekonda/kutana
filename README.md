@@ -14,7 +14,7 @@ The engine for developing bots for soc. networks, instant messengers and other s
 You can find repository with plugins for kutana [here](https://github.com/vk-brain/kutana-plugins).
 
 ### Installation
-- Download and install python (3.5.2+)
+- Download and install python (3.5.3+)
 
 ```
 https://www.python.org/downloads/

@@ -4,7 +4,7 @@ from kutana.controllers.vk.vkwrappers import (
 from kutana.controllers.vk.converter import convert_to_message
 from kutana.controllers.vk.vkcontrollerdata import VKRequest, VKResponse
 from kutana.controllers.basic import BasicController
-from kutana.plugindata import Attachment
+from kutana.plugin import Attachment
 from kutana.logger import logger
 import asyncio
 import aiohttp

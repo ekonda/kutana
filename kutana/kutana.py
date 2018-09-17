@@ -1,6 +1,6 @@
 from concurrent.futures import ProcessPoolExecutor
 from kutana.exceptions import ExitException
-from kutana.tools.structures import objdict
+from kutana.structures import objdict
 from kutana.executor import Executor
 import asyncio
 

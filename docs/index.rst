@@ -1,9 +1,9 @@
-Welcome to Kutana!
-==================
+Kutana
+======
 
 .. image:: _static/kutana-logo-512.png
     :alt: Kutana
-    :scale: 65%
+    :scale: 60%
 
 The engine for developing bots for soc. networks,
 instant messengers and other systems.
@@ -22,9 +22,6 @@ Usage
   should be a valid python modules with available `plugin`
   field with your plugin (`Plugin`).
 - Start engine.
-
-Example
-*******
 
 Example "run.py"
 

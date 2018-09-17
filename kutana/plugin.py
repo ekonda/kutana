@@ -1,6 +1,23 @@
-from kutana.tools.structures import objdict
+from kutana.structures import objdict
+from collections import namedtuple
 import shlex
 import re
+
+
+Message = namedtuple(
+    "Message",
+    "text attachments from_id peer_id raw_update"
+)
+
+Message.__doc__ = "Text message witch possible attachments."
+
+
+Attachment = namedtuple(
+    "Attachment",
+    "type id owner_id access_key link raw_attachment"
+)
+
+Attachment.__doc__ = "Detailed information about attachment."
 
 
 class Plugin():

@@ -1,10 +1,10 @@
-from kutana.controllers.vk.vkwrappers import (
+from kutana.controller_vk.vkwrappers import (
     WrapperUploadDoc, WrapperUploadPhoto, WrapperReply
 )
-from kutana.controllers.vk.converter import convert_to_message
-from kutana.controllers.vk.vkcontrollerdata import VKRequest, VKResponse
-from kutana.controllers.basic import BasicController
-from kutana.plugindata import Attachment
+from kutana.controller_vk.converter import convert_to_message
+from kutana.controller_vk.vkcontrollerdata import VKRequest, VKResponse
+from kutana.controller_basic import BasicController
+from kutana.plugin import Attachment
 from kutana.logger import logger
 import asyncio
 import aiohttp
@@ -239,7 +239,7 @@ class VKController(BasicController):
             result = await self.raw_request("execute", code=code)
 
             if result.error:
-                logger.error(result.kutana_error + result.response_error)
+                logger.error(result.errors)
 
             await ensure_future(self._set_results_to_requests(result, requests))
 
@@ -253,8 +253,7 @@ class VKController(BasicController):
             raise ValueError(
                 "Couldn't get longpoll information\n{}"
                 .format(
-                    longpoll.kutana_error +
-                    longpoll.response_error
+                    longpoll.errors
                 )
             )
 
@@ -305,8 +304,7 @@ class VKController(BasicController):
             raise ValueError(
                 "Couldn't get group information\n{}"
                 .format(
-                    current_group_s.kutana_error +
-                    current_group_s.response_error
+                    current_group_s.errors
                 )
             )
 

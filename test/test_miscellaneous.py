@@ -1,6 +1,6 @@
 from kutana import VKResponse, DebugController, Executor, load_plugins, \
     objdict, icedict, load_configuration
-import kutana.controllers.vk.converter as vk_converter
+import kutana.controller_vk.converter as vk_converter
 import unittest
 import asyncio
 

@@ -23,9 +23,6 @@ Usage
   field with your plugin (`Plugin`).
 - Start engine.
 
-Example
-*******
-
 Example "run.py"
 
 .. code-block:: python

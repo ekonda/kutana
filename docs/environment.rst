@@ -64,7 +64,8 @@ Other fields
 
   This field contains coroutine for uploading photos. It accepts "file"
   as first argument. It can be bytes, file or path to file. It also accepts
-  optional parameter "peer_id".
+  optional parameter "peer_id". You can pass uploaded photo as attachment to
+  reply or send_message
 
 - **upload_doc**
 
@@ -73,4 +74,5 @@ Other fields
   optional parameters "peer_id" and "filename".
 
   - :class:`.VKController`: also accepts optional argument "doctype" that can
-    be used to upload audio messages.
+    be used to upload audio messages. You can pass uploaded photo as
+    attachment to reply or send_message

@@ -10,7 +10,15 @@ def convert_to_attachment(attachment, attachment_type=None):
         body = attachment
 
     if "sizes" in body:
-        link = body["sizes"][-1]["url"]  # src
+        m_s_ind = -1
+        m_s_wid = 0
+
+        for i, size in enumerate(body["sizes"]):
+            if size["width"] > m_s_wid:
+                m_s_wid = size["width"]
+                m_s_ind = i
+
+        link = body["sizes"][m_s_ind]["url"]  # src
 
     elif "url" in body:
         link = body["url"]

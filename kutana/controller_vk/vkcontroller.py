@@ -74,7 +74,9 @@ class VKController(BasicController):
 
         try:
             async with self.session.post(url, data=data) as response:
-                raw_respose = await response.json()
+                raw_respose_text = await response.text()
+
+                raw_respose = json.loads(raw_respose_text)
 
         except Exception as e:
             return VKResponse(

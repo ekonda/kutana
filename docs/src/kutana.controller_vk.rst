@@ -20,14 +20,6 @@ kutana.controller\_vk.vkcontroller module
     :undoc-members:
     :show-inheritance:
 
-kutana.controller\_vk.vkcontrollerdata module
----------------------------------------------
-
-.. automodule:: kutana.controller_vk.vkcontrollerdata
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 kutana.controller\_vk.vkwrappers module
 ---------------------------------------
 

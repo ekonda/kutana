@@ -28,36 +28,27 @@ async def upload_file_to_vk(ctrl, upload_url, data):
     return upload_result
 
 
-class WrapperReply:
-    """Class-method for replying to messages."""
+def make_reply(ctrl, peer_id):
+    """Creates replying coroutine for controller and peer_id."""
 
-    __slots__ = ("ctrl", "peer_id")
-
-    def __init__(self, ctrl, peer_id):
-        self.ctrl = ctrl
-        self.peer_id = peer_id
-
-    async def __call__(self, message, attachment=None, sticker_id=None, payload=None, keyboard=None):
-        return await self.ctrl.send_message(
+    async def reply(message, attachment=None, sticker_id=None,
+            payload=None, keyboard=None):
+        return await ctrl.send_message(
             message,
-            self.peer_id,
+            peer_id,
             attachment,
             sticker_id,
             payload,
             keyboard
         )
 
+    return reply
 
-class WrapperUploadDoc:
-    """Class-method for uploading documents."""
 
-    __slots__ = ("ctrl", "peer_id")
+def make_upload_docs(ctrl, peer_id):
+    """Creates uploading docs coroutine for controller and peer_id."""
 
-    def __init__(self, ctrl, peer_id):
-        self.ctrl = ctrl
-        self.peer_id = peer_id
-
-    async def __call__(self, file, peer_id=None, group_id=None,
+    async def upload_doc(file, peer_id=None, group_id=None,
             doctype="doc", filename=None):
         """Pass peer_id=False to upload with docs.getWallUploadServer."""
 
@@ -65,21 +56,21 @@ class WrapperUploadDoc:
             filename = "file.png"
 
         if peer_id is None:
-            peer_id = self.peer_id
+            peer_id = peer_id
 
         if isinstance(file, str):
             with open(file, "rb") as o:
                 file = o.read()
 
         if peer_id:
-            upload_data = await self.ctrl.request(
+            upload_data = await ctrl.request(
                 "docs.getMessagesUploadServer", peer_id=peer_id, type=doctype
             )
 
         else:
-            upload_data = await self.ctrl.request(
+            upload_data = await ctrl.request(
                 "docs.getWallUploadServer",
-                group_id=group_id or self.ctrl.group_id
+                group_id=group_id or ctrl.group_id
             )
 
         if "upload_url" not in upload_data.response:
@@ -90,12 +81,12 @@ class WrapperUploadDoc:
         data = aiohttp.FormData()
         data.add_field("file", file, filename=filename)
 
-        upload_result = await upload_file_to_vk(self.ctrl, upload_url, data)
+        upload_result = await upload_file_to_vk(ctrl, upload_url, data)
 
         if not upload_result:
             return None
 
-        attachments = await self.ctrl.request(
+        attachments = await ctrl.request(
             "docs.save", **upload_result
         )
 
@@ -106,25 +97,21 @@ class WrapperUploadDoc:
             attachments.response[0], "doc"
         )
 
+    return upload_doc
 
-class WrapperUploadPhoto():
-    """Class-method for uploading documents."""
 
-    __slots__ = ("ctrl", "peer_id")
+def make_upload_photo(ctrl, peer_id):
+    """Creates uploading photo coroutine for controller and peer_id"""
 
-    def __init__(self, ctrl, peer_id):
-        self.ctrl = ctrl
-        self.peer_id = peer_id
-
-    async def __call__(self, file, peer_id=None):
+    async def upload_photo(file, peer_id=None):
         if peer_id is None:
-            peer_id = self.peer_id
+            peer_id = peer_id
 
         if isinstance(file, str):
             with open(file, "rb") as o:
                 file = o.read()
 
-        upload_data = await self.ctrl.request(
+        upload_data = await ctrl.request(
             "photos.getMessagesUploadServer", peer_id=peer_id
         )
 
@@ -136,12 +123,12 @@ class WrapperUploadPhoto():
         data = aiohttp.FormData()
         data.add_field("photo", file, filename="image.png")
 
-        upload_result = await upload_file_to_vk(self.ctrl, upload_url, data)
+        upload_result = await upload_file_to_vk(ctrl, upload_url, data)
 
         if not upload_result:
             return None
 
-        attachments = await self.ctrl.request(
+        attachments = await ctrl.request(
             "photos.saveMessagesPhoto", **upload_result
         )
 
@@ -151,3 +138,5 @@ class WrapperUploadPhoto():
         return convert_to_attachment(
             attachments.response[0], "photo"
         )
+
+    return upload_photo

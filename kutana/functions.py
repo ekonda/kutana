@@ -7,9 +7,6 @@ import os
 def get_path(rootpath, wantedpath):
     """Return path to wantedpath relative to rootpath."""
 
-    if wantedpath.startswith("/"):
-        wantedpath = wantedpath[1:]
-
     return os.path.join(
         os.path.dirname(rootpath),
         wantedpath

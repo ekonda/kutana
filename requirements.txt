@@ -1,2 +1,4 @@
 requests
+cchardet
 aiohttp
+aiodns

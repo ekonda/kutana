@@ -45,7 +45,7 @@ def make_reply(ctrl, peer_id):
     return reply
 
 
-def make_upload_docs(ctrl, peer_id):
+def make_upload_docs(ctrl, ori_peer_id):
     """Creates uploading docs coroutine for controller and peer_id."""
 
     async def upload_doc(file, peer_id=None, group_id=None,
@@ -56,7 +56,7 @@ def make_upload_docs(ctrl, peer_id):
             filename = "file.png"
 
         if peer_id is None:
-            peer_id = peer_id
+            peer_id = ori_peer_id
 
         if isinstance(file, str):
             with open(file, "rb") as o:
@@ -100,12 +100,12 @@ def make_upload_docs(ctrl, peer_id):
     return upload_doc
 
 
-def make_upload_photo(ctrl, peer_id):
+def make_upload_photo(ctrl, ori_peer_id):
     """Creates uploading photo coroutine for controller and peer_id"""
 
     async def upload_photo(file, peer_id=None):
         if peer_id is None:
-            peer_id = peer_id
+            peer_id = ori_peer_id
 
         if isinstance(file, str):
             with open(file, "rb") as o:

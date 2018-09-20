@@ -1,4 +1,4 @@
-from kutana import Executor, logger
+from kutana import logger
 from test_framework import KutanaTest
 import logging
 

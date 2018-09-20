@@ -1,14 +1,37 @@
-from kutana.controller_vk.vkwrappers import (
-    WrapperUploadDoc, WrapperUploadPhoto, WrapperReply
-)
+from kutana.controller_vk.vkwrappers import make_reply, make_upload_docs,\
+    make_upload_photo
 from kutana.controller_vk.converter import convert_to_message
-from kutana.controller_vk.vkcontrollerdata import VKRequest, VKResponse
 from kutana.controller_basic import BasicController
 from kutana.plugin import Attachment
 from kutana.logger import logger
+from collections import namedtuple
 import asyncio
 import aiohttp
 import json
+
+
+VKResponse = namedtuple(
+    "VKResponse",
+    "error errors response"
+)
+
+VKResponse.__doc__ = """ `error` is a boolean value indicating if error
+happened.
+
+`errors` contains array with happened errors.
+
+`response` contains result of reqeust if no errors happened.
+"""
+
+
+class VKRequest(asyncio.Future):
+    __slots__ = ("mthod", "kwargs")
+
+    def __init__(self, method, kwargs):
+        super().__init__()
+
+        self.method = method
+        self.kwargs = kwargs
 
 
 class VKController(BasicController):
@@ -74,7 +97,9 @@ class VKController(BasicController):
 
         try:
             async with self.session.post(url, data=data) as response:
-                raw_respose = await response.json()
+                raw_respose_text = await response.text()
+
+                raw_respose = json.loads(raw_respose_text)
 
         except Exception as e:
             return VKResponse(
@@ -163,12 +188,12 @@ class VKController(BasicController):
         peer_id = update["object"].get("peer_id")
 
         if update["type"] == "message_new":
-            eenv["reply"] = WrapperReply(self, peer_id)
+            eenv["reply"] = make_reply(self, peer_id)
 
         eenv["send_message"] = self.send_message
 
-        eenv["upload_photo"] = WrapperUploadPhoto(self, peer_id)
-        eenv["upload_doc"] = WrapperUploadDoc(self, peer_id)
+        eenv["upload_photo"] = make_upload_photo(self, peer_id)
+        eenv["upload_doc"] = make_upload_docs(self, peer_id)
 
         eenv["request"] = self.request
 

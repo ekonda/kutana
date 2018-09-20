@@ -67,6 +67,7 @@ Example "plugins/echo.py"
     :maxdepth: 2
     :caption: Elements
 
+    kutana
     plugin
     controller
     environment
@@ -75,7 +76,6 @@ Example "plugins/echo.py"
 
 .. toctree::
     :maxdepth: 1
-    :caption: Tips and tricks
 
     recipes
 

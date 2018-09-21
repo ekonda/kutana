@@ -1,6 +1,5 @@
 from kutana.structures import objdict
 from collections import namedtuple
-import shlex
 import re
 
 
@@ -318,7 +317,7 @@ class Plugin():
                     return
 
                 env["body"] = message.text[len(search_result):].strip()
-                env["args"] = shlex.split(env["body"])
+                env["args"] = env["body"].split()
                 env["prefix"] = message.text[:len(search_result)].strip()
 
                 comm = self._done_if_none(

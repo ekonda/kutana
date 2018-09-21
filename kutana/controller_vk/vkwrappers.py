@@ -33,14 +33,32 @@ def make_reply(ctrl, peer_id):
 
     async def reply(message, attachment=None, sticker_id=None,
             payload=None, keyboard=None):
-        return await ctrl.send_message(
+
+        if len(message) > 4096:
+            result = []
+
+            for i in range(0, len(message), 4096):
+                result.append(
+                    await ctrl.send_message(
+                        message[i : i + 4096],
+                        peer_id,
+                        attachment,
+                        sticker_id,
+                        payload,
+                        keyboard
+                    )
+                )
+
+            return result
+
+        return [await ctrl.send_message(
             message,
             peer_id,
             attachment,
             sticker_id,
             payload,
             keyboard
-        )
+        )]
 
     return reply
 

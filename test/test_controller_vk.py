@@ -1,4 +1,5 @@
 from kutana import Kutana, VKController, ExitException, Plugin
+from kutana.controller_vk.vkwrappers import make_reply
 import unittest
 import requests
 import logging
@@ -120,6 +121,23 @@ class TestControllerVk(unittest.TestCase):
         with self.assertRaises(ValueError):
             VKController("")
 
+    def test_vk_reply_message(self):
+        messages = []
+
+        class FakeController:
+            async def send_message(self, message, *args):
+                messages.append(message)
+
+        reply = make_reply(FakeController(), 0)
+
+        self.kutana.loop.run_until_complete(reply("abc"))
+        self.kutana.loop.run_until_complete(reply("abc" * 4096))
+
+        self.assertEqual(messages[0], "abc")
+        self.assertEqual(messages[1], ("abc" * 4096)[:4096])
+
+        self.assertEqual(len(messages), 4)
+
     def test_vk_controller_raw_request(self):
         async def test():
             async with VKController("token") as ctrl:
@@ -199,19 +217,32 @@ class TestControllerVk(unittest.TestCase):
 
             # Test sending
             a_image = await env.upload_photo("test/test_assets/author.png")
-            a_image = await env.upload_photo("test/test_assets/author.png", peer_id=False)
-            a_audio = await env.upload_doc("test/test_assets/girl.ogg", doctype="audio_message", filename="file.ogg")
+
+            a_image = await env.upload_photo(
+                "test/test_assets/author.png", peer_id=False
+            )
+
+            a_audio = await env.upload_doc(
+                "test/test_assets/girl.ogg",
+                doctype="audio_message",
+                filename="file.ogg"
+            )
 
             self.assertTrue(a_image.id)
             self.assertTrue(a_audio.id)
 
-            resp = await env.reply("Спасибо.", attachment=a_image)
+            resps = await env.reply("Спасибо.", attachment=a_image)
 
-            self.assertTrue(resp.response)
+            self.assertTrue(resps[0].response)
 
-            resp = await env.request("messages.delete", message_ids=str(resp.response), delete_for_all=1)
+            for resp in resps:
+                resp = await env.request(
+                    "messages.delete",
+                    message_ids=str(resp.response),
+                    delete_for_all=1
+                )
 
-            self.assertTrue(resp.response)
+                self.assertTrue(resp.response)
 
             # Test failed request
             resp = await env.request("messages.send")

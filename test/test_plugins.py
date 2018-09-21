@@ -77,10 +77,10 @@ class TestPlugins(KutanaTest):
         self.assertEqual(self.answers, [2, 3, 1] * 2)  # kutana's startup too
 
     def test_args_on_startswith_text(self):
-        queue = ["pr a b c", "pr a \"b c\"", "pr a \"\\\"\" b c"]
+        queue = ["pr a b c", "pr a \"b c\"", "pr ab c"]
 
         queue_answer = [
-            ["a", "b", "c"], ["a", "b c"], ["a", "\"", "b", "c"]
+            ["a", "b", "c"], ["a", "\"b", "c\""], ["ab", "c"]
         ]
 
         with self.debug_controller(queue) as plugin:

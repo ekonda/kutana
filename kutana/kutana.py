@@ -13,9 +13,7 @@ class Kutana:
 
         self.loop = loop or asyncio.get_event_loop()
 
-        self.storage = {
-            "controllers": {}
-        }
+        self.storage = {}
 
         self.running = True
         self.loops = []
@@ -23,19 +21,8 @@ class Kutana:
         self.prcss = []
         self.gathered_loops = None
 
-    def add_controller(self, controller, unique_name=None):
-        """Adding controller to engine with target unique name if specified.
-        If unique name is not specified pattern "{type}__{controllers_amount}"
-        will be used.
-        """
-
-        if unique_name is None:
-            unique_name = "{}__{}".format(
-                controller.type,
-                len(self.controllers)
-            )
-
-        self.storage["controllers"][unique_name] = controller
+    def add_controller(self, controller):
+        """Adding controller to engine."""
 
         self.controllers.append(controller)
 

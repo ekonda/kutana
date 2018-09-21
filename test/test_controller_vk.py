@@ -1,5 +1,4 @@
-from kutana import Kutana, VKController, ExitException, Plugin, \
-    logger
+from kutana import Kutana, VKController, ExitException, Plugin
 import unittest
 import requests
 import logging

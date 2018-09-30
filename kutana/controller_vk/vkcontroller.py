@@ -25,8 +25,6 @@ happened.
 
 
 class VKRequest(asyncio.Future):
-    __slots__ = ("mthod", "kwargs")
-
     def __init__(self, method, kwargs):
         super().__init__()
 
@@ -152,7 +150,8 @@ class VKController(BasicController):
             )
 
     async def send_message(self, message, peer_id, attachment=None,
-            sticker_id=None, payload=None, keyboard=None):
+            sticker_id=None, payload=None, keyboard=None,
+            forward_messages=None):
         """Send message to target peer_id wiith parameters."""
 
         if isinstance(attachment, Attachment):
@@ -180,8 +179,9 @@ class VKController(BasicController):
             peer_id=peer_id,
             attachment=attachment,
             sticker_id=sticker_id,
-            payload=sticker_id,
-            keyboard=keyboard
+            payload=payload,
+            keyboard=keyboard,
+            forward_messages=forward_messages
         )
 
     async def setup_env(self, update, eenv):

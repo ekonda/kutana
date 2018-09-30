@@ -39,8 +39,8 @@ executor's environment (eenv) with any controllers.
   "message" as first argument. It also accepts optional
   argument "attachment" (can be list of :class:`.Attachment`).
 
-  - :class:`.VKController`: also accepts "sticker_id", "payload" and
-    "keyboard".
+  - :class:`.VKController`: also accepts "sticker_id", "payload",
+    "forward_messages" and "keyboard".
 
 Other fields
 ^^^^^^^^^^^^
@@ -57,8 +57,8 @@ Other fields
   If accepts "message" and "peer_id" as first arguments. It also accepts
   optional argument "attachment" (can be list of :class:`.Attachment`).
 
-  - :class:`.VKController`: also accepts "sticker_id", "payload" and
-    "keyboard".
+  - :class:`.VKController`: also accepts "sticker_id", "payload",
+    "forward_messages" and "keyboard".
 
 - **upload_photo**
 

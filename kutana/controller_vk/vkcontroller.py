@@ -152,7 +152,7 @@ class VKController(BasicController):
     async def send_message(self, message, peer_id, attachment=None,
             sticker_id=None, payload=None, keyboard=None,
             forward_messages=None):
-        """Send message to target peer_id wiith parameters."""
+        """Send message to target peer_id with parameters."""
 
         if isinstance(attachment, Attachment):
             attachment = [attachment]

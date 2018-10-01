@@ -96,6 +96,9 @@ class Kutana:
         except (KeyboardInterrupt, ExitException):
             pass
 
+        finally:
+            self.running = False
+
         self.loop.run_until_complete(self.dispose())
 
     async def dispose(self):

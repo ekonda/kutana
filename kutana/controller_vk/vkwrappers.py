@@ -52,7 +52,7 @@ def make_reply(ctrl, peer_id):
 
             return result
 
-        return [await ctrl.send_message(
+        return (await ctrl.send_message(
             message,
             peer_id,
             attachment,
@@ -60,7 +60,7 @@ def make_reply(ctrl, peer_id):
             payload,
             keyboard,
             forward_messages
-        )]
+        ),)
 
     return reply
 

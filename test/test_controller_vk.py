@@ -153,6 +153,8 @@ class TestControllerVk(unittest.TestCase):
         async def test():
             ctrl = VKController(self.conf["vk_token"])
 
+            time.sleep(0.4)  # cool down vkapi
+
             async with ctrl:
                 results.append(await ctrl.raw_request("users.get"))
 

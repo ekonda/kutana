@@ -31,7 +31,8 @@ python -m pip install kutana
 - Register your plugins in the executor. You can import plugin from folders with function `load_plugins`. Files should be a valid python modules with available `plugin` field with your plugin (`Plugin`).
 - Start engine.
 
-Example `run.py`
+Example `run.py` (token for VKController is loaded from the file
+"configuration.json" and plugins are loaded from folder "plugins/")
 ```py
 from Kutana import *
 
@@ -49,6 +50,7 @@ kutana.executor.register_plugins(*load_plugins("plugins/"))
 # Run engine
 kutana.run()
 ```
+
 
 Example `plugins/echo.py`
 ```py

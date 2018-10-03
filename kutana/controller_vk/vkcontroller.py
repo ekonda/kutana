@@ -298,7 +298,7 @@ class VKController(BasicController):
                 response = await resp.json()
 
         except Exception:
-            return []
+            return ()
 
         if "ts" in response:
             self.longpoll["ts"] = response["ts"]
@@ -307,7 +307,7 @@ class VKController(BasicController):
             if response["failed"] in (2, 3, 4):
                 await self.update_longpoll_data()
 
-            return []
+            return ()
 
         updates = []
 

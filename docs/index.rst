@@ -23,7 +23,8 @@ Usage
   field with your plugin (`Plugin`).
 - Start engine.
 
-Example "run.py"
+Example `run.py` (token for VKController is loaded from the file
+"configuration.json" and plugins are loaded from folder "plugins/")
 
 .. code-block:: python
 

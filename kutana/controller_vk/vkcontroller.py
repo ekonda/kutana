@@ -82,9 +82,6 @@ class VKController(BasicController):
     async def raw_request(self, method, **kwargs):
         """Perform api request to vk.com"""
 
-        if not self.session:
-            self.session = aiohttp.ClientSession()
-
         url = self.api_url.format(method)
 
         data = {}

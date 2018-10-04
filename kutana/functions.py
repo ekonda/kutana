@@ -1,4 +1,5 @@
 from kutana.logger import logger
+from os.path import isdir, join, dirname
 import importlib.util
 import json
 import os
@@ -7,8 +8,8 @@ import os
 def get_path(rootpath, wantedpath):
     """Return path to wantedpath relative to rootpath."""
 
-    return os.path.join(
-        os.path.dirname(rootpath),
+    return join(
+        dirname(rootpath),
         wantedpath
     )
 
@@ -31,23 +32,25 @@ def import_plugin(name, path):
 
     return module.plugin
 
-def load_plugins(plugins_folder, verbose=True):
+def load_plugins(folder, verbose=True):
     """Import all plugins from target folder recursively."""
 
     found_plugins = []
 
-    for pack in os.walk(plugins_folder):
-        for filename in pack[2]:
-            if "_" == filename[:1] or ".py" != filename[-3:]:
-                continue
+    for name in os.listdir(folder):
+        path = join(folder, name)
 
-            path_to_module = os.path.join(pack[0], filename)
+        if isdir(path):
+            found_plugins += load_plugins(path)
 
-            if verbose:
-                logger.info("Loading plugin \"{}\"".format(path_to_module))
+            continue
 
-            found_plugins.append(
-                import_plugin(path_to_module, path_to_module)
-            )
+        if "_" == name[:1] or ".py" != name[-3:]:
+            continue
+
+        if verbose:
+            logger.info("Loading plugin \"{}\"".format(path))
+
+        found_plugins.append(import_plugin(path, path))
 
     return found_plugins

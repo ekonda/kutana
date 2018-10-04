@@ -3,6 +3,7 @@ from os.path import isdir, join, dirname
 import importlib.util
 import json
 import os
+import re
 
 
 def get_path(rootpath, wantedpath):
@@ -24,15 +25,20 @@ def load_configuration(target, path):
 
 
 def import_plugin(name, path):
-    """Import plugin from specified path with specified name."""
+    """Import plugin from specified path with specified name.
+    Return imported plugin or None if not plugin found.
+    """
 
     spec = importlib.util.spec_from_file_location(name, path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
 
-    return module.plugin
+    if hasattr(module, "plugin"):
+        return module.plugin
 
-def load_plugins(folder, verbose=True):
+    return None
+
+def load_plugins(folder):
     """Import all plugins from target folder recursively."""
 
     found_plugins = []
@@ -45,12 +51,17 @@ def load_plugins(folder, verbose=True):
 
             continue
 
-        if "_" == name[:1] or ".py" != name[-3:]:
+        if not re.match(r"^[^_].*\.py$", name):
             continue
 
-        if verbose:
-            logger.info("Loading plugin \"{}\"".format(path))
+        plugin = import_plugin(path, path)
 
-        found_plugins.append(import_plugin(path, path))
+        if plugin:
+            found_plugins.append(plugin)
+
+            logger.info("Loaded plugin \"{}\"".format(path))
+
+        else:
+            logger.warning("No plugin found in \"{}\"".format(path))
 
     return found_plugins

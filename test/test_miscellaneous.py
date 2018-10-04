@@ -47,16 +47,27 @@ class TestMiscellaneous(unittest.TestCase):
         with self.assertRaises(TypeError):
             a["a"] = 10
 
-    def test_functions(self):
+    def test_load_plugins(self):
         loaded_plugins = load_plugins("test/test_plugins/")
 
-        self.assertEqual(len(loaded_plugins), 1)
+        self.assertEqual(len(loaded_plugins), 2)
         self.assertEqual(loaded_plugins[0].name, "Memory")
+        self.assertEqual(loaded_plugins[1].name, "My file")
 
         executor = Executor()
         executor.register_plugins(*loaded_plugins)
 
         loop = asyncio.get_event_loop()
+
+        loop.run_until_complete(
+            executor(
+                {
+                    "kutana": self, "update_type": "startup",
+                    "registered_plugins": executor.registered_plugins
+                },
+                objdict(ctrl_type="kutana")
+            )
+        )
 
         loop.run_until_complete(
             executor(
@@ -68,6 +79,7 @@ class TestMiscellaneous(unittest.TestCase):
         )
 
         self.assertEqual(loaded_plugins[0].memory, "message")
+        self.assertEqual(loaded_plugins[1].my_file, ":)")
 
     def test_load_configuration(self):
         value = load_configuration("key", "test/test_assets/sample.json")

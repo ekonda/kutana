@@ -1,17 +1,17 @@
 ![Kutana logo](docs/_static/kutana-logo-512.png)
 
 [![Documentation Status](https://readthedocs.org/projects/kutana/badge/?version=latest)](https://kutana.readthedocs.io/en/latest/?badge=latest)
-[![Build Status](https://travis-ci.com/vk-brain/kutana.svg?branch=master)](https://travis-ci.com/vk-brain/kutana)
-[![CodeFactor](https://www.codefactor.io/repository/github/vk-brain/kutana/badge)](https://www.codefactor.io/repository/github/vk-brain/kutana)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/3119bfb791604b9db38e8e7a13e1d415)](https://www.codacy.com/app/michaelkrukov/kutana?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=vk-brain/kutana&amp;utm_campaign=Badge_Grade)
-[![Coverage Status](https://coveralls.io/repos/github/vk-brain/kutana/badge.svg?branch=master)](https://coveralls.io/github/vk-brain/kutana?branch=master)
-[![Total alerts](https://img.shields.io/lgtm/alerts/g/vk-brain/kutana.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/vk-brain/kutana/alerts)
+[![Build Status](https://travis-ci.com/ekonda/kutana.svg?branch=master)](https://travis-ci.com/ekonda/kutana)
+[![CodeFactor](https://www.codefactor.io/repository/github/ekonda/kutana/badge)](https://www.codefactor.io/repository/github/ekonda/kutana)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/3119bfb791604b9db38e8e7a13e1d415)](https://www.codacy.com/app/michaelkrukov/kutana?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=ekonda/kutana&amp;utm_campaign=Badge_Grade)
+[![Coverage Status](https://coveralls.io/repos/github/ekonda/kutana/badge.svg?branch=master)](https://coveralls.io/github/ekonda/kutana?branch=master)
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/ekonda/kutana.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/ekonda/kutana/alerts)
 [![PyPI version](https://badge.fury.io/py/kutana.svg)](https://badge.fury.io/py/kutana)
-[![Plugins repo](https://img.shields.io/badge/plugins-repo-green.svg)](https://github.com/vk-brain/kutana-plugins)
+[![Plugins repo](https://img.shields.io/badge/plugins-repo-green.svg)](https://github.com/ekonda/kutana-plugins)
 
 # Kutana
 The engine for developing bots for soc. networks, instant messengers and other systems.
-You can find repository with plugins for kutana [here](https://github.com/vk-brain/kutana-plugins).
+You can find repository with plugins for kutana [here](https://github.com/ekonda/kutana-plugins).
 
 ### Installation
 - Download and install python (3.5.3+)

@@ -198,7 +198,7 @@ class VKController(BasicController):
         return await convert_to_message(update, eenv)
 
     @staticmethod
-    async def _set_results_to_requests(result, requests):
+    def _set_results_to_requests(result, requests):
         err_no = 0
 
         if result.errors and result.errors[-1][0] == "VK_exe":
@@ -263,7 +263,7 @@ class VKController(BasicController):
             if result.error:
                 logger.error(result.errors)
 
-            await ensure_future(self._set_results_to_requests(result, requests))
+            self._set_results_to_requests(result, requests)
 
     async def get_background_coroutines(self, ensure_future):
         return (self._msg_exec_loop(ensure_future),)

@@ -10,7 +10,7 @@ class DebugController(BasicController):
 
     def __init__(self, *texts):
         self.replies = []
-        self.replies_others = {}
+        self.replies_all = {}
 
         self.queue = list(texts)
         self.dead = False
@@ -19,39 +19,45 @@ class DebugController(BasicController):
         return thing
 
     async def make_reply(self, update):
+        if isinstance(update, str):
+            sender_id = 1
+
+        else:
+            sender_id = update[0]
+
         async def reply(message, attachment=None, **kwargs):
-            if isinstance(update, (list, tuple)) and len(update) == 2:
-                peer_id = update[0]
-
-            else:
-                peer_id = 1
-
-            await self.send_message(message, peer_id=peer_id, attachment=attachment)
+            await self.send_message(
+                message, peer_id=sender_id, attachment=attachment
+            )
 
         return reply
 
-    async def send_message(self, message, peer_id=None, attachment=None,
+    async def send_message(self, message=None, peer_id=None, attachment=None,
             **kwargs):
-        if peer_id and peer_id != 1:
-            if peer_id in self.replies_others:
-                t = self.replies_others[peer_id]
 
-            else:
-                t = []
-                self.replies_others[peer_id] = t
+        sender_id = peer_id if peer_id is not None else 1
 
-        else:
-            t = self.replies
+        array = self.replies_all.get(sender_id, [])
 
         if message:
-            t.append(message)
+            array.append(message)
+
+            if sender_id == 1:
+                self.replies.append(message)
 
         if attachment:
             if not isinstance(attachment, (list, tuple)):
                 attachment = [attachment]
 
-            for at in attachment:
-                t.append(at)
+            array += attachment
+
+            if sender_id == 1:
+                self.replies += attachment
+
+        else:
+            attachment = []
+
+        self.replies_all[sender_id] = array
 
     async def setup_env(self, update, eenv):
         async def return_none(*args, **kwargs):
@@ -67,13 +73,17 @@ class DebugController(BasicController):
 
     @staticmethod
     async def convert_to_message(update, eenv):
-        if isinstance(update, (list, tuple)) and len(update) == 2:
+        # update = (sender_id, message)
+        # or
+        # update = (message_from_user_with_id_1)
+
+        if isinstance(update, str):
             return Message(
-                update[1], (), update[0], update[0], update
+                str(update), (), 1, 1, (1, str(update))
             )
 
         return Message(
-            str(update), (), 1, 1, (1, str(update))
+            update[1], (), update[0], update[0], update
         )
 
     async def get_background_coroutines(self, ensure_future):

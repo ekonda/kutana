@@ -38,14 +38,14 @@ class Kutana:
 
         await self.executor(update, eenv)
 
-    async def ensure_future(self, awaitable):
+    def ensure_future(self, awaitable):
         """Shurtcut for asyncio.ensure_loop with curretn loop."""
 
-        _awaitable =  asyncio.ensure_future(awaitable, loop=self.loop)
+        future = asyncio.ensure_future(awaitable, loop=self.loop)
 
-        self.prcss.append(_awaitable)
+        self.prcss.append(future)
 
-        return _awaitable
+        return future
 
     async def loop_for_controller(self, ctrl):
         """Receive and process updated from target controller."""
@@ -54,7 +54,7 @@ class Kutana:
 
         while self.running:
             for update in await receiver():
-                await self.ensure_future(
+                self.ensure_future(
                     self.process_update(
                         ctrl, update
                     )

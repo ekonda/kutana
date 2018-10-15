@@ -32,7 +32,7 @@ def make_reply(ctrl, peer_id):
     """Creates replying coroutine for controller and peer_id."""
 
     async def reply(message, attachment=None, sticker_id=None,
-            payload=None, keyboard=None):
+            payload=None, keyboard=None, forward_messages=None):
 
         if len(message) > 4096:
             result = []
@@ -45,20 +45,22 @@ def make_reply(ctrl, peer_id):
                         attachment,
                         sticker_id,
                         payload,
-                        keyboard
+                        keyboard,
+                        forward_messages
                     )
                 )
 
             return result
 
-        return [await ctrl.send_message(
+        return (await ctrl.send_message(
             message,
             peer_id,
             attachment,
             sticker_id,
             payload,
-            keyboard
-        )]
+            keyboard,
+            forward_messages
+        ),)
 
     return reply
 

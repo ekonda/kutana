@@ -1,10 +1,13 @@
 from kutana import Plugin
 
+
 plugin = Plugin(name="Statistics")
+
 
 @plugin.on_startup()
 async def on_startup(kutana, update):
     plugin.stats = {}
+
 
 @plugin.on_has_text(early=True)
 async def on_any_message(message, attachments, env):
@@ -15,6 +18,7 @@ async def on_any_message(message, attachments, env):
     plugin.stats[message.from_id] = new_words_count
 
     return "GOON"
+
 
 @plugin.on_text("statistics")
 async def on_show_statistics(message, attachments, env):

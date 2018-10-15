@@ -153,6 +153,8 @@ class TestControllerVk(unittest.TestCase):
         async def test():
             ctrl = VKController(self.conf["vk_token"])
 
+            time.sleep(1)  # cool down vkapi
+
             async with ctrl:
                 results.append(await ctrl.raw_request("users.get"))
 
@@ -221,6 +223,8 @@ class TestControllerVk(unittest.TestCase):
             a_image = await env.upload_photo(
                 "test/test_assets/author.png", peer_id=False
             )
+
+            time.sleep(0.34)  # cool down vkapi
 
             a_audio = await env.upload_doc(
                 "test/test_assets/girl.ogg",

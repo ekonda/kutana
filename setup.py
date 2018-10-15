@@ -10,7 +10,7 @@ import os
 import sys
 
 
-VERSION = "0.5.0"
+VERSION = "1.0.0"
 
 
 class VerifyVersionCommand(install):
@@ -41,7 +41,7 @@ setuptools.setup(
     description="The engine for developing bots for soc. networks, instant messengers and other systems.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/vk-brain/kutana",
+    url="https://github.com/ekonda/kutana",
     packages=setuptools.find_packages(),
     install_requires=[
         "requests==2.19",

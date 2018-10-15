@@ -11,7 +11,7 @@ class TestExecutors(KutanaTest):
         logger.setLevel(logging.ERROR)
 
     def test_just_debug(self):
-        self.target = ["message"] * 5
+        self.target = ["message"]
 
         with self.debug_controller(self.target):
 
@@ -66,7 +66,7 @@ class TestExecutors(KutanaTest):
     def test_exception(self):
         self.called = 0
 
-        with self.debug_controller(["message"] * 5):
+        with self.debug_controller(["message"]):
 
             async def new_update(update, eenv):
                 if eenv.ctrl_type == "debug":
@@ -89,7 +89,7 @@ class TestExecutors(KutanaTest):
 
             logger.setLevel(logging.CRITICAL)
 
-        self.assertEqual(self.called, 5)
+        self.assertEqual(self.called, 1)
 
     def test_default_exception_handle(self):
         self.called = 0
@@ -98,7 +98,7 @@ class TestExecutors(KutanaTest):
             self.assertEqual(mes, "Произошла ошибка! Приносим свои извинения.")
             self.called += 1
 
-        with self.debug_controller(["message"] * 5):
+        with self.debug_controller(["message"]):
 
             async def new_update(update, eenv):
                 if eenv.ctrl_type == "debug":
@@ -109,11 +109,11 @@ class TestExecutors(KutanaTest):
 
             logger.setLevel(logging.CRITICAL)
 
-        self.assertEqual(self.called, 5)
+        self.assertEqual(self.called, 1)
 
 
     def test_two_debug(self):
-        self.target = ["message"] * 5
+        self.target = ["message"]
         self.called = 0
 
         with self.debug_controller(self.target):
@@ -129,10 +129,10 @@ class TestExecutors(KutanaTest):
 
                 self.kutana.executor.register(new_update)
 
-        self.assertEqual(self.called, 10)
+        self.assertEqual(self.called, 2)
 
     def test_two_callbacks_and_two_debugs(self):
-            self.target = ["message"] * 5
+            self.target = ["message"]
             self.called = 0
 
             with self.debug_controller(self.target):
@@ -152,10 +152,10 @@ class TestExecutors(KutanaTest):
                     self.kutana.executor.register(new_update_1)
                     self.kutana.executor.register(new_update_2)
 
-            self.assertEqual(self.called, 20)
+            self.assertEqual(self.called, 4)
 
     def test_decorate_or_call(self):
-        self.target = ["message"] * 5
+        self.target = ["message"]
 
         with self.debug_controller(self.target):
             self.target *= 2

@@ -13,9 +13,9 @@ class TestPlugins(KutanaTest):
         plugin = Plugin(priority=1000)
 
     def test_echo_plugin(self):
-        queue = ["message", "echo message", "echonotecho"] * 5
+        queue = ["message", "echo message", "echonotecho"]
 
-        self.target = ["message"] * 5
+        self.target = ["message"]
 
         with self.debug_controller(queue) as plugin:
             async def on_echo(message, attachments, env):
@@ -94,7 +94,7 @@ class TestPlugins(KutanaTest):
     def test_plugins_callbacks_done(self):
         self.counter = 0
 
-        with self.debug_controller(["123"] * 5) as plugin:
+        with self.debug_controller(["123"]) as plugin:
 
             async def on_has_text(message, attachments, env):
                 self.counter += 1
@@ -108,12 +108,12 @@ class TestPlugins(KutanaTest):
 
             plugin.on_has_text("123")(on_has_text_2)
 
-        self.assertEqual(self.counter, 5)
+        self.assertEqual(self.counter, 1)
 
     def test_plugins_callbacks_not_done(self):
         self.counter = 0
 
-        with self.debug_controller(["123"] * 5) as plugin:
+        with self.debug_controller(["123"]) as plugin:
 
             async def on_has_text(message, attachments, env):
                 self.counter += 1
@@ -127,12 +127,12 @@ class TestPlugins(KutanaTest):
 
             plugin.on_has_text("123")(on_has_text_2)
 
-        self.assertEqual(self.counter, 10)
+        self.assertEqual(self.counter, 2)
 
     def test_multiple_plugins(self):
         self.counter = 0
 
-        with self.debug_controller(["msg"] * 2):
+        with self.debug_controller(["message"]):
             self.plugins.append(Plugin())
             self.plugins.append(Plugin())
 
@@ -147,12 +147,12 @@ class TestPlugins(KutanaTest):
             for pl in self.plugins:
                 pl.on_has_text()(on_has_text)
 
-        self.assertEqual(self.counter, 6)
+        self.assertEqual(self.counter, 3)  # with startup update
 
     def test_early_callbacks(self):
         self.answers = []
 
-        with self.debug_controller(["msg"]):
+        with self.debug_controller(["message"]):
             self.plugins.append(Plugin())
 
             async def on_has_text_early(message, attachments, env):
@@ -173,7 +173,7 @@ class TestPlugins(KutanaTest):
         self.disposed = 0
         self.counter = 0
 
-        with self.debug_controller(["123"] * 5 + ["321"]) as plugin:
+        with self.debug_controller(["123", "321"]) as plugin:
             async def on_123(message, attachments, env):
                 self.assertEqual(message.text, "123")
                 self.counter += 1
@@ -199,11 +199,11 @@ class TestPlugins(KutanaTest):
 
             plugin.on_dispose()(on_dispose)
 
-        self.assertEqual(self.counter, 6)
+        self.assertEqual(self.counter, 2)
         self.assertEqual(self.disposed, 1)
 
     def test_environment_reply(self):
-        self.target = ["echo 123"]
+        self.target = ["echo message"]
 
         with self.debug_controller(self.target) as plugin:
             async def on_echo(message, attachments, env):
@@ -213,7 +213,7 @@ class TestPlugins(KutanaTest):
             plugin.on_startswith_text("echo")(on_echo)
 
     def test_environments(self):
-        self.target = ["echo 123"]
+        self.target = ["echo message"]
 
         with self.debug_controller(self.target):
             plugin1 = Plugin()
@@ -239,7 +239,7 @@ class TestPlugins(KutanaTest):
                 self.assertIsNone(env.get("A"))
                 self.assertEqual(env.eenv.get("B"), "B")
 
-                await env.reply("echo 123")
+                await env.reply("echo message")
 
             plugin2.on_has_text()(do_check)
 

@@ -10,3 +10,7 @@ apidoc:
 
 test:
 	$(python) -m unittest discover -s test
+
+cov:
+	coverage run -m unittest discover -s test
+	coverage report --include=kutana/*

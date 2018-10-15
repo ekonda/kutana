@@ -25,8 +25,6 @@ happened.
 
 
 class VKRequest(asyncio.Future):
-    __slots__ = ("mthod", "kwargs")
-
     def __init__(self, method, kwargs):
         super().__init__()
 
@@ -83,9 +81,6 @@ class VKController(BasicController):
 
     async def raw_request(self, method, **kwargs):
         """Perform api request to vk.com"""
-
-        if not self.session:
-            self.session = aiohttp.ClientSession()
 
         url = self.api_url.format(method)
 
@@ -152,8 +147,9 @@ class VKController(BasicController):
             )
 
     async def send_message(self, message, peer_id, attachment=None,
-            sticker_id=None, payload=None, keyboard=None):
-        """Send message to target peer_id wiith parameters."""
+            sticker_id=None, payload=None, keyboard=None,
+            forward_messages=None):
+        """Send message to target peer_id with parameters."""
 
         if isinstance(attachment, Attachment):
             attachment = [attachment]
@@ -180,8 +176,9 @@ class VKController(BasicController):
             peer_id=peer_id,
             attachment=attachment,
             sticker_id=sticker_id,
-            payload=sticker_id,
-            keyboard=keyboard
+            payload=payload,
+            keyboard=keyboard,
+            forward_messages=forward_messages
         )
 
     async def setup_env(self, update, eenv):
@@ -201,7 +198,7 @@ class VKController(BasicController):
         return await convert_to_message(update, eenv)
 
     @staticmethod
-    async def _set_results_to_requests(result, requests):
+    def _set_results_to_requests(result, requests):
         err_no = 0
 
         if result.errors and result.errors[-1][0] == "VK_exe":
@@ -266,7 +263,7 @@ class VKController(BasicController):
             if result.error:
                 logger.error(result.errors)
 
-            await ensure_future(self._set_results_to_requests(result, requests))
+            self._set_results_to_requests(result, requests)
 
     async def get_background_coroutines(self, ensure_future):
         return (self._msg_exec_loop(ensure_future),)
@@ -298,7 +295,7 @@ class VKController(BasicController):
                 response = await resp.json()
 
         except Exception:
-            return []
+            return ()
 
         if "ts" in response:
             self.longpoll["ts"] = response["ts"]
@@ -307,7 +304,7 @@ class VKController(BasicController):
             if response["failed"] in (2, 3, 4):
                 await self.update_longpoll_data()
 
-            return []
+            return ()
 
         updates = []
 

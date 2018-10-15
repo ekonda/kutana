@@ -39,6 +39,40 @@ Check for prefix
         # tell executor to keep processing current update
         return "GOON"
 
+Use controller on startup
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: python
+
+    @plugin.on_startup()
+    async def on_startup(update, env):
+        controller = update["kutana"].controllers[-1]
+
+        # create environment for your execution
+        fake_env = objdict()
+
+        # setup environment with fake update
+        await controller.setup_env(
+            {"object": {}, "type": "fake"},
+            fake_env
+        )
+
+        # !!! Note that on startup update no control
+        # !!! looops are runnning.
+        # !!! That means just calling and awaiting from
+        # !!! coroutines like send_message will NOT work.
+        #
+        # !!! You sould use update["kutana"].ensure_future
+
+        update["kutana"].ensure_future(
+            fake_env.send_message(
+                "Hello world!",
+                peer_id=87641997
+            )
+        )
+
+        # etc.
+
 Initiate with controller
 ^^^^^^^^^^^^^^^^^^^^^^^^
 

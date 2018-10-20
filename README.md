@@ -34,7 +34,7 @@ python -m pip install kutana
 Example `run.py` (token for VKController is loaded from the file
 "configuration.json" and plugins are loaded from folder "plugins/")
 ```py
-from Kutana import *
+from kutana import *
 
 # Create engine
 kutana = Kutana()

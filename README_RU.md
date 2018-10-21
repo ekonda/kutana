@@ -12,7 +12,7 @@
 [English](README.md) | Русский
 
 # Kutana
-Движок разработки ботов для соц. сетей, мессенджеров and other systems.
+Движок разработки ботов для соц. сетей, мессенджеров и других систем.
 Вы можете найти репозиторий с плагинами для kutana [здесь](https://github.com/ekonda/kutana-plugins).
 
 ### Установка
@@ -30,31 +30,31 @@ python -m pip install kutana
 
 ### Использование
 - Создайте движок `Kutana` и добавьте контроллеры.
-- Зарегистрируйте ваши плагины в Исполнителе. Вы можете импортировать плагин из папок with функцией `load_plugins`. Файлы должны быть Рython модулями с доступной `plugin`  with your plugin (`Plugin`).
-- Start engine.
+- Зарегистрируйте ваши плагины в Исполнителе. Вы можете импортировать плагин из папок с помощью функциии `load_plugins`. Файлы должны быть Рython модулями с доступным `plugin`  и вашим плагином (`Plugin`).
+- Запустите движок.
 
-Example `run.py` (token for VKController is loaded from the file
-"configuration.json" and plugins are loaded from folder "plugins/")
+Пример `run.py` (Токен для VKController будет загружен из файла
+"configuration.json" и плагины будут загружены из папки "plugins/")
 ```py
 from kutana import *
 
-# Create engine
+# Создание движка
 kutana = Kutana()
 
-# Add VKController to engine
+# Добавление VKController в движок
 kutana.add_controller(
     VKController(load_configuration("vk_token", "configuration.json"))
 )
 
-# Load and register plugins
+# Загрузить и зарегистрировать плагины
 kutana.executor.register_plugins(*load_plugins("plugins/"))
 
-# Run engine
+# Запустить движок
 kutana.run()
 ```
 
 
-Example `plugins/echo.py`
+Пример `plugins/echo.py`
 ```py
 from kutana import Plugin
 
@@ -65,8 +65,9 @@ async def on_echo(message, attachments, env):
     await env.reply("{}".format(env.body))
 ```
 
-### Available controllers
-- VKController (vk.com groups)
+### Доступные контроллеры
+- VKController (vk.com группы)
 
 ### Authors
 - **Michael Krukov** - [@michaelkrukov](https://github.com/michaelkrukov)
+- **Sergey Abroskin (перевод README)** - [@MerdedSpade](https://github.com/MerdedSpade)

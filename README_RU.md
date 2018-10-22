@@ -22,7 +22,7 @@
 https://www.python.org/downloads/
 ```
 
-- Установить модуль `kutana` (используйте python3 если нужно)
+- Установить модуль `kutana` (используйте python3, если нужно)
 
 ```
 python -m pip install kutana

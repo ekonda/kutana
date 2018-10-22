@@ -22,7 +22,7 @@
 https://www.python.org/downloads/
 ```
 
-- Установите модуль `kutana` (используйте python3 если нужно)
+- Установить модуль `kutana` (используйте python3 если нужно)
 
 ```
 python -m pip install kutana
@@ -30,7 +30,7 @@ python -m pip install kutana
 
 ### Использование
 - Создайте движок `Kutana` и добавьте контроллеры.
-- Зарегистрируйте ваши плагины в Исполнителе. Вы можете импортировать плагин из папок с помощью функциии `load_plugins`. Файлы должны быть Рython модулями с доступным `plugin` и вашим плагином (`Plugin`).
+- Зарегистрируйте ваши плагины. Вы можете импортировать плагины  с помощью функциии `load_plugins`. Файлы должны быть Рython модулями.
 - Запустите движок.
 
 Пример `run.py` (Токен для VKController будет загружен из файла
@@ -68,6 +68,6 @@ async def on_echo(message, attachments, env):
 ### Доступные контроллеры
 - VKController (vk.com группы)
 
-### Authors
+### Авторы
 - **Michael Krukov** - [@michaelkrukov](https://github.com/michaelkrukov)
 - **Sergey Abroskin (перевод README)** - [@MerdedSpade](https://github.com/MerdedSpade)

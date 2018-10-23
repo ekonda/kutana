@@ -70,4 +70,4 @@ async def on_echo(message, attachments, env):
 
 ### Авторы
 - **Michael Krukov** - [@michaelkrukov](https://github.com/michaelkrukov)
-- [Other contributors](CONTRIBUTORS.md)
+- [Другие участники](CONTRIBUTORS.md)

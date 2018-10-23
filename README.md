@@ -70,3 +70,5 @@ async def on_echo(message, attachments, env):
 
 ### Authors
 - **Michael Krukov** - [@michaelkrukov](https://github.com/michaelkrukov)
+
+[Other contributors](CONTRIBUTORS.md)

@@ -9,7 +9,7 @@
 [![PyPI version](https://badge.fury.io/py/kutana.svg)](https://badge.fury.io/py/kutana)
 [![Plugins repo](https://img.shields.io/badge/plugins-repo-green.svg)](https://github.com/ekonda/kutana-plugins)
 
-English | [Русский](README_RU.md)
+English | [Русский](README.ru.md)
 
 # Kutana
 The engine for developing bots for soc. networks, instant messengers and other systems.

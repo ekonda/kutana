@@ -9,52 +9,52 @@
 [![PyPI version](https://badge.fury.io/py/kutana.svg)](https://badge.fury.io/py/kutana)
 [![Plugins repo](https://img.shields.io/badge/plugins-repo-green.svg)](https://github.com/ekonda/kutana-plugins)
 
-English | [Русский](README.ru.md)
+[English](README.md) | Русский
 
 # Kutana
-The engine for developing bots for soc. networks, instant messengers and other systems.
-You can find repository with plugins for kutana [here](https://github.com/ekonda/kutana-plugins).
+Движок разработки ботов для соц. сетей, мессенджеров и других систем.
+Вы можете найти репозиторий с плагинами для kutana [здесь](https://github.com/ekonda/kutana-plugins).
 
-### Installation
-- Download and install python (3.5.3+)
+### Установка
+- Загрузить и установить Рython (3.5.3+)
 
 ```
 https://www.python.org/downloads/
 ```
 
-- Install `kutana` module (use python3 if needed)
+- Установить модуль `kutana` (используйте python3, если нужно)
 
 ```
 python -m pip install kutana
 ```
 
-### Usage
-- Create `Kutana` engine and add controllers.
-- Register your plugins in the executor. You can import plugin from folders with function `load_plugins`. Files should be a valid python modules with available `plugin` field with your plugin (`Plugin`).
-- Start engine.
+### Использование
+- Создать основной объект движка Kutana и добавить контроллеры.
+- Зарегистрировать плагины в "исполнителе" и импортировать плагины с помощью функциии `load_plugins`. Файлы c плагинами должны быть python модулями с доступным `plugin` полем, в котором должен находиться экземпляр класса `Plugin`. 
+- Запустить движок.
 
-Example `run.py` (token for VKController is loaded from the file
-"configuration.json" and plugins are loaded from folder "plugins/")
+Пример `run.py` (Токен для VKController будет загружен из файла
+"configuration.json" и плагины будут загружены из папки "plugins/")
 ```py
 from kutana import *
 
-# Create engine
+# Создание движка
 kutana = Kutana()
 
-# Add VKController to engine
+# Добавление VKController в движок
 kutana.add_controller(
     VKController(load_configuration("vk_token", "configuration.json"))
 )
 
-# Load and register plugins
+# Загрузить и зарегистрировать плагины
 kutana.executor.register_plugins(*load_plugins("plugins/"))
 
-# Run engine
+# Запустить движок
 kutana.run()
 ```
 
 
-Example `plugins/echo.py`
+Пример `plugins/echo.py`
 ```py
 from kutana import Plugin
 
@@ -65,9 +65,9 @@ async def on_echo(message, attachments, env):
     await env.reply("{}".format(env.body))
 ```
 
-### Available controllers
-- VKController (vk.com groups)
+### Доступные контроллеры
+- VKController (vk.com группы)
 
-### Authors
+### Авторы
 - **Michael Krukov** - [@michaelkrukov](https://github.com/michaelkrukov)
-- [Other contributors](CONTRIBUTORS.md)
+- [Другие участники](CONTRIBUTORS.md)

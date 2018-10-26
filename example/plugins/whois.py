@@ -1,7 +1,7 @@
 from kutana import Plugin
 import random
 
-plugin = Plugin(name="(.кто | .кого | .кому) - выбор пользователя из конференции")
+plugin = Plugin(name="(/кто | /кого | /кому) - выбор пользователя из конференции")
 
 template = ["Нуу я думаю", "Скорее всего", "Звезды говорят", "Мама сказала", "Без сомнений", "Ну это же очевидно", "Только тсс"]
 
@@ -11,7 +11,7 @@ async def report(mes, at, env):
         return await env.reply("Команда доступна только в беседах")
 
     if not env.body:
-        return await env.reply("Используйте: (.кто | .кого | .кому) [текст]")
+        return await env.reply("Используйте: (/кто | /кого | /кому) [текст]")
 
     users = await env.request("messages.getConversationMembers", peer_id=mes.peer_id, fields='name')
     if users.error:

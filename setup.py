@@ -10,7 +10,7 @@ import os
 import sys
 
 
-VERSION = "1.0.0"
+VERSION = "1.0.1"
 
 
 class VerifyVersionCommand(install):
@@ -44,8 +44,8 @@ setuptools.setup(
     url="https://github.com/ekonda/kutana",
     packages=setuptools.find_packages(),
     install_requires=[
-        "requests==2.19",
-        "aiohttp==3.3"
+        "requests>=2.20.0",
+        "aiohttp>=3.3"
     ],
     python_requires='>=3.5',
     classifiers=[

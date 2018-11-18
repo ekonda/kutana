@@ -7,13 +7,11 @@
 [![Coverage Status](https://coveralls.io/repos/github/ekonda/kutana/badge.svg?branch=master)](https://coveralls.io/github/ekonda/kutana?branch=master)
 [![Codebeat Badge](https://codebeat.co/badges/fd698be3-d0f9-4e3c-b235-1c3a3cdb98a9)](https://codebeat.co/projects/github-com-ekonda-kutana-master)
 [![PyPI version](https://badge.fury.io/py/kutana.svg)](https://badge.fury.io/py/kutana)
-[![Plugins repo](https://img.shields.io/badge/plugins-repo-green.svg)](https://github.com/ekonda/kutana-plugins)
 
 English | [Русский](README.ru.md)
 
 # Kutana
 The engine for developing bots for soc. networks, instant messengers and other systems.
-You can find repository with plugins for kutana [here](https://github.com/ekonda/kutana-plugins).
 
 ### Installation
 - Download and install python (3.5.3+)

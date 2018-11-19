@@ -13,7 +13,9 @@
 # Kutana
 Движок разработки ботов для соц. сетей, мессенджеров и других систем.
 
-### Установка
+Хорошая основа для создания бота с помощью kutana - [kubot](https://github.com/ekonda/kubot).
+
+## Установка
 - Загрузить и установить Рython (3.5.3+)
 
 ```
@@ -26,7 +28,7 @@ https://www.python.org/downloads/
 python -m pip install kutana
 ```
 
-### Использование
+## Использование
 - Создать основной объект движка Kutana и добавить контроллеры.
 - Зарегистрировать плагины в "исполнителе" и импортировать плагины с помощью функциии `load_plugins`. Файлы c плагинами должны быть python модулями с доступным `plugin` полем, в котором должен находиться экземпляр класса `Plugin`.
 - Запустить движок.
@@ -63,9 +65,9 @@ async def on_echo(message, attachments, env):
     await env.reply("{}".format(env.body))
 ```
 
-### Доступные контроллеры
+## Доступные контроллеры
 - VKController (vk.com группы)
 
-### Авторы
+## Авторы
 - **Michael Krukov** - [@michaelkrukov](https://github.com/michaelkrukov)
 - [Другие участники](CONTRIBUTORS.md)

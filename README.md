@@ -13,7 +13,9 @@ English | [Русский](README.ru.md)
 # Kutana
 The engine for developing bots for soc. networks, instant messengers and other systems.
 
-### Installation
+Nice foundation for bot using kutana engine - [kubot](https://github.com/ekonda/kubot).
+
+## Installation
 - Download and install python (3.5.3+)
 
 ```
@@ -26,7 +28,7 @@ https://www.python.org/downloads/
 python -m pip install kutana
 ```
 
-### Usage
+## Usage
 - Create `Kutana` engine and add controllers.
 - Register your plugins in the executor. You can import plugin from folders with function `load_plugins`. Files should be a valid python modules with available `plugin` field with your plugin (`Plugin`).
 - Start engine.
@@ -63,9 +65,9 @@ async def on_echo(message, attachments, env):
     await env.reply("{}".format(env.body))
 ```
 
-### Available controllers
+## Available controllers
 - VKController (vk.com groups)
 
-### Authors
+## Authors
 - **Michael Krukov** - [@michaelkrukov](https://github.com/michaelkrukov)
 - [Other contributors](CONTRIBUTORS.md)

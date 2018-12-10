@@ -2,3 +2,4 @@ requests
 cchardet
 aiohttp
 aiodns
+loguru

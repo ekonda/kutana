@@ -1,6 +1,5 @@
 from kutana import logger
 from test_framework import KutanaTest
-from loguru import logger
 import sys
 
 class TestExecutors(KutanaTest):

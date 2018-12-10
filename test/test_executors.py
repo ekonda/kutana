@@ -1,14 +1,11 @@
 from kutana import logger
 from test_framework import KutanaTest
-import logging
-
-
-logging.disable(logging.INFO)
-
+from loguru import logger
+import sys
 
 class TestExecutors(KutanaTest):
     def tearDown(self):
-        logger.setLevel(logging.ERROR)
+        logger.start(sys.stderr, level="ERROR")
 
     def test_just_debug(self):
         self.target = ["message"]
@@ -87,7 +84,7 @@ class TestExecutors(KutanaTest):
             self.kutana.executor.register(new_error, error=True)
             self.kutana.executor.register(new_error_no, error=True)
 
-            logger.setLevel(logging.CRITICAL)
+            logger.start(sys.stderr, level="CRITICAL")
 
         self.assertEqual(self.called, 1)
 
@@ -107,7 +104,7 @@ class TestExecutors(KutanaTest):
 
             self.kutana.executor.register(new_update)
 
-            logger.setLevel(logging.CRITICAL)
+            logger.start(sys.stderr, level="CRITICAL")
 
         self.assertEqual(self.called, 1)
 

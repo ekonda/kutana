@@ -10,8 +10,11 @@ plugin = Plugin(name="Prefix", priority=500)
 # 500 is between
 #
 # That means early plugins works without prefix!
+#
+# If you need better prefix system, check github.com/ekonda/kubot
 
-PREFIX = "/"
+
+PREFIX = "."
 
 
 @plugin.on_has_text()
@@ -19,7 +22,7 @@ async def on_has_text(message, attachments, env):
     if not message.text.startswith(PREFIX):
         return "DONE"
 
-    env.eenv._cached_message = Message(
+    env["eenv"]["_cached_message"] = Message(
         message.text[len(PREFIX):],
         message.attachments,
         message.from_id,

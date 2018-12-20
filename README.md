@@ -29,11 +29,11 @@ python -m pip install kutana
 ```
 
 ## Usage
-- Create `Kutana` engine and add controllers.
+- Create `Kutana` engine and add managers.
 - Register your plugins in the executor. You can import plugin from folders with function `load_plugins`. Files should be a valid python modules with available `plugin` field with your plugin (`Plugin`).
 - Start engine.
 
-Example `run.py` (token for VKController is loaded from the file
+Example `run.py` (token for VKManager is loaded from the file
 "configuration.json" and plugins are loaded from folder "plugins/")
 ```py
 from kutana import *
@@ -41,9 +41,9 @@ from kutana import *
 # Create engine
 kutana = Kutana()
 
-# Add VKController to engine
-kutana.add_controller(
-    VKController(load_configuration("vk_token", "configuration.json"))
+# Add VKManager to engine
+kutana.add_manager(
+    VKManager(load_configuration("vk_token", "configuration.json"))
 )
 
 # Load and register plugins
@@ -62,11 +62,11 @@ plugin = Plugin(name="Echo")
 
 @plugin.on_startswith_text("echo")
 async def on_echo(message, attachments, env):
-    await env.reply("{}".format(env.body))
+    await env["reply"]("{}".format(env["body"]))
 ```
 
-## Available controllers
-- VKController (vk.com groups)
+## Available managers
+- VKManager (for vk.com groups)
 
 ## Authors
 - **Michael Krukov** - [@michaelkrukov](https://github.com/michaelkrukov)

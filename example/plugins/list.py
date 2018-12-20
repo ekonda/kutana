@@ -15,7 +15,7 @@ async def on_startup(update, env):
 
 @plugin.on_text("list")
 async def on_list(message, attachments, env):
-    await env.reply(
+    await env["reply"](
         "Plugins:\n" +
         " | ".join(plugin.plugins)
     )

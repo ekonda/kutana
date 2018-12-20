@@ -3,7 +3,7 @@
 python=python3
 
 all:
-	$(python) example/run.py
+	export PYTHONPATH=$(PWD); cd example; $(python) run.py
 
 apidoc:
 	sphinx-apidoc -o docs/src/ . $(PWD)/setup.py

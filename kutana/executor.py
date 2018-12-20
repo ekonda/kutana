@@ -18,13 +18,13 @@ class Executor:
             if hasattr(plugin, "_prepare_callbacks"):
                 self.register(*plugin._prepare_callbacks())
 
-            if hasattr(plugin, "_prepare_callbacks_error"):  # pragma: no cover
+            if hasattr(plugin, "_prepare_callbacks_error"):
                 self.register(*plugin._prepare_callbacks_error(), error=True)
 
             self.registered_plugins.append(plugin)
 
     def register(self, *callbacks, priority=400, error=False):
-        """Register callbacks."""
+        """Register callbacks for updates or errors with specified priority."""
 
         def _register(coroutine):
             callbacks = self.error_callbacks if error else self.callbacks
@@ -47,7 +47,7 @@ class Executor:
         return _register
 
     async def __call__(self, update, eenv):
-        """Process update from controller."""
+        """Process update from manager."""
 
         try:
             for cb in self.callbacks:
@@ -59,7 +59,7 @@ class Executor:
         except Exception as e:
             logger.exception(
                 "\"{}::{}\" on update {} from {}".format(
-                    sys.exc_info()[0].__name__, e, update, eenv.ctrl_type
+                    sys.exc_info()[0].__name__, e, update, eenv["mngr_type"]
                 )
             )
 
@@ -67,7 +67,7 @@ class Executor:
 
             if not self.error_callbacks:
                 if "reply" in eenv:
-                    return await eenv.reply("Произошла ошибка! Приносим свои извинения.")
+                    return await eenv["reply"]("Произошла ошибка! Приносим свои извинения.")
 
             for cb in self.error_callbacks:
                 comm = await cb(update, eenv)

@@ -1,4 +1,3 @@
-from kutana.structures import objdict
 from collections import namedtuple
 import re
 
@@ -88,14 +87,15 @@ class Plugin():
         return callbacks
 
     async def _proc_startup(self, update, eenv):
-        if eenv.ctrl_type != "kutana":
+        """Process startup update from kutana."""
+
+        if eenv["mngr_type"] != "kutana":
             return
 
         if update["update_type"] == "startup":
             if self._callback_startup:
                 await self._callback_startup(
-                    update,
-                    objdict(eenv=eenv, **eenv)
+                    update, {"eenv": eenv, **eenv}
                 )
 
     @staticmethod
@@ -107,22 +107,20 @@ class Plugin():
         if cbs is None:
             raise RuntimeError
 
-        if eenv.ctrl_type == "kutana":
+        if eenv["mngr_type"] == "kutana":  # do not process kutana's updates
             return
 
-        env = objdict(eenv=eenv, **eenv)
+        env = {"eenv": eenv, **eenv}
 
         if "_cached_message" in eenv:
             message = eenv["_cached_message"]
 
         else:
-            message = await eenv.convert_to_message(update, eenv)
+            message = await eenv["convert_to_message"](update, eenv)
 
             eenv["_cached_message"] = message
 
-        if message is None:
-            if not cbs[1]:
-                return
+        if message is None and cbs[1]:
 
             async def call(cb):
                 return await cb(
@@ -132,7 +130,7 @@ class Plugin():
 
             callbacks = cbs[1]
 
-        else:
+        elif cbs[0]:
 
             async def call(cb):
                 return await cb(
@@ -142,6 +140,9 @@ class Plugin():
                 )
 
             callbacks = cbs[0]
+
+        else:
+            return "DONE"
 
         for callback in callbacks:
             comm = await call(callback)

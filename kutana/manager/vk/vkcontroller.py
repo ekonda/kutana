@@ -1,7 +1,7 @@
-from kutana.controller_vk.vkwrappers import make_reply, make_upload_docs,\
+from kutana.manager.vk.vkwrappers import make_reply, make_upload_docs,\
     make_upload_photo
-from kutana.controller_vk.converter import convert_to_message
-from kutana.controller_basic import BasicController
+from kutana.manager.vk.converter import convert_to_message
+from kutana.manager.basic import BasicController
 from kutana.plugin import Attachment
 from kutana.logger import logger
 from collections import namedtuple
@@ -32,7 +32,7 @@ class VKRequest(asyncio.Future):
         self.kwargs = kwargs
 
 
-class VKController(BasicController):
+class VKManager(BasicController):
     """Class for receiving updates from vk.com.
     Controller requires group's token. You can specify settings for
     groups.setLongPollSettings with argument `longpoll_settings`.

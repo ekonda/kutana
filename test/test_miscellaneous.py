@@ -1,52 +1,11 @@
-from kutana import VKResponse, DebugController, Executor, load_plugins, \
-    objdict, icedict, load_configuration
-import kutana.controller_vk.converter as vk_converter
+from kutana import VKResponse, DebugManager, Executor, load_plugins, \
+    load_configuration
+import kutana.manager.vk.converter as vk_converter
 import unittest
 import asyncio
 
 
 class TestMiscellaneous(unittest.TestCase):
-    def test_objdict(self):
-        a = objdict()
-
-        self.assertEqual(str(a), "{}")
-        self.assertEqual(len(a), 0)
-        self.assertEqual(list(i for i in a), [])
-
-        a.a = 10  # pylint: disable=E0237
-        self.assertEqual(a.a, 10)
-        self.assertEqual(a["a"], 10)
-        self.assertEqual(a.get("a"), 10)
-
-        a["b"] = {"a": 5}
-        self.assertEqual(a.b.a, 5)
-
-        a["c"] = [1, 2]
-        self.assertIs(a.c, a["c"])
-
-        del a["a"]
-        del a["b"]
-        del a["c"]
-
-        self.assertEqual(a, {})
-
-    def test_icedict(self):
-        a = icedict(a=10)
-
-        self.assertEqual(str(a), "{'a': 10}")
-        self.assertEqual(len(a), 1)
-        self.assertEqual(list(i for i in a), ["a"])
-        self.assertEqual(a["a"], 10)
-        self.assertEqual(a.a, 10)
-
-        b = icedict(a=10)
-
-        self.assertEqual(a, b)
-        self.assertEqual(a, {"a": 10})
-
-        with self.assertRaises(TypeError):
-            a["a"] = 10
-
     def test_load_plugins(self):
         loaded_plugins = load_plugins("test/test_plugins/")
 
@@ -65,16 +24,18 @@ class TestMiscellaneous(unittest.TestCase):
                     "kutana": self, "update_type": "startup",
                     "registered_plugins": executor.registered_plugins
                 },
-                objdict(ctrl_type="kutana")
+                {
+                    "mngr_type": "kutana"
+                }
             )
         )
 
         loop.run_until_complete(
             executor(
-                "message", objdict(
-                    ctrl_type="debug",
-                    convert_to_message=DebugController.convert_to_message
-                )
+                "message", {
+                    "mngr_type": "debug",
+                    "convert_to_message": DebugManager.convert_to_message
+                }
             )
         )
 

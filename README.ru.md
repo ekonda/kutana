@@ -29,11 +29,11 @@ python -m pip install kutana
 ```
 
 ## Использование
-- Создать основной объект движка Kutana и добавить контроллеры.
+- Создать основной объект движка Kutana и добавить менеджеры.
 - Зарегистрировать плагины в "исполнителе" и импортировать плагины с помощью функциии `load_plugins`. Файлы c плагинами должны быть python модулями с доступным `plugin` полем, в котором должен находиться экземпляр класса `Plugin`.
 - Запустить движок.
 
-Пример `run.py` (Токен для VKController будет загружен из файла
+Пример `run.py` (Токен для VKManager будет загружен из файла
 "configuration.json" и плагины будут загружены из папки "plugins/")
 ```py
 from kutana import *
@@ -41,9 +41,9 @@ from kutana import *
 # Создание движка
 kutana = Kutana()
 
-# Добавление VKController в движок
-kutana.add_controller(
-    VKController(load_configuration("vk_token", "configuration.json"))
+# Добавление VKManager в движок
+kutana.add_manager(
+    VKManager(load_configuration("vk_token", "configuration.json"))
 )
 
 # Загрузить и зарегистрировать плагины
@@ -62,11 +62,11 @@ plugin = Plugin(name="Echo")
 
 @plugin.on_startswith_text("echo")
 async def on_echo(message, attachments, env):
-    await env.reply("{}".format(env.body))
+    await env["reply"]("{}".format(env["body"]))
 ```
 
-## Доступные контроллеры
-- VKController (vk.com группы)
+## Доступные менеджеры
+- VKManager (для vk.com группы)
 
 ## Авторы
 - **Michael Krukov** - [@michaelkrukov](https://github.com/michaelkrukov)

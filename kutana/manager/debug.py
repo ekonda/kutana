@@ -1,9 +1,9 @@
-from kutana.controller_basic import BasicController
+from kutana.manager.basic import BasicController
 from kutana.plugin import Message
 from kutana.exceptions import ExitException
 
 
-class DebugController(BasicController):
+class DebugManager(BasicController):
     """Shoots target texts once."""
 
     type = "debug"

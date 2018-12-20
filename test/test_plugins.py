@@ -17,16 +17,16 @@ class TestPlugins(KutanaTest):
 
         self.target = ["message"]
 
-        with self.debug_controller(queue) as plugin:
+        with self.debug_manager(queue) as plugin:
             async def on_echo(message, attachments, env):
-                await env.reply(env.body)
+                await env["reply"](env["body"])
 
             plugin.on_startswith_text("echo ", "echo\n")(on_echo)
 
     def test_plugin_on_startup(self):
         self.called = 0
 
-        with self.debug_controller(["message"]) as plugin:
+        with self.debug_manager(["message"]) as plugin:
             async def on_startup(update, env):
                 self.called += 1
 
@@ -37,7 +37,7 @@ class TestPlugins(KutanaTest):
     def test_plugin_register_special(self):
         self.answers = []
 
-        with self.debug_controller(["message"]) as plugin:
+        with self.debug_manager(["message"]) as plugin:
             async def cb_1(update, env):
                 self.answers.append(1)
 
@@ -56,7 +56,7 @@ class TestPlugins(KutanaTest):
     def test_plugin_register_special_two_plugins(self):
         self.answers = []
 
-        with self.debug_controller(["message"]) as plugin1:
+        with self.debug_manager(["message"]) as plugin1:
             plugin2 = Plugin(priority=500)
 
             self.plugins.append(plugin2)
@@ -83,9 +83,9 @@ class TestPlugins(KutanaTest):
             ["a", "b", "c"], ["a", "\"b", "c\""], ["ab", "c"]
         ]
 
-        with self.debug_controller(queue) as plugin:
+        with self.debug_manager(queue) as plugin:
             async def on_startswith_text(message, attachments, env):
-                self.assertEqual(env.args, queue_answer.pop(0))
+                self.assertEqual(env["args"], queue_answer.pop(0))
 
             plugin.on_startswith_text("pr")(on_startswith_text)
 
@@ -94,7 +94,7 @@ class TestPlugins(KutanaTest):
     def test_plugins_callbacks_done(self):
         self.counter = 0
 
-        with self.debug_controller(["123"]) as plugin:
+        with self.debug_manager(["123"]) as plugin:
 
             async def on_has_text(message, attachments, env):
                 self.counter += 1
@@ -113,7 +113,7 @@ class TestPlugins(KutanaTest):
     def test_plugins_callbacks_not_done(self):
         self.counter = 0
 
-        with self.debug_controller(["123"]) as plugin:
+        with self.debug_manager(["123"]) as plugin:
 
             async def on_has_text(message, attachments, env):
                 self.counter += 1
@@ -132,7 +132,7 @@ class TestPlugins(KutanaTest):
     def test_multiple_plugins(self):
         self.counter = 0
 
-        with self.debug_controller(["message"]):
+        with self.debug_manager(["message"]):
             self.plugins.append(Plugin())
             self.plugins.append(Plugin())
 
@@ -152,7 +152,7 @@ class TestPlugins(KutanaTest):
     def test_early_callbacks(self):
         self.answers = []
 
-        with self.debug_controller(["message"]):
+        with self.debug_manager(["message"]):
             self.plugins.append(Plugin())
 
             async def on_has_text_early(message, attachments, env):
@@ -173,7 +173,7 @@ class TestPlugins(KutanaTest):
         self.disposed = 0
         self.counter = 0
 
-        with self.debug_controller(["123", "321"]) as plugin:
+        with self.debug_manager(["123", "321"]) as plugin:
             async def on_123(message, attachments, env):
                 self.assertEqual(message.text, "123")
                 self.counter += 1
@@ -205,25 +205,25 @@ class TestPlugins(KutanaTest):
     def test_environment_reply(self):
         self.target = ["echo message"]
 
-        with self.debug_controller(self.target) as plugin:
+        with self.debug_manager(self.target) as plugin:
             async def on_echo(message, attachments, env):
-                self.assertIsNotNone(env.reply)
-                await env.reply(message.text)
+                self.assertIsNotNone(env["reply"])
+                await env["reply"](message.text)
 
             plugin.on_startswith_text("echo")(on_echo)
 
     def test_environments(self):
         self.target = ["echo message"]
 
-        with self.debug_controller(self.target):
+        with self.debug_manager(self.target):
             plugin1 = Plugin()
             plugin2 = Plugin()
 
             self.plugins = (plugin1, plugin2)
 
             async def do_skip(message, attachments, env):
-                env.A = "A"
-                env.eenv.B = "B"
+                env["A"] = "A"
+                env["eenv"]["B"] = "B"
 
                 return "GOON"
 
@@ -237,9 +237,9 @@ class TestPlugins(KutanaTest):
 
             async def do_check(message, attachments, env):
                 self.assertIsNone(env.get("A"))
-                self.assertEqual(env.eenv.get("B"), "B")
+                self.assertEqual(env["eenv"].get("B"), "B")
 
-                await env.reply("echo message")
+                await env["reply"]("echo message")
 
             plugin2.on_has_text()(do_check)
 
@@ -247,7 +247,7 @@ class TestPlugins(KutanaTest):
         queue = ["привет", "отлично привет", "ecHo", "ab", "ae", "hello"]
         self.result = 0
 
-        with self.debug_controller(queue) as plugin:
+        with self.debug_manager(queue) as plugin:
             async def no_trigger(message, attachments, env):
                 self.assertTrue(False)
 

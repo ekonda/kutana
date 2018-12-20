@@ -3,7 +3,7 @@ if __name__ == '__main__':
     import os
 
 
-    sys.path.append(os.getcwd())
+    sys.path.insert(0, os.getcwd())
 
 
 from test_framework import KutanaTest
@@ -17,15 +17,15 @@ class TestTiming(KutanaTest):
 
         stime = time.time()
 
-        with self.debug_controller(self.target) as plugin:
+        with self.debug_manager(self.target) as plugin:
             async def on_echo(message, attachments, env):
-                await env.reply("echo " + env.body)
+                await env["reply"]("echo " + env["body"])
 
             plugin.on_startswith_text("echo ", "echo\n")(on_echo)
 
 
             async def on_regexp(message, attachments, env):
-                await env.reply(env.match.group(0))
+                await env["reply"](env["match"].group(0))
 
             plugin.on_regexp_text(r"message")(on_regexp)
 
@@ -41,9 +41,9 @@ class TestTiming(KutanaTest):
     def test_raw_exec_time(self):
         self.target = ["message"] * 10000
 
-        with self.debug_controller(self.target) as plugin:
+        with self.debug_manager(self.target) as plugin:
             async def on_any(message, attachments, env):
-                await env.reply("message")
+                await env["reply"]("message")
 
             plugin.on_has_text()(on_any)
 

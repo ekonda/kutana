@@ -1,10 +1,10 @@
-from kutana.controller_vk.converter import convert_to_attachment
+from kutana.manager.vk.converter import convert_to_attachment
 import aiohttp
 import json
 
 
-async def upload_file_to_vk(ctrl, upload_url, data):
-    upload_result_resp = await ctrl.session.post(
+async def upload_file_to_vk(mngr, upload_url, data):
+    upload_result_resp = await mngr.session.post(
         upload_url, data=data
     )
 
@@ -28,7 +28,7 @@ async def upload_file_to_vk(ctrl, upload_url, data):
     return upload_result
 
 
-def make_reply(ctrl, peer_id):
+def make_reply(mngr, peer_id):
     """Creates replying coroutine for controller and peer_id."""
 
     async def reply(message, attachment=None, sticker_id=None,
@@ -39,7 +39,7 @@ def make_reply(ctrl, peer_id):
 
             for i in range(0, len(message), 4096):
                 result.append(
-                    await ctrl.send_message(
+                    await mngr.send_message(
                         message[i : i + 4096],
                         peer_id,
                         attachment,
@@ -52,7 +52,7 @@ def make_reply(ctrl, peer_id):
 
             return result
 
-        return (await ctrl.send_message(
+        return (await mngr.send_message(
             message,
             peer_id,
             attachment,
@@ -65,7 +65,7 @@ def make_reply(ctrl, peer_id):
     return reply
 
 
-def make_upload_docs(ctrl, ori_peer_id):
+def make_upload_docs(mngr, ori_peer_id):
     """Creates uploading docs coroutine for controller and peer_id."""
 
     async def upload_doc(file, peer_id=None, group_id=None,
@@ -83,14 +83,14 @@ def make_upload_docs(ctrl, ori_peer_id):
                 file = o.read()
 
         if peer_id:
-            upload_data = await ctrl.request(
+            upload_data = await mngr.request(
                 "docs.getMessagesUploadServer", peer_id=peer_id, type=doctype
             )
 
         else:
-            upload_data = await ctrl.request(
+            upload_data = await mngr.request(
                 "docs.getWallUploadServer",
-                group_id=group_id or ctrl.group_id
+                group_id=group_id or mngr.group_id
             )
 
         if "upload_url" not in upload_data.response:
@@ -101,12 +101,12 @@ def make_upload_docs(ctrl, ori_peer_id):
         data = aiohttp.FormData()
         data.add_field("file", file, filename=filename)
 
-        upload_result = await upload_file_to_vk(ctrl, upload_url, data)
+        upload_result = await upload_file_to_vk(mngr, upload_url, data)
 
         if not upload_result:
             return None
 
-        attachments = await ctrl.request(
+        attachments = await mngr.request(
             "docs.save", **upload_result
         )
 
@@ -120,7 +120,7 @@ def make_upload_docs(ctrl, ori_peer_id):
     return upload_doc
 
 
-def make_upload_photo(ctrl, ori_peer_id):
+def make_upload_photo(mngr, ori_peer_id):
     """Creates uploading photo coroutine for controller and peer_id"""
 
     async def upload_photo(file, peer_id=None):
@@ -131,7 +131,7 @@ def make_upload_photo(ctrl, ori_peer_id):
             with open(file, "rb") as o:
                 file = o.read()
 
-        upload_data = await ctrl.request(
+        upload_data = await mngr.request(
             "photos.getMessagesUploadServer", peer_id=peer_id
         )
 
@@ -143,12 +143,12 @@ def make_upload_photo(ctrl, ori_peer_id):
         data = aiohttp.FormData()
         data.add_field("photo", file, filename="image.png")
 
-        upload_result = await upload_file_to_vk(ctrl, upload_url, data)
+        upload_result = await upload_file_to_vk(mngr, upload_url, data)
 
         if not upload_result:
             return None
 
-        attachments = await ctrl.request(
+        attachments = await mngr.request(
             "photos.saveMessagesPhoto", **upload_result
         )
 

@@ -1,18 +1,18 @@
-from kutana import Kutana, VKController, load_plugins, \
+from kutana import Kutana, VKManager, load_plugins, \
     load_configuration
 
 
 # Create engine
 kutana = Kutana()
 
-# Create VKController
-controller = VKController(
+# Create VKManager
+manager = VKManager(
     load_configuration("vk_token", "configuration.json")
 )
 
-# Add controller to engine
-kutana.add_controller(
-    controller
+# Add manager to engine
+kutana.add_manager(
+    manager
 )
 
 # Load and register plugins

@@ -1,18 +1,24 @@
+"""Module with logger that is used in this engine."""
+
+
 import logging
+import logging.handlers
 
 
-formatter = logging.Formatter('%(asctime)s [ %(levelname)s ] %(message)s')
-level = logging.DEBUG
+FORMATTER = logging.Formatter('%(asctime)s [ %(levelname)s ] %(message)s')
+LEVEL = logging.INFO
 
-handler_file = logging.FileHandler('kutana.log')
-handler_file.setLevel(level)
-handler_file.setFormatter(formatter)
+handler_file = logging.handlers.RotatingFileHandler(
+    'kutana.log', maxBytes=1048576, backupCount=5
+)
+handler_file.setLevel(LEVEL)
+handler_file.setFormatter(FORMATTER)
 
 handler_stream = logging.StreamHandler()
-handler_stream.setLevel(level)
-handler_stream.setFormatter(formatter)
+handler_stream.setLevel(LEVEL)
+handler_stream.setFormatter(FORMATTER)
 
 logger = logging.getLogger("kutana")
-logger.setLevel(level)
+logger.setLevel(LEVEL)
 logger.addHandler(handler_stream)
 logger.addHandler(handler_file)

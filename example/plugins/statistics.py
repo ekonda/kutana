@@ -22,7 +22,7 @@ async def on_any_message(message, attachments, env):
 
 @plugin.on_text("statistics")
 async def on_show_statistics(message, attachments, env):
-    await env.reply(
+    await env["reply"](
         "You wrote: {} words.".format(
             plugin.stats.get(message.from_id, 0)
         )

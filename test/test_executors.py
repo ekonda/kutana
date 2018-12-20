@@ -13,29 +13,29 @@ class TestExecutors(KutanaTest):
     def test_just_debug(self):
         self.target = ["message"]
 
-        with self.debug_controller(self.target):
+        with self.debug_manager(self.target):
 
             async def new_update(update, eenv):
-                if eenv.ctrl_type == "debug":
-                    await eenv.reply(update)
+                if eenv["mngr_type"] == "debug":
+                    await eenv["reply"](update)
 
                 else:
-                    self.assertEqual(eenv.ctrl_type, "kutana")
+                    self.assertEqual(eenv["mngr_type"], "kutana")
 
             self.kutana.executor.register(new_update)
 
     def test_debug_upload(self):
         self.target = ["file"]
 
-        with self.debug_controller(self.target):
+        with self.debug_manager(self.target):
 
             async def new_update(update, eenv):
-                if eenv.ctrl_type == "debug":
-                    attachment = await eenv.upload_doc("file")
-                    await eenv.reply("", attachment=attachment)
+                if eenv["mngr_type"] == "debug":
+                    attachment = await eenv["upload_doc"]("file")
+                    await eenv["reply"]("", attachment=attachment)
 
                 else:
-                    self.assertEqual(eenv.ctrl_type, "kutana")
+                    self.assertEqual(eenv["mngr_type"], "kutana")
 
             self.kutana.executor.register(new_update)
 
@@ -43,17 +43,17 @@ class TestExecutors(KutanaTest):
         self.called_1 = 0
         self.called_2 = 0
 
-        with self.debug_controller(["message", "message"]):
+        with self.debug_manager(["message", "message"]):
 
             async def prc1(update, eenv):
-                if eenv.ctrl_type == "debug":
+                if eenv["mngr_type"] == "debug":
                     self.called_1 += 1
                     return "DONE"
 
             prc1.priority = 0  # very low
 
             async def prc2(update, eenv):
-                if eenv.ctrl_type == "debug":
+                if eenv["mngr_type"] == "debug":
                     self.called_2 += 1
                     return "DONE"
 
@@ -66,16 +66,16 @@ class TestExecutors(KutanaTest):
     def test_exception(self):
         self.called = 0
 
-        with self.debug_controller(["message"]):
+        with self.debug_manager(["message"]):
 
             async def new_update(update, eenv):
-                if eenv.ctrl_type == "debug":
+                if eenv["mngr_type"] == "debug":
                     raise Exception
 
             self.kutana.executor.register(new_update)
 
             async def new_error(update, eenv):
-                self.assertTrue(eenv.exception)
+                self.assertTrue(eenv["exception"])
 
                 self.called += 1
 
@@ -98,11 +98,11 @@ class TestExecutors(KutanaTest):
             self.assertEqual(mes, "Произошла ошибка! Приносим свои извинения.")
             self.called += 1
 
-        with self.debug_controller(["message"]):
+        with self.debug_manager(["message"]):
 
             async def new_update(update, eenv):
-                if eenv.ctrl_type == "debug":
-                    eenv.reply = my_faked_reply
+                if eenv["mngr_type"] == "debug":
+                    eenv["reply"] = my_faked_reply
                     raise Exception
 
             self.kutana.executor.register(new_update)
@@ -116,16 +116,16 @@ class TestExecutors(KutanaTest):
         self.target = ["message"]
         self.called = 0
 
-        with self.debug_controller(self.target):
-            with self.debug_controller(self.target):
+        with self.debug_manager(self.target):
+            with self.debug_manager(self.target):
 
                 async def new_update(update, eenv):
-                    if eenv.ctrl_type == "debug":
-                        await eenv.reply(update)
+                    if eenv["mngr_type"] == "debug":
+                        await eenv["reply"](update)
                         self.called += 1
 
                     else:
-                        self.assertEqual(eenv.ctrl_type, "kutana")
+                        self.assertEqual(eenv["mngr_type"], "kutana")
 
                 self.kutana.executor.register(new_update)
 
@@ -135,18 +135,18 @@ class TestExecutors(KutanaTest):
             self.target = ["message"]
             self.called = 0
 
-            with self.debug_controller(self.target):
-                with self.debug_controller(self.target):
+            with self.debug_manager(self.target):
+                with self.debug_manager(self.target):
                     self.target *= 2
 
                     async def new_update_1(update, eenv):
-                        if eenv.ctrl_type == "debug":
-                            await eenv.reply(update)
+                        if eenv["mngr_type"] == "debug":
+                            await eenv["reply"](update)
                             self.called += 1
 
                     async def new_update_2(update, eenv):
-                        if eenv.ctrl_type == "debug":
-                            await eenv.reply(update)
+                        if eenv["mngr_type"] == "debug":
+                            await eenv["reply"](update)
                             self.called += 1
 
                     self.kutana.executor.register(new_update_1)
@@ -157,12 +157,12 @@ class TestExecutors(KutanaTest):
     def test_decorate_or_call(self):
         self.target = ["message"]
 
-        with self.debug_controller(self.target):
+        with self.debug_manager(self.target):
             self.target *= 2
 
             @self.kutana.executor.register()
             async def new_update(update, eenv):
-                if eenv.ctrl_type == "debug":
-                    await eenv.reply(update)
+                if eenv["mngr_type"] == "debug":
+                    await eenv["reply"](update)
 
             self.kutana.executor.register(new_update)

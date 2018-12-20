@@ -1,5 +1,5 @@
-from kutana import Kutana, VKController, ExitException, Plugin
-from kutana.controller_vk.vkwrappers import make_reply
+from kutana import Kutana, VKManager, ExitException, Plugin
+from kutana.manager.vk.vkwrappers import make_reply
 import unittest
 import requests
 import logging
@@ -22,7 +22,7 @@ logging.disable(logging.INFO)
 # }
 
 
-class TestControllerVk(unittest.TestCase):
+class TestManagerVk(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         try:
@@ -75,13 +75,13 @@ class TestControllerVk(unittest.TestCase):
 
             return reci
 
-        VKController.original_get_receiver_coroutine_function = VKController.get_receiver_coroutine_function
-        VKController.get_receiver_coroutine_function = get_receiver_coroutine_function
+        VKManager.original_get_receiver_coroutine_function = VKManager.get_receiver_coroutine_function
+        VKManager.get_receiver_coroutine_function = get_receiver_coroutine_function
 
         cls.kutana = Kutana()
 
-        cls.kutana.add_controller(
-            VKController(
+        cls.kutana.add_manager(
+            VKManager(
                 token=cls.conf["vk_token"],
                 longpoll_settings={"message_typing_state": 1}
             )
@@ -109,7 +109,7 @@ class TestControllerVk(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        VKController.get_receiver_coroutine_function = VKController.original_get_receiver_coroutine_function
+        VKManager.get_receiver_coroutine_function = VKManager.original_get_receiver_coroutine_function
 
     def tearDown(self):
         if self.messages_to_delete:
@@ -119,16 +119,16 @@ class TestControllerVk(unittest.TestCase):
 
     def test_vk_exceptions(self):
         with self.assertRaises(ValueError):
-            VKController("")
+            VKManager("")
 
     def test_vk_reply_message(self):
         messages = []
 
-        class FakeController:
+        class FakeManager:
             async def send_message(self, message, *args):
                 messages.append(message)
 
-        reply = make_reply(FakeController(), 0)
+        reply = make_reply(FakeManager(), 0)
 
         self.kutana.loop.run_until_complete(reply("abc"))
         self.kutana.loop.run_until_complete(reply("abc" * 4096))
@@ -138,53 +138,53 @@ class TestControllerVk(unittest.TestCase):
 
         self.assertEqual(len(messages), 4)
 
-    def test_vk_controller_raw_request(self):
+    def test_vk_manager_raw_request(self):
         async def test():
-            async with VKController("token") as ctrl:
-                return await ctrl.raw_request("any.method", a1="v1", a2="v2")
+            async with VKManager("token") as mngr:
+                return await mngr.raw_request("any.method", a1="v1", a2="v2")
 
         response = self.kutana.loop.run_until_complete(test())
 
         self.assertEqual(response.errors[0][1]["error_code"], 5)
 
-    def test_vk_controller_raw_request_nested(self):
+    def test_vk_manager_raw_request_nested(self):
         results = []
 
         async def test():
-            ctrl = VKController(self.conf["vk_token"])
+            mngr = VKManager(self.conf["vk_token"])
 
             time.sleep(1)  # cool down vkapi
 
-            async with ctrl:
-                results.append(await ctrl.raw_request("users.get"))
+            async with mngr:
+                results.append(await mngr.raw_request("users.get"))
 
-                self.assertEqual(len(ctrl.subsessions), 1)
-                self.assertIsNone(ctrl.subsessions[0])
+                self.assertEqual(len(mngr.subsessions), 1)
+                self.assertIsNone(mngr.subsessions[0])
 
-                async with ctrl:
-                    results.append(await ctrl.raw_request("users.get"))
+                async with mngr:
+                    results.append(await mngr.raw_request("users.get"))
 
-                    self.assertEqual(len(ctrl.subsessions), 2)
-                    self.assertIsNone(ctrl.subsessions[0])
+                    self.assertEqual(len(mngr.subsessions), 2)
+                    self.assertIsNone(mngr.subsessions[0])
 
-                    session_m2 = ctrl.subsessions[-1]
+                    session_m2 = mngr.subsessions[-1]
 
-                    async with ctrl:
-                        self.assertEqual(len(ctrl.subsessions), 3)
-                        self.assertIsNone(ctrl.subsessions[0])
+                    async with mngr:
+                        self.assertEqual(len(mngr.subsessions), 3)
+                        self.assertIsNone(mngr.subsessions[0])
 
-                        results.append(await ctrl.raw_request("users.get"))
+                        results.append(await mngr.raw_request("users.get"))
 
-                        session_m1 = ctrl.subsessions[-1]
+                        session_m1 = mngr.subsessions[-1]
 
-                    self.assertEqual(len(ctrl.subsessions), 2)
-                    self.assertEqual(ctrl.session, session_m1)
-                    self.assertIsNone(ctrl.subsessions[0])
+                    self.assertEqual(len(mngr.subsessions), 2)
+                    self.assertEqual(mngr.session, session_m1)
+                    self.assertIsNone(mngr.subsessions[0])
 
-                self.assertEqual(ctrl.session, session_m2)
+                self.assertEqual(mngr.session, session_m2)
 
-            self.assertIsNone(ctrl.session)
-            self.assertFalse(ctrl.subsessions)
+            self.assertIsNone(mngr.session)
+            self.assertFalse(mngr.subsessions)
 
         self.kutana.loop.run_until_complete(test())
 
@@ -208,8 +208,8 @@ class TestControllerVk(unittest.TestCase):
 
         async def on_regexp(message, attachments, env):
             # Test receiving
-            self.assertEqual(env.match.group(1), "message")
-            self.assertEqual(env.match.group(0), "echo message")
+            self.assertEqual(env["match"].group(1), "message")
+            self.assertEqual(env["match"].group(0), "echo message")
 
             self.assertEqual(message.attachments, attachments)
             self.assertEqual(len(attachments), 2)
@@ -218,15 +218,15 @@ class TestControllerVk(unittest.TestCase):
             self.assertTrue(attachments[1].link)
 
             # Test sending
-            a_image = await env.upload_photo("test/test_assets/author.png")
+            a_image = await env["upload_photo"]("test/test_assets/author.png")
 
-            a_image = await env.upload_photo(
+            a_image = await env["upload_photo"](
                 "test/test_assets/author.png", peer_id=False
             )
 
             time.sleep(0.34)  # cool down vkapi
 
-            a_audio = await env.upload_doc(
+            a_audio = await env["upload_doc"](
                 "test/test_assets/girl.ogg",
                 doctype="audio_message",
                 filename="file.ogg"
@@ -235,12 +235,12 @@ class TestControllerVk(unittest.TestCase):
             self.assertTrue(a_image.id)
             self.assertTrue(a_audio.id)
 
-            resps = await env.reply("Спасибо.", attachment=a_image)
+            resps = await env["reply"]("Спасибо.", attachment=a_image)
 
             self.assertTrue(resps[0].response)
 
             for resp in resps:
-                resp = await env.request(
+                resp = await env["request"](
                     "messages.delete",
                     message_ids=str(resp.response),
                     delete_for_all=1
@@ -249,7 +249,7 @@ class TestControllerVk(unittest.TestCase):
                 self.assertTrue(resp.response)
 
             # Test failed request
-            resp = await env.request("messages.send")
+            resp = await env["request"]("messages.send")
 
             self.assertTrue(resp.error)
             self.assertTrue(resp.errors[0][1])

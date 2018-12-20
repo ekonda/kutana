@@ -42,7 +42,7 @@ async def resolveScreenName(screen_name, eenv):  # pragma: no cover
     if screen_name in naive_cache:
         return naive_cache[screen_name]
 
-    result = await eenv.request(
+    result = await eenv["request"](
         "utils.resolveScreenName",
         screen_name=screen_name
     )

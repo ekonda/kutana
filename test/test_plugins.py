@@ -1,5 +1,6 @@
-from kutana import Plugin
+from kutana import Plugin, Message, Attachment, DebugEnvironment
 from test_framework import KutanaTest
+import asyncio
 import re
 
 
@@ -176,6 +177,27 @@ class TestPlugins(KutanaTest):
 
         self.assertEqual(self.answers, ["early", "early", "late"])
 
+    def test_early_callbacks_raw(self):
+        self.answers = []
+
+        with self.debug_manager([None]):
+
+            self.plugins.append(Plugin())
+
+            async def on_raw_early(update, env):
+                self.answers.append("early")
+
+                return "GOON"
+
+            async def on_raw(update, env):
+                self.answers.append("late")
+
+            for pl in self.plugins:
+                pl.on_raw()(on_raw)
+                pl.on_raw(early=True)(on_raw_early)
+
+        self.assertEqual(self.answers, ["early", "early", "late"])
+
     def test_plugin_callbacks(self):
         self.disposed = 0
         self.counter = 0
@@ -250,6 +272,49 @@ class TestPlugins(KutanaTest):
                 await env.reply("echo message")
 
             plugin2.on_has_text()(do_check)
+
+    def test_plugin_attachments_type(self):
+        plugin = Plugin()
+
+        decorator = plugin.on_attachment("photo")
+
+        async def on_attachment(message, env):
+            return "DONE"
+
+        wrapper = decorator(on_attachment)
+
+        attachments = [
+            Attachment("audio", 0, 0, 0, 0, {}),
+            Attachment("image", 0, 0, 0, 0, {})
+        ]
+
+        res = asyncio.get_event_loop().run_until_complete(
+            wrapper(
+                Message("", attachments, 0, 0, {}),
+                DebugEnvironment(None, 0)
+            )
+        )
+
+        self.assertEqual(res, None)
+
+    def test_plugin_attachments(self):
+        plugin = Plugin()
+
+        decorator = plugin.on_attachment()
+
+        async def on_attachment(message, env):
+            return "DONE"
+
+        wrapper = decorator(on_attachment)
+
+        res = asyncio.get_event_loop().run_until_complete(
+            wrapper(
+                Message("no text", ("attachment"), 0, 0, {}),
+                DebugEnvironment(None, 0)
+            )
+        )
+
+        self.assertEqual(res, "DONE")
 
     def test_plugin_onstar(self):
         queue = ["привет", "отлично привет", "ecHo", "ab", "ae", "hello"]

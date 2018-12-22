@@ -1,6 +1,6 @@
-from kutana.logger import logger
-from kutana.environment import Environment
 import sys
+
+from kutana.logger import logger
 
 
 class Executor:
@@ -20,13 +20,13 @@ class Executor:
 
         for plugin in plugins:
             if hasattr(plugin, "_prepare_callbacks"):
-                self.register(*plugin._prepare_callbacks())
+                self.register(*plugin._prepare_callbacks())  # pylint: disable=W0212
 
             if hasattr(plugin, "_prepare_callbacks_error"):
-                self.register(*plugin._prepare_callbacks_error(), error=True)
+                self.register(*plugin._prepare_callbacks_error(), error=True)  # pylint: disable=W0212
 
-            self.register_startup(*plugin._callbacks_startup)
-            self.register_dispose(*plugin._callbacks_dispose)
+            self.register_startup(*plugin._callbacks_startup)  # pylint: disable=W0212
+            self.register_dispose(*plugin._callbacks_dispose)  # pylint: disable=W0212
 
             self.registered_plugins.append(plugin)
 
@@ -76,16 +76,13 @@ class Executor:
     async def __call__(self, update, env):
         try:
             for callback in self.callbacks:
-                res = await callback(update, env)
-
-                if res == "DONE":
+                if await callback(update, env) == "DONE":
                     break
 
         except Exception as e:
             logger.exception(
-                "\"{}::{}\" on update {} from {}".format(
-                    sys.exc_info()[0].__name__, e, update, env.manager_type
-                )
+                "\"%s::%s\" on update %s from %s",
+                sys.exc_info()[0].__name__, e, update, env.manager_type
             )
 
             env.meta["exception"] = e
@@ -95,13 +92,9 @@ class Executor:
                     "Произошла ошибка! Приносим свои извинения."
                 )
 
-            else:
-
-                for callback in self.error_callbacks:
-                    res = await callback(update, env)
-
-                    if res == "DONE":
-                        break
+            for callback in self.error_callbacks:
+                if await callback(update, env) == "DONE":
+                    break
 
     async def startup(self, kutana):
         """Call initialization callbacks."""

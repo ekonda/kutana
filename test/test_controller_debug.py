@@ -15,6 +15,14 @@ class TestManagerDebug(KutanaTest):
 
         self.assertEqual(self.manager.replies_all, {1: ["message"]})
 
+    def test_upload_photo(self):
+        with self.debug_manager(["132"]) as plugin:
+
+            async def on_text(message, env):
+                self.assertEqual("photo", await env.upload_photo("photo"))
+
+            plugin.on_has_text()(on_text)
+
     def test_multiple_senders_plain(self):
         self.target = ["message1"]
 

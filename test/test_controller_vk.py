@@ -121,6 +121,16 @@ class TestManagerVk(unittest.TestCase):
         with self.assertRaises(ValueError):
             VKManager("")
 
+    def test_vk_wrong_token(self):
+        VKManager("wrong token")
+
+    def test_vk_no_peer_id(self):
+        env = VKEnvironment(None, None)
+
+        res = self.kutana.loop.run_until_complete(env.reply("message"))
+
+        self.assertEqual(res, ())
+
     def test_vk_reply_message(self):
         messages = []
 

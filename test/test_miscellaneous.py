@@ -1,7 +1,10 @@
 from kutana import VKResponse, VKEnvironment, DebugEnvironment, DebugManager, \
-    Executor, load_plugins, load_configuration, VKManager
+    Executor, load_plugins, load_configuration, VKManager, Environment, \
+    Plugin, logger
 import unittest
 import asyncio
+import logging
+import types
 
 
 class TestMiscellaneous(unittest.TestCase):
@@ -38,6 +41,48 @@ class TestMiscellaneous(unittest.TestCase):
         value = load_configuration("key2", "test/test_assets/sample.json")
 
         self.assertEqual(value, {"keynkey": "hvalue"})
+
+    def test_environment_spawn(self):
+        env = Environment("manager")
+        inner_env = env.spawn()
+
+        self.assertEqual(env.manager, inner_env.manager)
+        self.assertEqual(env.parent_environment, None)
+        self.assertEqual(inner_env.parent_environment, env)
+
+    def test_plugin_with_exception_callback(self):
+        plugin = Plugin(exceptions=0)
+
+        async def on_text(message, env):
+            raise Exception
+
+        plugin.on_has_text()(on_text)
+
+        def _prepare_callbacks_error():
+            async def callback(update, env):
+                plugin.exceptions += 1  # pylint: disable=E1101
+
+            return (callback,)
+
+        plugin._prepare_callbacks_error = _prepare_callbacks_error
+
+        executor = Executor()
+
+        executor.register_plugins(plugin)
+
+        loop = asyncio.get_event_loop()
+
+        logger.setLevel(logging.CRITICAL)
+
+        loop.run_until_complete(
+            executor(
+                "message", DebugEnvironment(DebugManager(), peer_id=0)
+            )
+        )
+
+        logger.setLevel(logging.ERROR)
+
+        self.assertEqual(plugin.exceptions, 1)  # pylint: disable=E1101
 
     def test_vk_conversation(self):
         class FakeManager(VKManager):

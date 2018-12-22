@@ -1,9 +1,19 @@
-from kutana.logger import logger
-from os.path import isdir, join, dirname
 import importlib.util
 import json
 import os
+from os.path import dirname, isdir, join
 import re
+
+from kutana.logger import logger
+
+
+def done_if_none(value):
+    """Return "DONE" if value is None. Otherwise return value."""
+
+    if value is None:
+        return "DONE"
+
+    return value
 
 
 def get_path(rootpath, wantedpath):
@@ -47,11 +57,11 @@ def load_plugin(path, plugins_list=None):
     if hasattr(module, "plugin"):
         plugins_list.append(module.plugin)
 
-        logger.info("Loaded plugin \"{}\"".format(path))
+        logger.info("Loaded plugin \"%s\"", path)
 
         return module.plugin
 
-    logger.warning("No plugin found in \"{}\"".format(path))
+    logger.warning("No plugin found in \"%s\"", path)
 
     return None
 

@@ -9,9 +9,7 @@ plugin = Plugin(name="Metrics")
 async def on_metrics(message, env):
     process = psutil.Process(os.getpid())
 
-    taken_memory = process.memory_info().rss
-    found_time = time.time() - message.raw_update["object"]["date"]
+    taken_memory = int(process.memory_info().rss / 2**20)
+    taken_time = time.time() - message.raw_update["object"]["date"]
 
-    await env.reply("mem: ~{}mib; tim: {}".format(
-        int(taken_memory / 2**20), found_time
-    ))
+    await env.reply("mem: ~{}mib; tim: {}".format(taken_memory, taken_time))

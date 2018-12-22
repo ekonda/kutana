@@ -1,21 +1,14 @@
-from kutana.plugin import Message, Attachment
-from kutana.environment import Environment
-import aiohttp
 import json
 import re
+import aiohttp
+from kutana.plugin import Message, Attachment
+from kutana.environment import Environment
 
 
-naive_cache = {}
+NAIVE_CACHE = {}
 
 
 class VKEnvironment(Environment):
-    __slots__ = ("peer_id",)
-
-    def __init__(self, manager, parent_environment=None, peer_id=None):
-        super().__init__(manager, parent_environment)
-
-        self.peer_id = peer_id
-
     def spawn(self):
         return self.__class__(self.manager, self, peer_id=self.peer_id)
 
@@ -49,8 +42,8 @@ class VKEnvironment(Environment):
         return await self.manager.request(method, **kwargs)
 
     async def send_message(self, message, peer_id, attachment=None,
-            sticker_id=None, payload=None, keyboard=None,
-            forward_messages=None):
+                           sticker_id=None, payload=None, keyboard=None,
+                           forward_messages=None):
         """Proxy for manager's `send_message` method."""
 
         return await self.manager.send_message(
@@ -64,7 +57,7 @@ class VKEnvironment(Environment):
         )
 
     async def reply(self, message, attachment=None, sticker_id=None,
-            payload=None, keyboard=None, forward_messages=None):
+                    payload=None, keyboard=None, forward_messages=None):
 
         if self.peer_id is None:
             return ()
@@ -106,11 +99,8 @@ class VKEnvironment(Environment):
         return result
 
     async def upload_doc(self, file, peer_id=None, group_id=None,
-            doctype="doc", filename=None):
+                         doctype="doc", filename=None):
         """Pass peer_id=False to upload with docs.getWallUploadServer."""
-
-        if filename is None:
-            filename = "file.png"
 
         if peer_id is None:
             peer_id = self.peer_id
@@ -155,12 +145,22 @@ class VKEnvironment(Environment):
         )
 
     async def upload_photo(self, file, peer_id=None):
+        """
+        Upload passed file to vk.com. If `peer_id` was passed, file will be
+        uploaded for user with `peer_id`.
+
+        :param file: file to be uploaded. Can be bytes, file-like object or
+            path to file as string
+        :param peer_id: user's id to file to be uploaded for
+        :rtype: :class:`Attachment`
+        """
+
         if peer_id is None:
             peer_id = self.peer_id
 
         if isinstance(file, str):
-            with open(file, "rb") as o:
-                file = o.read()
+            with open(file, "rb") as fh:
+                file = fh.read()
 
         upload_data = await self.manager.request(
             "photos.getMessagesUploadServer", peer_id=peer_id
@@ -190,16 +190,18 @@ class VKEnvironment(Environment):
             attachments.response[0], "photo"
         )
 
-    async def resolveScreenName(self, screen_name):
-        if screen_name in naive_cache:
-            return naive_cache[screen_name]
+    async def resolve_screen_name(self, screen_name):
+        """Return answer from vk.com with resolved passed screen name."""
+
+        if screen_name in NAIVE_CACHE:
+            return NAIVE_CACHE[screen_name]
 
         result = await self.manager.request(
             "utils.resolveScreenName",
             screen_name=screen_name
         )
 
-        naive_cache[screen_name] = result
+        NAIVE_CACHE[screen_name] = result
 
         return result
 
@@ -215,17 +217,17 @@ class VKEnvironment(Environment):
             cursor = 0
             new_text = ""
 
-            for m in re.finditer(r"\[(.+?)\|.+?\]", text):
-                resp = await self.resolveScreenName(m.group(1))
+            for match in re.finditer(r"\[(.+?)\|.+?\]", text):
+                resp = await self.resolve_screen_name(match.group(1))
 
-                new_text += text[cursor : m.start()]
+                new_text += text[cursor : match.start()]
 
-                cursor = m.end()
+                cursor = match.end()
 
                 if not resp.response or resp.response["object_id"] == update["group_id"]:
                     continue
 
-                new_text += text[m.start() : m.end()]
+                new_text += text[match.start() : match.end()]
 
             new_text += text[cursor :]
 

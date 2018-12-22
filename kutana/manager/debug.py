@@ -5,13 +5,6 @@ from kutana.environment import Environment
 
 
 class DebugEnvironment(Environment):
-    __slots__ = ("peer_id",)
-
-    def __init__(self, manager, parent_environment=None, peer_id=None):
-        super().__init__(manager, parent_environment)
-
-        self.peer_id = peer_id
-
     def spawn(self):
         return self.__class__(self.manager, self, peer_id=self.peer_id)
 
@@ -21,7 +14,7 @@ class DebugEnvironment(Environment):
         )
 
     async def send_message(self, message=None, peer_id=None, attachment=None,
-            **kwargs):
+                           **kwargs):
         """Proxy for manager's `send_message` method."""
 
         await self.manager.send_message(message, peer_id, attachment, **kwargs)
@@ -40,6 +33,9 @@ class DebugEnvironment(Environment):
         # update = (sender_id, message)
         # or
         # update = (message_from_user_with_id_1)
+
+        if not update:
+            return None
 
         if isinstance(update, str):
             return Message(
@@ -64,7 +60,7 @@ class DebugManager(BasicManager):
         self.dead = False
 
     async def send_message(self, message=None, peer_id=None, attachment=None,
-            **kwargs):
+                           **kwargs):
 
         peer_id = peer_id if peer_id is not None else 1
 
@@ -89,7 +85,7 @@ class DebugManager(BasicManager):
                 self.replies.extend(attachment)
 
     async def get_environment(self, update):
-        peer_id = 1 if isinstance(update, str) else update[0]
+        peer_id = update[0] if isinstance(update, (list, tuple)) else 1
 
         return DebugEnvironment(self, peer_id=peer_id)
 

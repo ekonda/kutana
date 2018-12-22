@@ -44,7 +44,9 @@ before most of usual callbacks.
 
 Executers can use plugins. Plugins contains logically grouped callbacks with
 orbitrary data like plugins's name, description etc. Plugins register their
-callbacks in executor, and executer register callbacks in kutana.
+callbacks in executor, and executer register callbacks in kutana. Plugins'
+callbacks can return None (implicitly or explicitly) or `"DONE"` to mark
+update as processed.
 
 Callbacks
 ---------
@@ -56,9 +58,9 @@ plugin looks like that:
 
 .. code-block:: python
 
-	@plugin.on_startswith_text("echo")
-	async def on_echo_callback(message, attachments, env):
-	    await env.reply("{}".format(env.body))
+    @plugin.on_startswith_text("echo")
+    async def on_echo_callback(message, attachments, env):
+        await env.reply("{}".format(env.body))
 
 
 Callback receives three arguments - :class:`.Message`, list of
@@ -72,9 +74,9 @@ Callback function for processing raw update from service looks like that:
 
 .. code-block:: python
 
-	@plugin.on_raw()
-	async def on_raw_callback(update, env):
-	    pass
+    @plugin.on_raw()
+    async def on_raw_callback(update, env):
+        pass
 
 
 Callback receives two arguments - raw update's data as dict and
@@ -83,12 +85,6 @@ is used when you need to add something special to workflow often connected with
 concrete service.
 
 -------------------------------------------------------------------------------
-
-.. toctree::
-    :maxdepth: 1
-    :caption: Recipes
-
-    recipes
 
 .. toctree::
     :maxdepth: 1

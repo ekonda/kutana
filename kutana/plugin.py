@@ -1,5 +1,7 @@
-from collections import namedtuple
 import re
+from collections import namedtuple
+
+from kutana.functions import done_if_none
 
 
 Message = namedtuple(
@@ -38,15 +40,6 @@ class Plugin():
         for k, v in kwargs.items():
             setattr(self, k, v)
 
-    @staticmethod
-    def _done_if_none(value):
-        """Return "DONE" if value is None. Otherwise return value."""
-
-        if value is None:
-            return "DONE"
-
-        return value
-
     def _prepare_callbacks(self):
         """Return callbacks for registration in executor."""
 
@@ -74,7 +67,7 @@ class Plugin():
 
             callbacks.append(wrapper)
 
-        callbacks += self._callbacks_special
+        callbacks.extend(self._callbacks_special)
 
         return callbacks
 
@@ -107,7 +100,7 @@ class Plugin():
             else:
                 res = await callback(message, inner_env)
 
-            if res == "DONE":  # propogate process result to executor
+            if res == "DONE":
                 return "DONE"
 
     def register(self, *callbacks, early=False):
@@ -178,10 +171,14 @@ class Plugin():
         """
 
         def decorator(coro):
-            if early:
-                self._ecallbacks_raw.append(coro)
+            async def wrapper(update, env):
+                return done_if_none(await coro(update, env))
 
-            self._callbacks_raw.append(coro)
+            if early:
+                self._ecallbacks_raw.append(wrapper)
+
+            else:
+                self._callbacks_raw.append(wrapper)
 
             return coro
 
@@ -194,16 +191,15 @@ class Plugin():
         See :func:`Plugin.register` for info about `early`.
         """
 
+        if not texts:
+            raise ValueError("No texts passed to `Plugin.on_text`")
+
         def decorator(coro):
             check_texts = list(text.strip().lower() for text in texts)
 
             async def wrapper(message, env):
                 if message.text.strip().lower() in check_texts:
-                    res = self._done_if_none(
-                        await coro(message, env)
-                    )
-
-                    if res == "DONE":
+                    if done_if_none(await coro(message, env)) == "DONE":
                         return "DONE"
 
             self.register(wrapper, early=early)
@@ -235,9 +231,7 @@ class Plugin():
 
                     env.meta["found_text"] = text
 
-                    res = self._done_if_none(await coro(message, env))
-
-                    if res == "DONE":
+                    if done_if_none(await coro(message, env)) == "DONE":
                         return "DONE"
 
             self.register(wrapper, early=early)
@@ -279,11 +273,7 @@ class Plugin():
                 env.meta["args"] = env.meta["body"].split()
                 env.meta["prefix"] = message.text[:len(search_result)].strip()
 
-                res = self._done_if_none(
-                    await coro(message, env)
-                )
-
-                if res == "DONE":
+                if done_if_none(await coro(message, env)) == "DONE":
                     return "DONE"
 
             self.register(wrapper, early=early)
@@ -318,11 +308,7 @@ class Plugin():
 
                 env.meta["match"] = match
 
-                res = self._done_if_none(
-                    await coro(message, env)
-                )
-
-                if res == "DONE":
+                if done_if_none(await coro(message, env)) == "DONE":
                     return "DONE"
 
             self.register(wrapper, early=early)
@@ -353,9 +339,7 @@ class Plugin():
                     else:
                         return
 
-                res = self._done_if_none(await coro(message, env))
-
-                if res == "DONE":
+                if done_if_none(await coro(message, env)) == "DONE":
                     return "DONE"
 
             self.register(wrapper, early=early)

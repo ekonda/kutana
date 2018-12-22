@@ -1,7 +1,7 @@
+import asyncio
+
 from kutana.exceptions import ExitException
 from kutana.executor import Executor
-from kutana.environment import Environment
-import asyncio
 
 
 class Kutana:
@@ -76,9 +76,10 @@ class Kutana:
         self.loop.run_until_complete(self.executor.startup(self))
 
         try:
-            self.gathered = asyncio.gather(*self.loops, *self.tasks)
+            self.loop.run_until_complete(
+                asyncio.gather(*self.loops, *self.tasks)
+            )
 
-            self.loop.run_until_complete(self.gathered)
         except (KeyboardInterrupt, ExitException):
             pass
 

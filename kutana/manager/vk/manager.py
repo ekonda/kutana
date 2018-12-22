@@ -1,12 +1,12 @@
-from .environment import VKEnvironment
-from kutana.environment import Environment
-from kutana.manager.basic import BasicManager
-from kutana.plugin import Attachment
-from kutana.logger import logger
-from collections import namedtuple
 import asyncio
-import aiohttp
 import json
+from collections import namedtuple
+
+import aiohttp
+from kutana.logger import logger
+from kutana.manager.basic import BasicManager
+from kutana.manager.vk.environment import VKEnvironment
+from kutana.plugin import Attachment
 
 
 VKResponse = namedtuple(
@@ -36,10 +36,6 @@ class VKManager(BasicManager):
     Controller requires group's token. You can specify settings for
     groups.setLongPollSettings with argument `longpoll_settings`.
     """
-
-    @staticmethod
-    def get_type():
-        return "vk"
 
     def __init__(self, token, execute_pause=0.05, longpoll_settings=None):
         if not token:
@@ -108,7 +104,7 @@ class VKManager(BasicManager):
             return VKResponse(
                 error=True,
                 errors=(
-                    ("VK_req", raw_respose.get("error","")),
+                    ("VK_req", raw_respose.get("error", "")),
                     ("VK_exe", raw_respose.get("execute_errors", ""))
                 ),
                 response=raw_respose.get("response", "")
@@ -117,7 +113,7 @@ class VKManager(BasicManager):
         return VKResponse(
             error=False,
             errors=(
-                ("VK_req", raw_respose.get("error","")),
+                ("VK_req", raw_respose.get("error", "")),
                 ("VK_exe", raw_respose.get("execute_errors", ""))
             ),
             response=raw_respose["response"]
@@ -148,8 +144,8 @@ class VKManager(BasicManager):
             )
 
     async def send_message(self, message, peer_id, attachment=None,
-            sticker_id=None, payload=None, keyboard=None,
-            forward_messages=None):
+                           sticker_id=None, payload=None, keyboard=None,
+                           forward_messages=None):
         """Send message to target peer_id with parameters."""
 
         if isinstance(attachment, Attachment):
@@ -184,9 +180,6 @@ class VKManager(BasicManager):
 
     async def get_environment(self, update):
         return VKEnvironment(self, peer_id=update["object"].get("peer_id"))
-
-    async def convert_to_message(self, update, env):
-        return await env.convert_to_message(update)
 
     @staticmethod
     def _set_results_to_requests(result, requests):
@@ -277,11 +270,11 @@ class VKManager(BasicManager):
     async def receiver(self):
         try:
             async with self.session.post(
-                self.longpoll_url.format(
-                    self.longpoll["server"],
-                    self.longpoll["key"],
-                    self.longpoll["ts"],
-                )
+                    self.longpoll_url.format(
+                        self.longpoll["server"],
+                        self.longpoll["key"],
+                        self.longpoll["ts"],
+                    )
             ) as resp:
                 response = await resp.json()
 
@@ -375,10 +368,11 @@ class VKManager(BasicManager):
 
         await self.update_longpoll_data()
 
-        logger.info("logged in as \"{}\" ( https://vk.com/club{} )".format(
+        logger.info(
+            "logged in as \"%s\" ( https://vk.com/club%s )",
             current_group_s.response[0]["name"],
             current_group_s.response[0]["id"]
-        ))
+        )
 
         return self.receiver
 

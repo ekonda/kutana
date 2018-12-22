@@ -15,12 +15,8 @@ class TestExecutors(KutanaTest):
 
         with self.debug_manager(self.target):
 
-            async def new_update(update, eenv):
-                if eenv["mngr_type"] == "debug":
-                    await eenv["reply"](update)
-
-                else:
-                    self.assertEqual(eenv["mngr_type"], "kutana")
+            async def new_update(update, env):
+                await env.reply(update)
 
             self.kutana.executor.register(new_update)
 
@@ -29,13 +25,10 @@ class TestExecutors(KutanaTest):
 
         with self.debug_manager(self.target):
 
-            async def new_update(update, eenv):
-                if eenv["mngr_type"] == "debug":
-                    attachment = await eenv["upload_doc"]("file")
-                    await eenv["reply"]("", attachment=attachment)
+            async def new_update(update, env):
+                attachment = await env.upload_doc("file")
 
-                else:
-                    self.assertEqual(eenv["mngr_type"], "kutana")
+                await env.reply("", attachment=attachment)
 
             self.kutana.executor.register(new_update)
 
@@ -43,45 +36,43 @@ class TestExecutors(KutanaTest):
         self.called_1 = 0
         self.called_2 = 0
 
-        with self.debug_manager(["message", "message"]):
+        with self.debug_manager(["message"]):
 
-            async def prc1(update, eenv):
-                if eenv["mngr_type"] == "debug":
-                    self.called_1 += 1
-                    return "DONE"
+            async def prc1(update, env):
+                self.called_1 += 1
+                return "DONE"
 
             prc1.priority = 0  # very low
 
-            async def prc2(update, eenv):
-                if eenv["mngr_type"] == "debug":
-                    self.called_2 += 1
-                    return "DONE"
+            async def prc2(update, env):
+                self.called_2 += 1
+                return "DONE"
 
             self.kutana.executor.register(prc1)
             self.kutana.executor.register(prc2, priority=1000)  # very high
 
         self.assertEqual(self.called_1, 0)
-        self.assertEqual(self.called_2, 2)
+        self.assertEqual(self.called_2, 1)
 
     def test_exception(self):
         self.called = 0
 
         with self.debug_manager(["message"]):
 
-            async def new_update(update, eenv):
-                if eenv["mngr_type"] == "debug":
+            async def new_update(update, env):
+                if env.manager_type == "debug":
                     raise Exception
 
             self.kutana.executor.register(new_update)
 
-            async def new_error(update, eenv):
-                self.assertTrue(eenv["exception"])
+            async def new_error(update, env):
+                self.assertTrue(env.meta["exception"])
 
                 self.called += 1
 
                 return "DONE"
 
-            async def new_error_no(update, eenv):
+            async def new_error_no(update, env):
                 self.assertTrue(False)
 
             self.kutana.executor.register(new_error, error=True)
@@ -92,77 +83,60 @@ class TestExecutors(KutanaTest):
         self.assertEqual(self.called, 1)
 
     def test_default_exception_handle(self):
-        self.called = 0
-
-        async def my_faked_reply(mes):
-            self.assertEqual(mes, "Произошла ошибка! Приносим свои извинения.")
-            self.called += 1
+        self.target = ["Произошла ошибка! Приносим свои извинения."]
 
         with self.debug_manager(["message"]):
 
-            async def new_update(update, eenv):
-                if eenv["mngr_type"] == "debug":
-                    eenv["reply"] = my_faked_reply
-                    raise Exception
+            async def new_update(update, env):
+                raise Exception
 
             self.kutana.executor.register(new_update)
 
             logger.setLevel(logging.CRITICAL)
-
-        self.assertEqual(self.called, 1)
-
 
     def test_two_debug(self):
         self.target = ["message"]
         self.called = 0
 
         with self.debug_manager(self.target):
+
             with self.debug_manager(self.target):
 
-                async def new_update(update, eenv):
-                    if eenv["mngr_type"] == "debug":
-                        await eenv["reply"](update)
-                        self.called += 1
-
-                    else:
-                        self.assertEqual(eenv["mngr_type"], "kutana")
+                async def new_update(update, env):
+                    await env.reply(update)
+                    self.called += 1
 
                 self.kutana.executor.register(new_update)
 
         self.assertEqual(self.called, 2)
 
     def test_two_callbacks_and_two_debugs(self):
-            self.target = ["message"]
-            self.called = 0
+            queue = ["message"]
 
-            with self.debug_manager(self.target):
-                with self.debug_manager(self.target):
-                    self.target *= 2
+            self.target = ["message"] * 2
 
-                    async def new_update_1(update, eenv):
-                        if eenv["mngr_type"] == "debug":
-                            await eenv["reply"](update)
-                            self.called += 1
+            with self.debug_manager(queue):
 
-                    async def new_update_2(update, eenv):
-                        if eenv["mngr_type"] == "debug":
-                            await eenv["reply"](update)
-                            self.called += 1
+                with self.debug_manager(queue):
+
+                    async def new_update_1(update, env):
+                        await env.reply(update)
+
+                    async def new_update_2(update, env):
+                        await env.reply(update)  # will never be called
 
                     self.kutana.executor.register(new_update_1)
                     self.kutana.executor.register(new_update_2)
-
-            self.assertEqual(self.called, 4)
 
     def test_decorate_or_call(self):
         self.target = ["message"]
 
         with self.debug_manager(self.target):
+
             self.target *= 2
 
             @self.kutana.executor.register()
-            async def new_update(update, eenv):
-                if eenv["mngr_type"] == "debug":
-                    await eenv["reply"](update)
+            async def new_update(update, env):
+                await env.reply(update)
 
             self.kutana.executor.register(new_update)

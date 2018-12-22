@@ -1,6 +1,5 @@
-from kutana import VKResponse, DebugManager, Executor, load_plugins, \
-    load_configuration
-import kutana.manager.vk.converter as vk_converter
+from kutana import VKResponse, VKEnvironment, DebugEnvironment, DebugManager, \
+    Executor, load_plugins, load_configuration, VKManager
 import unittest
 import asyncio
 
@@ -18,24 +17,13 @@ class TestMiscellaneous(unittest.TestCase):
 
         loop = asyncio.get_event_loop()
 
-        loop.run_until_complete(
-            executor(
-                {
-                    "kutana": self, "update_type": "startup",
-                    "registered_plugins": executor.registered_plugins
-                },
-                {
-                    "mngr_type": "kutana"
-                }
-            )
-        )
+        loop.run_until_complete(executor.startup(None))
 
         loop.run_until_complete(
-            executor(
-                "message", {
-                    "mngr_type": "debug",
-                    "convert_to_message": DebugManager.convert_to_message
-                }
+            executor("message",
+                DebugEnvironment(
+                    DebugManager(), peer_id=0
+                )
             )
         )
 
@@ -52,24 +40,25 @@ class TestMiscellaneous(unittest.TestCase):
         self.assertEqual(value, {"keynkey": "hvalue"})
 
     def test_vk_conversation(self):
-        async def fake_resolveScreenName(*args, **kwargs):
-            return VKResponse(False, (), {"object_id": 1})
+        class FakeManager(VKManager):
+            def __init__(self):
+                pass
 
-        resolveScreenName = vk_converter.resolveScreenName
-        vk_converter.resolveScreenName = fake_resolveScreenName
+            async def request(self, *args, **kwargs):
+                return VKResponse(False, (), {"object_id": 1})
+
+        env = VKEnvironment(FakeManager(), peer_id=0)
 
         loop = asyncio.get_event_loop()
 
         message = loop.run_until_complete(
-            vk_converter.convert_to_message(
+            env.convert_to_message(
                 {"object": {"date": 1, "random_id": 0, "fwd_messages": [],
                 "important": False, "peer_id": 1,
                 "text": "echo [club1|\u0421\u043e] 123", "attachments": [],
                 "conversation_message_id": 1411, "out": 0, "from_id": 1,
                 "id": 0, "is_hidden": False}, "group_id": 1,
-                "type": "message_new"},
-                {w: 1 for w in ("reply", "send_msg", "request",
-                "upload_photo", "upload_doc")}
+                "type": "message_new"}
             )
         )
 
@@ -77,22 +66,18 @@ class TestMiscellaneous(unittest.TestCase):
         self.assertEqual(message.attachments, ())
 
         message = loop.run_until_complete(
-            vk_converter.convert_to_message(
+            env.convert_to_message(
                 {"object": {"date": 1, "random_id": 0, "fwd_messages": [],
                 "important": False, "peer_id": 1,
                 "text": "echo [club1|\u0421\u043e] 123", "attachments": [],
                 "conversation_message_id": 1411, "out": 0, "from_id": 1,
                 "id": 0, "is_hidden": False}, "group_id": 2,
-                "type": "message_new"},
-                {w: 1 for w in ("reply", "send_msg", "request",
-                "upload_photo", "upload_doc")}
+                "type": "message_new"}
             )
         )
 
         self.assertEqual(message.text, "echo [club1|\u0421\u043e] 123")
         self.assertEqual(message.attachments, ())
-
-        vk_converter.resolveScreenName = resolveScreenName
 
 
 if __name__ == '__main__':

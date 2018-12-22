@@ -22,12 +22,14 @@ async def on_has_text(message, attachments, env):
     if not message.text.startswith(PREFIX):
         return "DONE"
 
-    env["eenv"]["_cached_message"] = Message(
-        message.text[len(PREFIX):],
-        message.attachments,
-        message.from_id,
-        message.peer_id,
-        message.raw_update
+    env.parent_environment.replace_cached_message(
+        Message(
+            message.text[len(PREFIX):],
+            message.attachments,
+            message.from_id,
+            message.peer_id,
+            message.raw_update
+        )
     )
 
     return "GOON"

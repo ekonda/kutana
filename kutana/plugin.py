@@ -31,7 +31,7 @@ class Plugin():
         self._callbacks_special = []
 
         self._callbacks_dispose = []
-        self._callback_startup = None
+        self._callbacks_startup = []
 
         self.priority = 400
 
@@ -52,19 +52,11 @@ class Plugin():
 
         callbacks = []
 
-        if self._callback_startup:
-            async def wrapper_for_startup(update, eenv):
-                await self._proc_startup(update, eenv)
-
-            wrapper_for_startup.priority = self.priority
-
-            callbacks.append(wrapper_for_startup)
-
         if self._ecallbacks or self._ecallbacks_raw:
 
-            async def wrapper_for_early(update, eenv):
+            async def wrapper_for_early(update, env):
                 return await self._proc_update(
-                    update, eenv, (self._ecallbacks, self._ecallbacks_raw)
+                    update, env, (self._ecallbacks, self._ecallbacks_raw)
                 )
 
             wrapper_for_early.priority = self.priority + 200
@@ -73,9 +65,9 @@ class Plugin():
 
         if self._callbacks or self._callbacks_raw:
 
-            async def wrapper(update, eenv):
+            async def wrapper(update, env):
                 return await self._proc_update(
-                    update, eenv, (self._callbacks, self._callbacks_raw)
+                    update, env, (self._callbacks, self._callbacks_raw)
                 )
 
             wrapper.priority = self.priority
@@ -86,68 +78,36 @@ class Plugin():
 
         return callbacks
 
-    async def _proc_startup(self, update, eenv):
-        """Process startup update from kutana."""
-
-        if eenv["mngr_type"] != "kutana":
-            return
-
-        if update["update_type"] == "startup":
-            if self._callback_startup:
-                await self._callback_startup(
-                    update, {"eenv": eenv, **eenv}
-                )
-
     @staticmethod
-    async def _proc_update(update, eenv, cbs=None):
-        """Process update with eenv and target callbacks.
+    async def _proc_update(update, env, callbacks):
+        """Process update with env and target callbacks.
         If no callbacks passed raises RuntimeException.
         """
 
-        if cbs is None:
-            raise RuntimeError
-
-        if eenv["mngr_type"] == "kutana":  # do not process kutana's updates
-            return
-
-        env = {"eenv": eenv, **eenv}
-
-        if "_cached_message" in eenv:
-            message = eenv["_cached_message"]
+        if env.has_message():
+            message = env.get_message()
 
         else:
-            message = await eenv["convert_to_message"](update, eenv)
+            message = await env.convert_to_message(update)
 
-            eenv["_cached_message"] = message
+            env.set_message(message)
 
-        if message is None and cbs[1]:
-
-            async def call(cb):
-                return await cb(
-                    update,
-                    env
-                )
-
-            callbacks = cbs[1]
-
-        elif cbs[0]:
-
-            async def call(cb):
-                return await cb(
-                    message,
-                    message.attachments,
-                    env,
-                )
-
-            callbacks = cbs[0]
+        if message:
+            callbacks_type = 0  # process message
 
         else:
-            return "DONE"
+            callbacks_type = 1  #  process raw update
 
-        for callback in callbacks:
-            comm = await call(callback)
+        inner_env = env.spawn()
 
-            if comm == "DONE":
+        for callback in callbacks[callbacks_type]:
+            if callbacks_type == 1:
+                res = await callback(update, inner_env)
+
+            else:
+                res = await callback(message, inner_env)
+
+            if res == "DONE":  # propogate process result to executor
                 return "DONE"
 
     def register(self, *callbacks, early=False):
@@ -197,12 +157,12 @@ class Plugin():
     def on_startup(self):
         """Returns decorator for adding callbacks which is triggered
         at the startup of kutana. Decorated coroutine receives update and
-        plugin environment (although this env is only accessible in startup by
-        only this decoraed coroutine).
+        plugin environment (although this env is only accessible in plugin by
+        decoraed coroutines).
         """
 
         def decorator(coro):
-            self._callback_startup = coro
+            self._callbacks_startup.append(coro)
 
             return coro
 
@@ -237,13 +197,13 @@ class Plugin():
         def decorator(coro):
             check_texts = list(text.strip().lower() for text in texts)
 
-            async def wrapper(message, attachments, env):
+            async def wrapper(message, env):
                 if message.text.strip().lower() in check_texts:
-                    comm = self._done_if_none(
-                        await coro(message, attachments, env)
+                    res = self._done_if_none(
+                        await coro(message, env)
                     )
 
-                    if comm == "DONE":
+                    if res == "DONE":
                         return "DONE"
 
             self.register(wrapper, early=early)
@@ -266,20 +226,20 @@ class Plugin():
         def decorator(coro):
             check_texts = tuple(text.strip().lower() for text in texts) or ("",)
 
-            async def wrapper(message, attachments, env):
+            async def wrapper(message, env):
                 check_text = message.text.strip().lower()
 
                 for text in check_texts:
                     if text not in check_text:
                         continue
 
-                    env["found_text"] = text
+                    env.meta["found_text"] = text
 
-                    comm = self._done_if_none(
-                        await coro(message, attachments, env)
+                    res = self._done_if_none(
+                        await coro(message, env)
                     )
 
-                    if comm == "DONE":
+                    if res == "DONE":
                         return "DONE"
 
             self.register(wrapper, early=early)
@@ -311,21 +271,21 @@ class Plugin():
 
                 return None
 
-            async def wrapper(message, attachments, env):
+            async def wrapper(message, env):
                 search_result = search_prefix(message.text.lower())
 
                 if search_result is None:
                     return
 
-                env["body"] = message.text[len(search_result):].strip()
-                env["args"] = env["body"].split()
-                env["prefix"] = message.text[:len(search_result)].strip()
+                env.meta["body"] = message.text[len(search_result):].strip()
+                env.meta["args"] = env.meta["body"].split()
+                env.meta["prefix"] = message.text[:len(search_result)].strip()
 
-                comm = self._done_if_none(
-                    await coro(message, attachments, env)
+                res = self._done_if_none(
+                    await coro(message, env)
                 )
 
-                if comm == "DONE":
+                if res == "DONE":
                     return "DONE"
 
             self.register(wrapper, early=early)
@@ -352,19 +312,19 @@ class Plugin():
             compiled = regexp
 
         def decorator(coro):
-            async def wrapper(message, attachments, env):
+            async def wrapper(message, env):
                 match = compiled.match(message.text)
 
                 if not match:
                     return
 
-                env["match"] = match
+                env.meta["match"] = match
 
-                comm = self._done_if_none(
-                    await coro(message, attachments, env)
+                res = self._done_if_none(
+                    await coro(message, env)
                 )
 
-                if comm == "DONE":
+                if res == "DONE":
                     return "DONE"
 
             self.register(wrapper, early=early)
@@ -382,7 +342,9 @@ class Plugin():
         """
 
         def decorator(coro):
-            async def wrapper(message, attachments, env):
+            async def wrapper(message, env):
+                attachments = message.attachments
+
                 if not attachments:
                     return
 
@@ -393,11 +355,9 @@ class Plugin():
                     else:
                         return
 
-                comm = self._done_if_none(
-                    await coro(message, attachments, env)
-                )
+                res = self._done_if_none(await coro(message, env))
 
-                if comm == "DONE":
+                if res == "DONE":
                     return "DONE"
 
             self.register(wrapper, early=early)
@@ -405,9 +365,3 @@ class Plugin():
             return wrapper
 
         return decorator
-
-    async def dispose(self):
-        """Free resources and prepare for shutdown."""
-
-        for callback in self._callbacks_dispose:
-            await callback()

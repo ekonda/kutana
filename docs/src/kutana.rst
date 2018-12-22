@@ -6,26 +6,10 @@ Subpackages
 
 .. toctree::
 
-    kutana.controller_vk
+    kutana.manager
 
 Submodules
 ----------
-
-kutana.controller\_basic module
--------------------------------
-
-.. automodule:: kutana.controller_basic
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-kutana.controller\_debug module
--------------------------------
-
-.. automodule:: kutana.controller_debug
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 kutana.exceptions module
 ------------------------
@@ -71,14 +55,6 @@ kutana.plugin module
 --------------------
 
 .. automodule:: kutana.plugin
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-kutana.structures module
-------------------------
-
-.. automodule:: kutana.structures
     :members:
     :undoc-members:
     :show-inheritance:

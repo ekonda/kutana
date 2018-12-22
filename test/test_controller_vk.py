@@ -1,5 +1,5 @@
 from kutana import Kutana, VKManager, ExitException, Plugin
-from kutana.manager.vk.vkwrappers import make_reply
+from kutana.manager.vk.environment import VKEnvironment
 import unittest
 import requests
 import logging
@@ -128,10 +128,10 @@ class TestManagerVk(unittest.TestCase):
             async def send_message(self, message, *args):
                 messages.append(message)
 
-        reply = make_reply(FakeManager(), 0)
+        env = VKEnvironment(FakeManager(), peer_id=0)
 
-        self.kutana.loop.run_until_complete(reply("abc"))
-        self.kutana.loop.run_until_complete(reply("abc" * 4096))
+        self.kutana.loop.run_until_complete(env.reply("abc"))
+        self.kutana.loop.run_until_complete(env.reply("abc" * 4096))
 
         self.assertEqual(messages[0], "abc")
         self.assertEqual(messages[1], ("abc" * 4096)[:4096])
@@ -200,16 +200,18 @@ class TestManagerVk(unittest.TestCase):
         self.called_on_raw = False
         self.called_on_attachment = False
 
-        async def on_attachment(message, attachments, env):
+        async def on_attachment(message, env):
             self.called_on_attachment = True
             return "GOON"
 
         plugin.on_attachment("photo")(on_attachment)
 
-        async def on_regexp(message, attachments, env):
+        async def on_regexp(message, env):
+            attachments = message.attachments
+
             # Test receiving
-            self.assertEqual(env["match"].group(1), "message")
-            self.assertEqual(env["match"].group(0), "echo message")
+            self.assertEqual(env.meta["match"].group(1), "message")
+            self.assertEqual(env.meta["match"].group(0), "echo message")
 
             self.assertEqual(message.attachments, attachments)
             self.assertEqual(len(attachments), 2)
@@ -218,15 +220,15 @@ class TestManagerVk(unittest.TestCase):
             self.assertTrue(attachments[1].link)
 
             # Test sending
-            a_image = await env["upload_photo"]("test/test_assets/author.png")
+            a_image = await env.upload_photo("test/test_assets/author.png")
 
-            a_image = await env["upload_photo"](
+            a_image = await env.upload_photo(
                 "test/test_assets/author.png", peer_id=False
             )
 
             time.sleep(0.34)  # cool down vkapi
 
-            a_audio = await env["upload_doc"](
+            a_audio = await env.upload_doc(
                 "test/test_assets/girl.ogg",
                 doctype="audio_message",
                 filename="file.ogg"
@@ -235,12 +237,12 @@ class TestManagerVk(unittest.TestCase):
             self.assertTrue(a_image.id)
             self.assertTrue(a_audio.id)
 
-            resps = await env["reply"]("Спасибо.", attachment=a_image)
+            resps = await env.reply("Спасибо.", attachment=a_image)
 
             self.assertTrue(resps[0].response)
 
             for resp in resps:
-                resp = await env["request"](
+                resp = await env.request(
                     "messages.delete",
                     message_ids=str(resp.response),
                     delete_for_all=1
@@ -249,7 +251,7 @@ class TestManagerVk(unittest.TestCase):
                 self.assertTrue(resp.response)
 
             # Test failed request
-            resp = await env["request"]("messages.send")
+            resp = await env.request("messages.send")
 
             self.assertTrue(resp.error)
             self.assertTrue(resp.errors[0][1])

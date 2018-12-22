@@ -2,14 +2,18 @@
 
 from kutana.logger import logger
 
-from kutana.kutana import *  # lgtm [py/polluting-import]
-from kutana.plugin import *  # lgtm [py/polluting-import]
-from kutana.executor import *  # lgtm [py/polluting-import]
+from kutana.kutana import Kutana
+from kutana.plugin import Plugin, Message, Attachment
+from kutana.executor import Executor
+from kutana.exceptions import ExitException
 
-from kutana.manager.basic import *  # lgtm [py/polluting-import]
-from kutana.manager.debug import *  # lgtm [py/polluting-import]
-from kutana.manager.vk import *  # lgtm [py/polluting-import]
+from kutana.environment import Environment
 
-from kutana.functions import *  # lgtm [py/polluting-import]
+from kutana.manager.basic import BasicManager
+from kutana.manager.debug import DebugManager, DebugEnvironment
+from kutana.manager.vk import VKManager, VKRequest, VKResponse, VKEnvironment
+
+from kutana.functions import get_path, load_configuration, import_module, \
+    load_plugins
 
 NAME = "kutana"

@@ -1,7 +1,6 @@
-from kutana.manager.vk.vkwrappers import make_reply, make_upload_docs,\
-    make_upload_photo
-from kutana.manager.vk.converter import convert_to_message
-from kutana.manager.basic import BasicController
+from .environment import VKEnvironment
+from kutana.environment import Environment
+from kutana.manager.basic import BasicManager
 from kutana.plugin import Attachment
 from kutana.logger import logger
 from collections import namedtuple
@@ -32,13 +31,15 @@ class VKRequest(asyncio.Future):
         self.kwargs = kwargs
 
 
-class VKManager(BasicController):
+class VKManager(BasicManager):
     """Class for receiving updates from vk.com.
     Controller requires group's token. You can specify settings for
     groups.setLongPollSettings with argument `longpoll_settings`.
     """
 
-    type = "vk"
+    @staticmethod
+    def get_type():
+        return "vk"
 
     def __init__(self, token, execute_pause=0.05, longpoll_settings=None):
         if not token:
@@ -181,21 +182,11 @@ class VKManager(BasicController):
             forward_messages=forward_messages
         )
 
-    async def setup_env(self, update, eenv):
-        peer_id = update["object"].get("peer_id")
+    async def get_environment(self, update):
+        return VKEnvironment(self, peer_id=update["object"].get("peer_id"))
 
-        if update["type"] == "message_new":
-            eenv["reply"] = make_reply(self, peer_id)
-
-        eenv["send_message"] = self.send_message
-
-        eenv["upload_photo"] = make_upload_photo(self, peer_id)
-        eenv["upload_doc"] = make_upload_docs(self, peer_id)
-
-        eenv["request"] = self.request
-
-    async def convert_to_message(self, update, eenv):
-        return await convert_to_message(update, eenv)
+    async def convert_to_message(self, update, env):
+        return await env.convert_to_message(update)
 
     @staticmethod
     def _set_results_to_requests(result, requests):

@@ -1,5 +1,6 @@
 from kutana.exceptions import ExitException
 from kutana.executor import Executor
+from kutana.environment import Environment
 import asyncio
 
 
@@ -27,16 +28,9 @@ class Kutana:
         self.managers.append(manager)
 
     async def process_update(self, mngr, update):
-        """Prepare environment and process update from manager."""
+        """Create environment and process update from manager."""
 
-        eenv = {
-            "mngr_type": mngr.type,
-            "convert_to_message": mngr.convert_to_message
-        }
-
-        await mngr.setup_env(update, eenv)
-
-        await self.executor(update, eenv)
+        await self.executor(update, await mngr.get_environment(update))
 
     def ensure_future(self, awaitable):
         """Shurtcut for asyncio.ensure_loop with active loop."""
@@ -79,17 +73,7 @@ class Kutana:
             for awaitable in awaitables:
                 self.loops.append(awaitable)
 
-        self.loop.run_until_complete(
-            self.executor(
-                {
-                    "kutana": self, "update_type": "startup",
-                    "registered_plugins": self.executor.registered_plugins
-                },
-                {
-                    "mngr_type": "kutana"
-                }
-            )
-        )
+        self.loop.run_until_complete(self.executor.startup(self))
 
         try:
             self.gathered = asyncio.gather(*self.loops, *self.tasks)

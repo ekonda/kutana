@@ -8,9 +8,7 @@ import logging.handlers
 FORMATTER = logging.Formatter('%(asctime)s [ %(levelname)s ] %(message)s')
 LEVEL = logging.INFO
 
-handler_file = logging.handlers.RotatingFileHandler(
-    'kutana.log', maxBytes=1048576, backupCount=5
-)
+handler_file = logging.FileHandler('kutana.log')
 handler_file.setLevel(LEVEL)
 handler_file.setFormatter(FORMATTER)
 

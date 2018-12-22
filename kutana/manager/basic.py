@@ -1,13 +1,13 @@
-class BasicController:  # pragma: no cover
+class BasicManager:  # pragma: no cover
     type = "basic"
 
-    async def setup_env(self, update, eenv):
-        """Installs wanted methods and values for update into eenv."""
+    async def get_environment(self, update):
+        """Create and return manager's environment for update processing."""
 
         raise NotImplementedError
 
-    async def convert_to_message(self, update, eenv):
-        """Converts raw update to instances of :class:`.Message`
+    async def convert_to_message(self, update):
+        """Convert raw update to instances of :class:`.Message`
         and :class:`.Attachmnet` for plugins.
         """
 

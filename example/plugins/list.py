@@ -5,10 +5,10 @@ plugin = Plugin(name="Plugins")
 
 
 @plugin.on_startup()
-async def on_startup(update, env):
+async def on_startup(kutana, registered_plugins):
     plugin.plugins = []
 
-    for pl in update["registered_plugins"]:
+    for pl in registered_plugins:
         if isinstance(pl, Plugin) and hasattr(pl, "name"):
             plugin.plugins.append(pl.name)
 

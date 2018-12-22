@@ -18,11 +18,11 @@ PREFIX = "."
 
 
 @plugin.on_has_text()
-async def on_has_text(message, attachments, env):
+async def on_has_text(message, env):
     if not message.text.startswith(PREFIX):
         return "DONE"
 
-    env.parent_environment.replace_cached_message(
+    env.parent_environment.set_message(
         Message(
             message.text[len(PREFIX):],
             message.attachments,

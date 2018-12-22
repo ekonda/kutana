@@ -235,9 +235,7 @@ class Plugin():
 
                     env.meta["found_text"] = text
 
-                    res = self._done_if_none(
-                        await coro(message, env)
-                    )
+                    res = self._done_if_none(await coro(message, env))
 
                     if res == "DONE":
                         return "DONE"

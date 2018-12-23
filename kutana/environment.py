@@ -1,4 +1,8 @@
+"""Base environment for manager."""
+
 class Environment:
+    """Base environment for manager."""
+
     __slots__ = (
         "_has_message", "_message", "meta",
         "manager", "parent_environment", "peer_id"
@@ -17,15 +21,29 @@ class Environment:
 
     @property
     def manager_type(self):
+        """Return currently processed message's manager type."""
+
         return self.manager.type
 
     def spawn(self):
+        """
+        Create partial copy of environment with this environment as parent.
+        Environment's `meta` is not copied.
+        """
+
         return self.__class__(self.manager, self)
 
     def has_message(self):
+        """
+        Return True if message was converted from update
+        (successfully or not).
+        """
+
         return self._has_message
 
     def get_message(self):
+        """Return currently processed message."""
+
         return self._message
 
     def set_message(self, message):
@@ -36,24 +54,3 @@ class Environment:
 
         self._message = message
         self._has_message = message is not None
-
-    async def convert_to_message(self, update):
-        """
-        Create and return :class:`Message` object from passed `update` object.
-        Return None if :class:`.Message` can't be created.
-        """
-
-        raise NotImplementedError
-
-    async def reply(self, message):
-        """
-        Reply with specified text to message currently being processed. Return
-        None if environment wasn't able to determine message's recipient.
-        """
-
-        raise NotImplementedError
-
-    async def send_message(self, message, peer_id):
-        """Send specified text to user with specified id."""
-
-        raise NotImplementedError

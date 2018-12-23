@@ -11,22 +11,10 @@ Subpackages
 Submodules
 ----------
 
-kutana.manager.basic module
----------------------------
+.. toctree::
 
-.. automodule:: kutana.manager.basic
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-kutana.manager.debug module
----------------------------
-
-.. automodule:: kutana.manager.debug
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
+   kutana.manager.basic
+   kutana.manager.debug
 
 Module contents
 ---------------

@@ -1,3 +1,5 @@
+"""Structures and classes for plugins."""
+
 import re
 from collections import namedtuple
 
@@ -20,15 +22,18 @@ Attachment = namedtuple(
 Attachment.__doc__ = "Detailed information about attachment."
 
 
+Callbacks = namedtuple(
+    "Callbacks",
+    "normal raw"
+)
+
+
 class Plugin():
     """Class for creating extensions for kutana engine."""
 
     def __init__(self, **kwargs):
-        self._callbacks = []
-        self._callbacks_raw = []
-
-        self._ecallbacks = []
-        self._ecallbacks_raw = []
+        self._callbacks = Callbacks([], [])
+        self._callbacks_early = Callbacks([], [])
 
         self._callbacks_special = []
 
@@ -45,22 +50,22 @@ class Plugin():
 
         callbacks = []
 
-        if self._ecallbacks or self._ecallbacks_raw:
+        if self._callbacks_early.normal or self._callbacks_early.raw:
 
             async def wrapper_for_early(update, env):
                 return await self._proc_update(
-                    update, env, (self._ecallbacks, self._ecallbacks_raw)
+                    update, env, self._callbacks_early
                 )
 
             wrapper_for_early.priority = self.priority + 200
 
             callbacks.append(wrapper_for_early)
 
-        if self._callbacks or self._callbacks_raw:
+        if self._callbacks.normal or self._callbacks.raw:
 
             async def wrapper(update, env):
                 return await self._proc_update(
-                    update, env, (self._callbacks, self._callbacks_raw)
+                    update, env, self._callbacks
                 )
 
             wrapper.priority = self.priority
@@ -81,15 +86,15 @@ class Plugin():
             message = env.get_message()
 
         else:
-            message = await env.convert_to_message(update)
+            message = await env.manager.convert_to_message(update)
 
             env.set_message(message)
 
         if message:
-            callbacks_type = 0  # process message
+            callbacks_type = 0  # callbacks for messages
 
         else:
-            callbacks_type = 1  #  process raw update
+            callbacks_type = 1  # callbacks for raw
 
         inner_env = env.spawn()
 
@@ -110,7 +115,10 @@ class Plugin():
         before callbacks (from other plugins too) with `early=False`.
         """
 
-        callbacks_list = self._ecallbacks if early else self._callbacks
+        if early:
+            callbacks_list = self._callbacks_early.normal
+        else:
+            callbacks_list = self._callbacks.normal
 
         for callback in callbacks:
             callbacks_list.append(callback)
@@ -119,7 +127,7 @@ class Plugin():
         """Register callback for processing updates in this plugins's
         executor. Return decorator for registering callback.
 
-        Arguments `env` and raw `update` is passed to callback.
+        Arguments raw update and env is passed to callback.
 
         If `early` is True, this callbacks will be executed
         before callbacks (from other plugins too) with `early=False`.
@@ -175,10 +183,10 @@ class Plugin():
                 return done_if_none(await coro(update, env))
 
             if early:
-                self._ecallbacks_raw.append(wrapper)
+                self._callbacks_early.raw.append(wrapper)
 
             else:
-                self._callbacks_raw.append(wrapper)
+                self._callbacks.raw.append(wrapper)
 
             return coro
 
@@ -212,7 +220,7 @@ class Plugin():
         """Returns decorator for adding callbacks which is triggered
         when the message contains any of the specified texts.
 
-        Fills env for callback with:
+        Fills Environment's meta with:
 
         - "found_text" - text found in message.
 
@@ -244,7 +252,7 @@ class Plugin():
         """Returns decorator for adding callbacks which is triggered
         when the message starts with any of the specified texts.
 
-        Fills env for callback with:
+        Fills Environment's meta with:
 
         - "body" - text without prefix.
         - "args" - text without prefix splitted in bash-like style.
@@ -286,7 +294,7 @@ class Plugin():
         """Returns decorator for adding callbacks which is triggered
         when the message matches the specified regular expression.
 
-        Fills env for callback with:
+        Fills Environment's meta with:
 
         - "match" - match.
 

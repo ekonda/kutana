@@ -1,12 +1,18 @@
+"""Manager for interacting with VKontakte"""
+
 import asyncio
 import json
+import re
 from collections import namedtuple
 
 import aiohttp
 from kutana.logger import logger
 from kutana.manager.basic import BasicManager
 from kutana.manager.vk.environment import VKEnvironment
-from kutana.plugin import Attachment
+from kutana.plugin import Attachment, Message
+
+
+NAIVE_CACHE = {}
 
 
 VKResponse = namedtuple(
@@ -24,6 +30,8 @@ happened.
 
 
 class VKRequest(asyncio.Future):
+    """Class for queueing requests to VKontakte"""
+
     def __init__(self, method, kwargs):
         super().__init__()
 
@@ -69,7 +77,7 @@ class VKManager(BasicManager):
 
         return self
 
-    async def __aexit__(self, exc_type, exc, tb):
+    async def __aexit__(self, exc_type, exc, traceback):
         if not self.session.closed:
 
             await self.session.close()
@@ -178,6 +186,97 @@ class VKManager(BasicManager):
             forward_messages=forward_messages
         )
 
+    async def resolve_screen_name(self, screen_name):
+        """Return answer from vk.com with resolved passed screen name."""
+
+        if screen_name in NAIVE_CACHE:
+            return NAIVE_CACHE[screen_name]
+
+        result = await self.request(
+            "utils.resolveScreenName",
+            screen_name=screen_name
+        )
+
+        NAIVE_CACHE[screen_name] = result
+
+        return result
+
+    async def convert_to_message(self, update):
+        if update["type"] != "message_new":
+            return None
+
+        obj = update["object"]
+
+        text = obj["text"]
+
+        if "conversation_message_id" in obj:
+            cursor = 0
+            new_text = ""
+
+            for match in re.finditer(r"\[(.+?)\|.+?\]", text):
+                resp = await self.resolve_screen_name(match.group(1))
+
+                new_text += text[cursor : match.start()]
+
+                cursor = match.end()
+
+                if not resp.response or resp.response["object_id"] == update["group_id"]:
+                    continue
+
+                new_text += text[match.start() : match.end()]
+
+            new_text += text[cursor :]
+
+            text = new_text.lstrip()
+
+        return Message(
+            text,
+            tuple(self.convert_to_attachment(a) for a in obj["attachments"]),
+            obj.get("from_id"),
+            obj.get("peer_id"),
+            update
+        )
+
+    @staticmethod
+    def convert_to_attachment(attachment, attachment_type=None):
+        """
+        Create and return :class:`.Attachment` created from passed data. If
+        attachmnet type can't be determined passed `attachment_type`
+        well be used.
+        """
+
+        if "type" in attachment and attachment["type"] in attachment:
+            body = attachment[attachment["type"]]
+            attachment_type = attachment["type"]
+        else:
+            body = attachment
+
+        if "sizes" in body:
+            m_s_ind = -1
+            m_s_wid = 0
+
+            for i, size in enumerate(body["sizes"]):
+                if size["width"] > m_s_wid:
+                    m_s_wid = size["width"]
+                    m_s_ind = i
+
+            link = body["sizes"][m_s_ind]["url"]  # src
+
+        elif "url" in body:
+            link = body["url"]
+
+        else:
+            link = None
+
+        return Attachment(
+            attachment_type,
+            body.get("id"),
+            body.get("owner_id"),
+            body.get("access_key"),
+            link,
+            attachment
+        )
+
     async def get_environment(self, update):
         return VKEnvironment(self, peer_id=update["object"].get("peer_id"))
 
@@ -218,7 +317,7 @@ class VKManager(BasicManager):
             except asyncio.InvalidStateError:
                 pass
 
-    async def _msg_exec_loop(self, ensure_future):
+    async def _msg_exec_loop(self, _):
         while self.running:
             await asyncio.sleep(self.execute_pause)
 
@@ -253,6 +352,8 @@ class VKManager(BasicManager):
         return (self._msg_exec_loop(ensure_future),)
 
     async def update_longpoll_data(self):
+        """Update manager's longpoll data"""
+
         longpoll = await self.raw_request("groups.getLongPollServer", group_id=self.group_id)
 
         if longpoll.error:
@@ -268,6 +369,8 @@ class VKManager(BasicManager):
         }
 
     async def receiver(self):
+        """Return new updates for bot from vkontakte."""
+
         try:
             async with self.session.post(
                     self.longpoll_url.format(

@@ -1,3 +1,5 @@
+"""Manager and environment for debug purposes."""
+
 from kutana.manager.basic import BasicManager
 from kutana.plugin import Message
 from kutana.exceptions import ExitException
@@ -5,28 +7,54 @@ from kutana.environment import Environment
 
 
 class DebugEnvironment(Environment):
+    """Environment for :class:`DebugManager`."""
+
     def spawn(self):
         return self.__class__(self.manager, self, peer_id=self.peer_id)
 
     async def reply(self, message, attachment=None, **kwargs):
+        """
+        Send message to current message's sender.
+        See :func:`DebugEnvironment.send_message` for details.
+        """
+
         await self.send_message(
             message, peer_id=self.peer_id, attachment=attachment
         )
 
     async def send_message(self, message=None, peer_id=None, attachment=None,
                            **kwargs):
-        """Proxy for manager's `send_message` method."""
+        """Proxy for manager's :func:`DebugManager.send_message` method."""
 
         await self.manager.send_message(message, peer_id, attachment, **kwargs)
 
     async def upload_doc(self, thing, **kwargs):
+        """Return first argument."""
+
         return thing
 
     async def upload_photo(self, thing, **kwargs):
+        """Return first argument."""
+
         return thing
 
     async def request(self, *args, **kwargs):
+        """Do nothing."""
+
         return None
+
+
+class DebugManager(BasicManager):
+    """Shoots target texts once and contains replied data."""
+
+    type = "debug"
+
+    def __init__(self, *texts):
+        self.replies = []
+        self.replies_all = {}
+
+        self.queue = list(texts)
+        self.dead = False
 
     @staticmethod
     async def convert_to_message(update):
@@ -46,21 +74,16 @@ class DebugEnvironment(Environment):
             update[1], (), update[0], update[0], update
         )
 
+    async def send_message(self, message=None, peer_id=None, attachment=None):
+        """
+        Send message to specified user or user with id 1.
 
-class DebugManager(BasicManager):
-    """Shoots target texts once and contains replied data."""
-
-    type = "debug"
-
-    def __init__(self, *texts):
-        self.replies = []
-        self.replies_all = {}
-
-        self.queue = list(texts)
-        self.dead = False
-
-    async def send_message(self, message=None, peer_id=None, attachment=None,
-                           **kwargs):
+        :param message: message to send
+        :param peer_id: recipient's id
+        :param attachmnet: optional attachment or list of attachments to
+            reply with
+        :rtype: None
+        """
 
         peer_id = peer_id if peer_id is not None else 1
 

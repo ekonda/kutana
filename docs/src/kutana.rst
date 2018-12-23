@@ -11,54 +11,15 @@ Subpackages
 Submodules
 ----------
 
-kutana.exceptions module
-------------------------
+.. toctree::
 
-.. automodule:: kutana.exceptions
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-kutana.executor module
-----------------------
-
-.. automodule:: kutana.executor
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-kutana.functions module
------------------------
-
-.. automodule:: kutana.functions
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-kutana.kutana module
---------------------
-
-.. automodule:: kutana.kutana
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-kutana.logger module
---------------------
-
-.. automodule:: kutana.logger
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-kutana.plugin module
---------------------
-
-.. automodule:: kutana.plugin
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
+   kutana.environment
+   kutana.exceptions
+   kutana.executor
+   kutana.functions
+   kutana.kutana
+   kutana.logger
+   kutana.plugin
 
 Module contents
 ---------------

@@ -1,18 +1,17 @@
+"""Environment for :class:`VKManager`."""
+
 import json
-import re
 import aiohttp
-from kutana.plugin import Message, Attachment
 from kutana.environment import Environment
 
 
-NAIVE_CACHE = {}
-
-
 class VKEnvironment(Environment):
+    """Environment for :class:`VKManager`"""
+
     def spawn(self):
         return self.__class__(self.manager, self, peer_id=self.peer_id)
 
-    async def upload_file_to_vk(self, upload_url, data):
+    async def _upload_file_to_vk(self, upload_url, data):
         upload_result_resp = await self.manager.session.post(
             upload_url, data=data
         )
@@ -58,6 +57,20 @@ class VKEnvironment(Environment):
 
     async def reply(self, message, attachment=None, sticker_id=None,
                     payload=None, keyboard=None, forward_messages=None):
+        """
+        Reply to currently processed message. If text is too long - message
+        will be splitted into parts.
+
+        :param message: message to reply with
+        :param attachmnet: optional attachment or list of attachments to
+            reply with
+        :param sticker_id: id of sticker to reply with
+        :param payload: json data to reply with (see vk.com/dev for details)
+        :param keyboard: json formatted keyboard to reply with (see
+            vk.com/dev for details)
+        :param forward_messages: messages's id to forward with reply
+        :rtype: list with results of sending messages
+        """
 
         if self.peer_id is None:
             return ()
@@ -128,7 +141,7 @@ class VKEnvironment(Environment):
         data = aiohttp.FormData()
         data.add_field("file", file, filename=filename)
 
-        upload_result = await self.upload_file_to_vk(upload_url, data)
+        upload_result = await self._upload_file_to_vk(upload_url, data)
 
         if not upload_result:
             return None
@@ -140,7 +153,7 @@ class VKEnvironment(Environment):
         if not attachments.response:
             return None
 
-        return self.convert_to_attachment(
+        return self.manager.convert_to_attachment(
             attachments.response[0], "doc"
         )
 
@@ -174,7 +187,7 @@ class VKEnvironment(Environment):
         data = aiohttp.FormData()
         data.add_field("photo", file, filename="image.png")
 
-        upload_result = await self.upload_file_to_vk(upload_url, data)
+        upload_result = await self._upload_file_to_vk(upload_url, data)
 
         if not upload_result:
             return None
@@ -186,97 +199,6 @@ class VKEnvironment(Environment):
         if not attachments.response:
             return None
 
-        return self.convert_to_attachment(
+        return self.manager.convert_to_attachment(
             attachments.response[0], "photo"
-        )
-
-    async def resolve_screen_name(self, screen_name):
-        """Return answer from vk.com with resolved passed screen name."""
-
-        if screen_name in NAIVE_CACHE:
-            return NAIVE_CACHE[screen_name]
-
-        result = await self.manager.request(
-            "utils.resolveScreenName",
-            screen_name=screen_name
-        )
-
-        NAIVE_CACHE[screen_name] = result
-
-        return result
-
-    async def convert_to_message(self, update):
-        if update["type"] != "message_new":
-            return None
-
-        obj = update["object"]
-
-        text = obj["text"]
-
-        if "conversation_message_id" in obj:
-            cursor = 0
-            new_text = ""
-
-            for match in re.finditer(r"\[(.+?)\|.+?\]", text):
-                resp = await self.resolve_screen_name(match.group(1))
-
-                new_text += text[cursor : match.start()]
-
-                cursor = match.end()
-
-                if not resp.response or resp.response["object_id"] == update["group_id"]:
-                    continue
-
-                new_text += text[match.start() : match.end()]
-
-            new_text += text[cursor :]
-
-            text = new_text.lstrip()
-
-        return Message(
-            text,
-            tuple(self.convert_to_attachment(a) for a in obj["attachments"]),
-            obj.get("from_id"),
-            obj.get("peer_id"),
-            update
-        )
-
-    @staticmethod
-    def convert_to_attachment(attachment, attachment_type=None):
-        """
-        Create and return :class:`.Attachment` created from passed data. If
-        attachmnet type can't be determined passed `attachment_type`
-        well be used.
-        """
-
-        if "type" in attachment and attachment["type"] in attachment:
-            body = attachment[attachment["type"]]
-            attachment_type = attachment["type"]
-        else:
-            body = attachment
-
-        if "sizes" in body:
-            m_s_ind = -1
-            m_s_wid = 0
-
-            for i, size in enumerate(body["sizes"]):
-                if size["width"] > m_s_wid:
-                    m_s_wid = size["width"]
-                    m_s_ind = i
-
-            link = body["sizes"][m_s_ind]["url"]  # src
-
-        elif "url" in body:
-            link = body["url"]
-
-        else:
-            link = None
-
-        return Attachment(
-            attachment_type,
-            body.get("id"),
-            body.get("owner_id"),
-            body.get("access_key"),
-            link,
-            attachment
         )

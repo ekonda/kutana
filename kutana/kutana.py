@@ -1,3 +1,5 @@
+"""Core class for engine."""
+
 import asyncio
 
 from kutana.exceptions import ExitException
@@ -18,9 +20,6 @@ class Kutana:
         self.running = True
         self.loops = []
         self.tasks = []
-        self.prcss = []
-
-        self.gathered_loops = None
 
     def add_manager(self, manager):
         """Add manager to engine."""
@@ -37,7 +36,7 @@ class Kutana:
 
         future = asyncio.ensure_future(awaitable, loop=self.loop)
 
-        self.prcss.append(future)
+        self.tasks.append(future)
 
         return future
 
@@ -77,7 +76,7 @@ class Kutana:
 
         try:
             self.loop.run_until_complete(
-                asyncio.gather(*self.loops, *self.tasks)
+                asyncio.gather(*self.loops)
             )
 
         except (KeyboardInterrupt, ExitException):
@@ -91,7 +90,7 @@ class Kutana:
     async def dispose(self):
         """Free resources and prepare for shutdown."""
 
-        await asyncio.gather(*self.prcss)
+        await asyncio.gather(*self.tasks)
 
         await self.executor.dispose()
 

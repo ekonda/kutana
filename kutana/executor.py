@@ -1,3 +1,5 @@
+"""Class performing callbacks management."""
+
 import sys
 
 from kutana.logger import logger
@@ -16,7 +18,12 @@ class Executor:
         self.registered_plugins = []
 
     def register_plugins(self, *plugins):
-        """Register callbacks from plugins."""
+        """
+        Register plugins' callbacks in executor.
+
+        :param plguins: plugins for registration
+        """
+
 
         for plugin in plugins:
             if hasattr(plugin, "_prepare_callbacks"):
@@ -31,16 +38,25 @@ class Executor:
             self.registered_plugins.append(plugin)
 
     def register(self, *callbacks, priority=400, error=False):
-        """Register callbacks for updates or errors with specified priority."""
+        """
+        Register callbacks for processing updates or errors with specified
+        priority.
+
+        :param callbacks: callbacks for registration
+        :param priority: priority of callbacks
+        :param error: True if registration for processing errors
+        :rtype: decorator for registration
+        """
 
         def _register(coroutine):
             callbacks = self.error_callbacks if error else self.callbacks
 
             callbacks.append(coroutine)
 
-            def get_priority(cb):
-                if hasattr(cb, "priority") and cb.priority is not None:
-                    return -cb.priority
+            def get_priority(callback):
+                if hasattr(callback, "priority") and \
+                        callback.priority is not None:
+                    return -callback.priority
 
                 return -priority
 
@@ -54,6 +70,13 @@ class Executor:
         return _register
 
     def register_startup(self, *callbacks):
+        """
+        Register callbacks for startup of engine.
+
+        :param callbacks: callbacks for registration
+        :rtype: decorator for registration
+        """
+
         def _register_startup(coroutine):
             self.startup_callbacks.append(coroutine)
             return coroutine
@@ -64,6 +87,14 @@ class Executor:
         return _register_startup
 
     def register_dispose(self, *callbacks):
+        """
+        Register callbacks for disposing resourses before shutting down
+        engine.
+
+        :param callbacks: callbacks for registration
+        :rtype: decorator for registration
+        """
+
         def _register_dispose(coroutine):
             self.dispose_callbacks.append(coroutine)
             return coroutine
@@ -79,7 +110,7 @@ class Executor:
                 if await callback(update, env) == "DONE":
                     break
 
-        except Exception as e:
+        except Exception as e:  # pylint: disable=W0703
             logger.exception(
                 "\"%s::%s\" on update %s from %s",
                 sys.exc_info()[0].__name__, e, update, env.manager_type

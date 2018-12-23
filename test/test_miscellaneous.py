@@ -4,7 +4,6 @@ from kutana import VKResponse, VKEnvironment, DebugEnvironment, DebugManager, \
 import unittest
 import asyncio
 import logging
-import types
 
 
 class TestMiscellaneous(unittest.TestCase):
@@ -89,7 +88,7 @@ class TestMiscellaneous(unittest.TestCase):
             def __init__(self):
                 pass
 
-            async def request(self, *args, **kwargs):
+            async def request(self, method, **kwargs):
                 return VKResponse(False, (), {"object_id": 1})
 
         env = VKEnvironment(FakeManager(), peer_id=0)

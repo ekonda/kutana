@@ -16,7 +16,7 @@ class TestMiscellaneous(unittest.TestCase):
         self.assertEqual(loaded_plugins[1].name, "My file")
 
         executor = Executor()
-        executor.register_plugins(*loaded_plugins)
+        executor.register_plugins(loaded_plugins)
 
         loop = asyncio.get_event_loop()
 
@@ -68,7 +68,7 @@ class TestMiscellaneous(unittest.TestCase):
 
         executor = Executor()
 
-        executor.register_plugins(plugin)
+        executor.register_plugins([plugin])
 
         loop = asyncio.get_event_loop()
 

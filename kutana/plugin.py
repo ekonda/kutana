@@ -3,7 +3,7 @@
 import re
 from collections import namedtuple
 
-from kutana.functions import done_if_none
+from kutana.functions import is_done
 
 
 Message = namedtuple(
@@ -26,6 +26,9 @@ Callbacks = namedtuple(
     "Callbacks",
     "normal raw"
 )
+
+Callbacks.__doc__ = "Structure for grouping callbacks inside of " \
+                    ":class:`.Plugin`."
 
 
 class Plugin():
@@ -125,7 +128,7 @@ class Plugin():
 
     def register_special(self, *callbacks, early=False):
         """Register callback for processing updates in this plugins's
-        executor. Return decorator for registering callback.
+        executor directly. Return decorator for registering callback.
 
         Arguments raw update and env is passed to callback.
 
@@ -180,7 +183,8 @@ class Plugin():
 
         def decorator(coro):
             async def wrapper(update, env):
-                return done_if_none(await coro(update, env))
+                if is_done(await coro(update, env)):
+                    return "DONE"
 
             if early:
                 self._callbacks_early.raw.append(wrapper)
@@ -207,7 +211,7 @@ class Plugin():
 
             async def wrapper(message, env):
                 if message.text.strip().lower() in check_texts:
-                    if done_if_none(await coro(message, env)) == "DONE":
+                    if is_done(await coro(message, env)):
                         return "DONE"
 
             self.register(wrapper, early=early)
@@ -220,9 +224,8 @@ class Plugin():
         """Returns decorator for adding callbacks which is triggered
         when the message contains any of the specified texts.
 
-        Fills Environment's meta with:
-
-        - "found_text" - text found in message.
+        Keyword argument `found_text` can be passed to callback with text
+        found in message.
 
         See :func:`Plugin.register` for info about `early`.
         """
@@ -230,16 +233,22 @@ class Plugin():
         def decorator(coro):
             check_texts = tuple(text.strip().lower() for text in texts) or ("",)
 
-            async def wrapper(message, env):
-                check_text = message.text.strip().lower()
+            args_count = coro.__code__.co_argcount
+            args_names = coro.__code__.co_varnames[:args_count]
+
+            async def wrapper(msg, env):
+                check_text = msg.text.strip().lower()
 
                 for text in check_texts:
                     if text not in check_text:
                         continue
 
-                    env.meta["found_text"] = text
+                    kwargs = {}
 
-                    if done_if_none(await coro(message, env)) == "DONE":
+                    if "found_text" in args_names:
+                        kwargs["found_text"] = text
+
+                    if is_done(await coro(msg, env, **kwargs)):
                         return "DONE"
 
             self.register(wrapper, early=early)
@@ -252,11 +261,9 @@ class Plugin():
         """Returns decorator for adding callbacks which is triggered
         when the message starts with any of the specified texts.
 
-        Fills Environment's meta with:
-
-        - "body" - text without prefix.
-        - "args" - text without prefix splitted in bash-like style.
-        - "prefix" - prefix.
+        Keyword arguments `body` (text after prefix), `args` (text after
+        prefix splitted by spaces) and `prefix` (text before body) can
+        be passed to callback.
 
         See :func:`Plugin.register` for info about `early`.
         """
@@ -271,17 +278,32 @@ class Plugin():
 
                 return None
 
-            async def wrapper(message, env):
-                search_result = search_prefix(message.text.lower())
+            args_count = coro.__code__.co_argcount
+            args_names = coro.__code__.co_varnames[:args_count]
+
+            async def wrapper(msg, env):
+                search_result = search_prefix(msg.text.lower())
 
                 if search_result is None:
                     return
 
-                env.meta["body"] = message.text[len(search_result):].strip()
-                env.meta["args"] = env.meta["body"].split()
-                env.meta["prefix"] = message.text[:len(search_result)].strip()
+                kwargs = {}
 
-                if done_if_none(await coro(message, env)) == "DONE":
+
+                if "body" in args_names:
+                    kwargs["body"] = msg.text[len(search_result):].strip()
+
+                if "args" in args_names:
+                    if "body" in kwargs:
+                        kwargs["args"] = kwargs["body"].split()
+
+                    else:
+                        kwargs["args"] = msg.text[len(search_result):].split()
+
+                if "prefix" in args_names:
+                    kwargs["prefix"] = msg.text[:len(search_result)].strip()
+
+                if is_done(await coro(msg, env, **kwargs)):
                     return "DONE"
 
             self.register(wrapper, early=early)
@@ -294,9 +316,8 @@ class Plugin():
         """Returns decorator for adding callbacks which is triggered
         when the message matches the specified regular expression.
 
-        Fills Environment's meta with:
-
-        - "match" - match.
+        Keyword argument `match` can be passed to callback with
+        :class:`re.Match` object for message.
 
         See :func:`Plugin.register` for info about `early`.
         """
@@ -308,15 +329,21 @@ class Plugin():
             compiled = regexp
 
         def decorator(coro):
+            args_count = coro.__code__.co_argcount
+            args_names = coro.__code__.co_varnames[:args_count]
+
             async def wrapper(message, env):
                 match = compiled.match(message.text)
 
                 if not match:
                     return
 
-                env.meta["match"] = match
+                kwargs = {}
 
-                if done_if_none(await coro(message, env)) == "DONE":
+                if "match" in args_names:
+                    kwargs["match"] = match
+
+                if is_done(await coro(message, env, **kwargs)):
                     return "DONE"
 
             self.register(wrapper, early=early)
@@ -347,7 +374,7 @@ class Plugin():
                     else:
                         return
 
-                if done_if_none(await coro(message, env)) == "DONE":
+                if is_done(await coro(message, env)):
                     return "DONE"
 
             self.register(wrapper, early=early)

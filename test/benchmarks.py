@@ -19,14 +19,14 @@ class TestTiming(KutanaTest):
 
         with self.debug_manager(self.target) as plugin:
 
-            async def on_echo(message, env):
-                await env.reply("echo " + env.meta["body"])
+            async def on_echo(message, env, body):
+                await env.reply("echo " + body)
 
             plugin.on_startswith_text("echo ", "echo\n")(on_echo)
 
 
-            async def on_regexp(message, env):
-                await env.reply(env.meta["match"].group(0))
+            async def on_regexp(message, env, match):
+                await env.reply(match.group(0))
 
             plugin.on_regexp_text(r"message")(on_regexp)
 

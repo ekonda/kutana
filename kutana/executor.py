@@ -17,13 +17,12 @@ class Executor:
 
         self.registered_plugins = []
 
-    def register_plugins(self, *plugins):
+    def register_plugins(self, plugins):
         """
         Register plugins' callbacks in executor.
 
         :param plguins: plugins for registration
         """
-
 
         for plugin in plugins:
             if hasattr(plugin, "_prepare_callbacks"):
@@ -116,7 +115,7 @@ class Executor:
                 sys.exc_info()[0].__name__, e, update, env.manager_type
             )
 
-            env.meta["exception"] = e
+            env.exception = e
 
             if not self.error_callbacks:
                 return await env.reply(

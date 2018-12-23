@@ -59,8 +59,8 @@ plugin looks like that:
 .. code-block:: python
 
     @plugin.on_startswith_text("echo")
-    async def on_echo_callback(message, attachments, env):
-        await env.reply("{}".format(env.body))
+    async def on_echo_callback(message, env, body):
+        await env.reply("{}".format(body))
 
 
 Callback receives three arguments - :class:`.Message`, list of
@@ -84,10 +84,58 @@ Callback receives two arguments - raw update's data as dict and
 is used when you need to add something special to workflow often connected with
 concrete service.
 
+Plugins
+-------
+See :class:`.Plugin` for list of available callback registators. Example
+of simple plugin:
+
+.. code-block:: python
+
+    from kutana import Plugin
+
+    plugin = Plugin(name="Echo")
+
+    @plugin.on_startswith_text("echo")
+    async def on_echo(message, env, body):
+        await env.reply("{}".format(body))
+
+Callback `on_echo` can have (or can not have) keyword arguments `body`,
+`args`, `prefix`. Kutana will pass corresponding values to keywords. This
+plugin can be registered in :class:`.Executor`.
+
+Exmaple of working engine with :class:`VKManager`:
+
+.. code-block:: python
+
+    from kutana import Kutana, VKManager, \
+        load_plugins, load_configuration
+
+    kutana = Kutana()
+
+    manager = VKManager("API TOKEN")
+
+    kutana.add_manager(manager)
+
+    kutana.executor.register_plugins(
+        load_plugins("plugins/")
+    )
+
+    kutana.run()
+
+
+
 -------------------------------------------------------------------------------
+
+.. toctree::
+    :maxdepth: 1
+    :caption: Managers
+
+    VKManager <src/kutana.manager.vk>
+    DebugManager <src/kutana.manager.debug>
 
 .. toctree::
     :maxdepth: 1
     :caption: API Reference
 
+    Plugin <src/kutana.plugin>
     src/modules

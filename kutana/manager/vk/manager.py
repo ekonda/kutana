@@ -101,7 +101,7 @@ class VKManager(BasicManager):
 
                 raw_respose = json.loads(raw_respose_text)
 
-        except Exception as e:
+        except (json.JSONDecodeError, aiohttp.ClientError) as e:
             return VKResponse(
                 error=True,
                 errors=(("Kutana", str(type(e)) + ": " + str(e)),),
@@ -381,7 +381,7 @@ class VKManager(BasicManager):
             ) as resp:
                 response = await resp.json()
 
-        except Exception:
+        except (json.JSONDecodeError, aiohttp.ClientError):
             return ()
 
         if "ts" in response:

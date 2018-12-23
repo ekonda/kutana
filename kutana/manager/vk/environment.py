@@ -1,4 +1,4 @@
-"""Environment for :class:`VKManager`."""
+"""Environment for :class:`.VKManager`."""
 
 import json
 import aiohttp
@@ -6,7 +6,7 @@ from kutana.environment import Environment
 
 
 class VKEnvironment(Environment):
-    """Environment for :class:`VKManager`"""
+    """Environment for :class:`.VKManager`"""
 
     def spawn(self):
         return self.__class__(self.manager, self, peer_id=self.peer_id)
@@ -165,7 +165,7 @@ class VKEnvironment(Environment):
         :param file: file to be uploaded. Can be bytes, file-like object or
             path to file as string
         :param peer_id: user's id to file to be uploaded for
-        :rtype: :class:`Attachment`
+        :rtype: :class:`.Attachment`
         """
 
         if peer_id is None:

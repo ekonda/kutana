@@ -66,7 +66,7 @@ class TestExecutors(KutanaTest):
             self.kutana.executor.register(new_update)
 
             async def new_error(update, env):
-                self.assertTrue(env.meta["exception"])
+                self.assertTrue(env.exception)
 
                 self.called += 1
 

@@ -4,8 +4,8 @@ class Environment:
     """Base environment for manager."""
 
     __slots__ = (
-        "_has_message", "_message", "meta",
-        "manager", "parent_environment", "peer_id"
+        "_has_message", "_message", "manager", "parent_environment", "peer_id",
+        "exception"
     )
 
     def __init__(self, manager, parent_environment=None, peer_id=None):
@@ -14,10 +14,10 @@ class Environment:
 
         self.peer_id = peer_id
 
+        self.exception = None
+
         self._has_message = None
         self._message = None
-
-        self.meta = {}
 
     @property
     def manager_type(self):
@@ -28,7 +28,6 @@ class Environment:
     def spawn(self):
         """
         Create partial copy of environment with this environment as parent.
-        Environment's `meta` is not copied.
         """
 
         return self.__class__(self.manager, self)

@@ -9,13 +9,10 @@ import re
 from kutana.logger import logger
 
 
-def done_if_none(value):
-    """Return "DONE" if value is None. Otherwise return value."""
+def is_done(value):
+    """Return True if value is None or equals to `"DONE"` otherwise False"""
 
-    if value is None:
-        return "DONE"
-
-    return value
+    return value is None or value == "DONE"
 
 
 def get_path(rootpath, wantedpath):

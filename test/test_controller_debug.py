@@ -7,9 +7,9 @@ class TestManagerDebug(KutanaTest):
 
         with self.debug_manager(["echo message"]) as plugin:
 
-            async def on_echo(message, env):
+            async def on_echo(message, env, body):
                 self.assertIsNone(await env.request("users.get"))
-                await env.reply(env.meta["body"])
+                await env.reply(body)
 
             plugin.on_startswith_text("echo")(on_echo)
 
@@ -33,8 +33,8 @@ class TestManagerDebug(KutanaTest):
                 (3, "echo message4")
         ]) as plugin:
 
-            async def on_echo(message, env):
-                await env.reply(env.meta["body"])
+            async def on_echo(message, env, body):
+                await env.reply(body)
 
             plugin.on_startswith_text("echo")(on_echo)
 

@@ -216,12 +216,12 @@ class TestManagerVk(unittest.TestCase):
 
         plugin.on_attachment("photo")(on_attachment)
 
-        async def on_regexp(message, env):
+        async def on_regexp(message, env, match):
             attachments = message.attachments
 
             # Test receiving
-            self.assertEqual(env.meta["match"].group(1), "message")
-            self.assertEqual(env.meta["match"].group(0), "echo message")
+            self.assertEqual(match.group(1), "message")
+            self.assertEqual(match.group(0), "echo message")
 
             self.assertEqual(message.attachments, attachments)
             self.assertEqual(len(attachments), 2)
@@ -279,7 +279,7 @@ class TestManagerVk(unittest.TestCase):
 
         plugin.on_raw()(on_raw)
 
-        self.kutana.executor.register_plugins(plugin)
+        self.kutana.executor.register_plugins([plugin])
 
         self.kutana.run()
 

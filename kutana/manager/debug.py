@@ -7,12 +7,12 @@ from kutana.environment import Environment
 
 
 class DebugEnvironment(Environment):
-    """Environment for :class:`DebugManager`."""
+    """Environment for :class:`.DebugManager`."""
 
     def spawn(self):
         return self.__class__(self.manager, self, peer_id=self.peer_id)
 
-    async def reply(self, message, attachment=None, **kwargs):
+    async def reply(self, message, attachment=None):
         """
         Send message to current message's sender.
         See :func:`DebugEnvironment.send_message` for details.
@@ -22,23 +22,22 @@ class DebugEnvironment(Environment):
             message, peer_id=self.peer_id, attachment=attachment
         )
 
-    async def send_message(self, message=None, peer_id=None, attachment=None,
-                           **kwargs):
+    async def send_message(self, *args, **kwargs):
         """Proxy for manager's :func:`DebugManager.send_message` method."""
 
-        await self.manager.send_message(message, peer_id, attachment, **kwargs)
+        await self.manager.send_message(*args, **kwargs)
 
-    async def upload_doc(self, thing, **kwargs):
+    async def upload_doc(self, thing, **__):
         """Return first argument."""
 
         return thing
 
-    async def upload_photo(self, thing, **kwargs):
+    async def upload_photo(self, thing, **__):
         """Return first argument."""
 
         return thing
 
-    async def request(self, *args, **kwargs):
+    async def request(self, *_, **__):
         """Do nothing."""
 
         return None

@@ -25,7 +25,7 @@ class KutanaTest(unittest.TestCase):
             yield self.plugin
         finally:
             for plugin in self.plugins:
-                self.kutana.executor.register_plugins(plugin)
+                self.kutana.executor.register_plugins([plugin])
 
             self.kutana.run()
 

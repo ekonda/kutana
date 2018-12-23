@@ -17,10 +17,10 @@ class BasicManager:  # pragma: no cover
 
     async def convert_to_message(self, update):
         """
-        Create and return :class:`Message` from raw_update.
+        Create and return :class:`.Message` from raw_update.
 
         :param update: manager's service raw update
-        :rtype: :class:`Message` or None if message can't be created
+        :rtype: :class:`.Message` or None if message can't be created
         """
 
         raise NotImplementedError

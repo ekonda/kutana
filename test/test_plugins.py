@@ -20,8 +20,8 @@ class TestPlugins(KutanaTest):
 
         with self.debug_manager(queue) as plugin:
 
-            async def on_echo(message, env):
-                await env.reply(env.meta["body"])
+            async def on_echo(message, env, body):
+                await env.reply(body)
 
             plugin.on_startswith_text("echo ", "echo\n")(on_echo)
 
@@ -90,12 +90,34 @@ class TestPlugins(KutanaTest):
 
         with self.debug_manager(queue) as plugin:
 
-            async def on_startswith_text(message, env):
-                self.assertEqual(env.meta["args"], queue_answer.pop(0))
+            async def on_startswith_text(message, env, args):
+                self.assertEqual(args, queue_answer.pop(0))
 
             plugin.on_startswith_text("pr")(on_startswith_text)
 
         self.assertFalse(queue_answer)
+
+    def test_kwords_arguments(self):
+        self.target = ["1", "2"]
+
+        with self.debug_manager(["123", ".hi arg1 arg2"]) as plugin:
+
+            async def on_has_text(msg, env, found_text):
+                self.assertEqual(found_text, "12")
+
+                await env.reply("1")
+
+            plugin.on_has_text("12")(on_has_text)
+
+
+            async def on_startswith_text(msg, env, args, body, prefix):
+                self.assertEqual(args, ["hi", "arg1", "arg2"])
+                self.assertEqual(body, "hi arg1 arg2")
+                self.assertEqual(prefix, ".")
+
+                await env.reply("2")
+
+            plugin.on_startswith_text(".")(on_startswith_text)
 
     def test_plugins_callbacks_done(self):
         self.counter = 0
@@ -145,10 +167,6 @@ class TestPlugins(KutanaTest):
 
             async def on_has_text(message, env):
                 self.counter += 1
-
-                self.assertNotIn("key", env.meta)
-                env.meta["key"] = "value"
-
                 return "GOON"
 
             for pl in self.plugins:
@@ -240,38 +258,6 @@ class TestPlugins(KutanaTest):
                 await env.reply(message.text)
 
             plugin.on_startswith_text("echo")(on_echo)
-
-    def test_environments(self):
-        self.target = ["echo message"]
-
-        with self.debug_manager(self.target):
-
-            plugin1 = Plugin()
-            plugin2 = Plugin()
-
-            self.plugins = (plugin1, plugin2)
-
-            async def do_skip(message, env):
-                env.meta["A"] = "A"
-                env.parent_environment.meta["B"] = "B"
-
-                return "GOON"
-
-            async def do_check_one(message, env):
-                self.assertEqual(env.meta.get("A"), "A")
-
-                return "GOON"
-
-            plugin1.on_has_text()(do_skip)
-            plugin1.on_has_text()(do_check_one)
-
-            async def do_check(message, env):
-                self.assertIsNone(env.meta.get("A"))
-                self.assertEqual(env.parent_environment.meta["B"], "B")
-
-                await env.reply("echo message")
-
-            plugin2.on_has_text()(do_check)
 
     def test_plugin_attachments_type(self):
         plugin = Plugin()

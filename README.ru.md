@@ -43,11 +43,18 @@ kutana = Kutana()
 
 # Добавление VKManager в движок
 kutana.add_manager(
-    VKManager(load_configuration("vk_token", "configuration.json"))
+    VKManager(
+        load_configuration(
+            "vk_token",
+            "configuration.json"
+        )
+    )
 )
 
 # Загрузить и зарегистрировать плагины
-kutana.executor.register_plugins(*load_plugins("plugins/"))
+kutana.executor.register_plugins(
+    load_plugins("plugins/")
+)
 
 # Запустить движок
 kutana.run()
@@ -61,8 +68,8 @@ from kutana import Plugin
 plugin = Plugin(name="Echo")
 
 @plugin.on_startswith_text("echo")
-async def on_echo(message, env):
-    await env.reply("{}".format(env.meta["body"]))
+async def on_echo(message, env, body):
+    await env.reply("{}".format(body))
 ```
 
 ## Доступные менеджеры

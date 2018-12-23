@@ -103,6 +103,12 @@ Callback `on_echo` can have (or can not have) keyword arguments `body`,
 `args`, `prefix`. Kutana will pass corresponding values to keywords. This
 plugin can be registered in :class:`.Executor`.
 
+.. note::
+
+    Plugins uses callback's signature to determine if it needs to pass some
+    arguments. It means that you have to use `functools.wraps` to properly
+    wrap callback.
+
 Exmaple of working engine with :class:`VKManager`:
 
 .. code-block:: python
@@ -121,8 +127,6 @@ Exmaple of working engine with :class:`VKManager`:
     )
 
     kutana.run()
-
-
 
 -------------------------------------------------------------------------------
 

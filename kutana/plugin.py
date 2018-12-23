@@ -1,6 +1,7 @@
 """Structures and classes for plugins."""
 
 import re
+import inspect
 from collections import namedtuple
 
 from kutana.functions import is_done
@@ -206,9 +207,9 @@ class Plugin():
         if not texts:
             raise ValueError("No texts passed to `Plugin.on_text`")
 
-        def decorator(coro):
-            check_texts = list(text.strip().lower() for text in texts)
+        check_texts = list(text.strip().lower() for text in texts)
 
+        def decorator(coro):
             async def wrapper(message, env):
                 if message.text.strip().lower() in check_texts:
                     if is_done(await coro(message, env)):
@@ -216,7 +217,7 @@ class Plugin():
 
             self.register(wrapper, early=early)
 
-            return wrapper
+            return coro
 
         return decorator
 
@@ -230,11 +231,10 @@ class Plugin():
         See :func:`Plugin.register` for info about `early`.
         """
 
-        def decorator(coro):
-            check_texts = tuple(text.strip().lower() for text in texts) or ("",)
+        check_texts = tuple(text.strip().lower() for text in texts) or ("",)
 
-            args_count = coro.__code__.co_argcount
-            args_names = coro.__code__.co_varnames[:args_count]
+        def decorator(coro):
+            signature = inspect.signature(coro)
 
             async def wrapper(msg, env):
                 check_text = msg.text.strip().lower()
@@ -245,7 +245,7 @@ class Plugin():
 
                     kwargs = {}
 
-                    if "found_text" in args_names:
+                    if "found_text" in signature.parameters:
                         kwargs["found_text"] = text
 
                     if is_done(await coro(msg, env, **kwargs)):
@@ -253,7 +253,7 @@ class Plugin():
 
             self.register(wrapper, early=early)
 
-            return wrapper
+            return coro
 
         return decorator
 
@@ -268,8 +268,10 @@ class Plugin():
         See :func:`Plugin.register` for info about `early`.
         """
 
+        check_texts = tuple(text.lstrip().lower() for text in texts)
+
         def decorator(coro):
-            check_texts = tuple(text.lstrip().lower() for text in texts)
+            signature = inspect.signature(coro)
 
             def search_prefix(message):
                 for text in check_texts:
@@ -277,9 +279,6 @@ class Plugin():
                         return text
 
                 return None
-
-            args_count = coro.__code__.co_argcount
-            args_names = coro.__code__.co_varnames[:args_count]
 
             async def wrapper(msg, env):
                 search_result = search_prefix(msg.text.lower())
@@ -289,18 +288,17 @@ class Plugin():
 
                 kwargs = {}
 
-
-                if "body" in args_names:
+                if "body" in signature.parameters:
                     kwargs["body"] = msg.text[len(search_result):].strip()
 
-                if "args" in args_names:
+                if "args" in signature.parameters:
                     if "body" in kwargs:
                         kwargs["args"] = kwargs["body"].split()
 
                     else:
                         kwargs["args"] = msg.text[len(search_result):].split()
 
-                if "prefix" in args_names:
+                if "prefix" in signature.parameters:
                     kwargs["prefix"] = msg.text[:len(search_result)].strip()
 
                 if is_done(await coro(msg, env, **kwargs)):
@@ -308,7 +306,7 @@ class Plugin():
 
             self.register(wrapper, early=early)
 
-            return wrapper
+            return coro
 
         return decorator
 
@@ -329,8 +327,7 @@ class Plugin():
             compiled = regexp
 
         def decorator(coro):
-            args_count = coro.__code__.co_argcount
-            args_names = coro.__code__.co_varnames[:args_count]
+            signature = inspect.signature(coro)
 
             async def wrapper(message, env):
                 match = compiled.match(message.text)
@@ -340,7 +337,7 @@ class Plugin():
 
                 kwargs = {}
 
-                if "match" in args_names:
+                if "match" in signature.parameters:
                     kwargs["match"] = match
 
                 if is_done(await coro(message, env, **kwargs)):
@@ -348,7 +345,7 @@ class Plugin():
 
             self.register(wrapper, early=early)
 
-            return wrapper
+            return coro
 
         return decorator
 

@@ -9,10 +9,12 @@ from kutana.functions import is_done
 
 Message = namedtuple(
     "Message",
-    "text attachments from_id peer_id raw_update"
+    "text attachments from_id peer_id date raw_update"
 )
 
-Message.__doc__ = "Text message witch possible attachments."
+Message.__doc__ = """
+Text message witch possible attachments.
+"""
 
 
 Attachment = namedtuple(
@@ -20,7 +22,9 @@ Attachment = namedtuple(
     "type id owner_id access_key link raw_attachment"
 )
 
-Attachment.__doc__ = "Detailed information about attachment."
+Attachment.__doc__ = """
+Detailed information about attachment.
+"""
 
 
 Callbacks = namedtuple(
@@ -28,8 +32,9 @@ Callbacks = namedtuple(
     "normal raw"
 )
 
-Callbacks.__doc__ = "Structure for grouping callbacks inside of " \
-                    ":class:`.Plugin`."
+Callbacks.__doc__ = """
+Structure for grouping callbacks inside of :class:`.Plugin`.
+"""
 
 
 class Plugin():
@@ -376,6 +381,6 @@ class Plugin():
 
             self.register(wrapper, early=early)
 
-            return wrapper
+            return coro
 
         return decorator

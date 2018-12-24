@@ -20,11 +20,9 @@ VKResponse = namedtuple(
     "error errors response"
 )
 
-VKResponse.__doc__ = """ `error` is a boolean value indicating if error
-happened.
-
+VKResponse.__doc__ = """
+`error` is a boolean value indicating if errorhappened.
 `errors` contains array with happened errors.
-
 `response` contains result of reqeust if no errors happened.
 """
 
@@ -40,10 +38,15 @@ class VKRequest(asyncio.Future):
 
 
 class VKManager(BasicManager):
-    """Class for receiving updates from vk.com.
+    """
+    Class for receiving updates from vk.com.
     Controller requires group's token. You can specify settings for
     groups.setLongPollSettings with argument `longpoll_settings`.
     """
+
+
+    type = "vkontakte"
+
 
     def __init__(self, token, execute_pause=0.05, longpoll_settings=None):
         if not token:
@@ -234,6 +237,7 @@ class VKManager(BasicManager):
             tuple(self.convert_to_attachment(a) for a in obj["attachments"]),
             obj.get("from_id"),
             obj.get("peer_id"),
+            obj.get("date"),
             update
         )
 

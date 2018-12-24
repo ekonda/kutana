@@ -30,7 +30,11 @@ class Environment:
         Create partial copy of environment with this environment as parent.
         """
 
-        return self.__class__(self.manager, self)
+        return self.__class__(
+            manager=self.manager,
+            parent_environment=self,
+            peer_id=self.peer_id
+        )
 
     def has_message(self):
         """

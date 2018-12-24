@@ -14,20 +14,25 @@ plugin = Plugin(name="Prefix", priority=500)
 # If you need better prefix system, check github.com/ekonda/kubot
 
 
-PREFIX = "."
+PREFIX = (".", "/")
 
 
 @plugin.on_has_text()
 async def on_has_text(message, env):
-    if not message.text.startswith(PREFIX):
+    for prefix in PREFIX:
+        if message.text[:len(prefix)] == prefix:
+            break
+
+    else:
         return "DONE"
 
     env.parent_environment.set_message(
         Message(
-            message.text[len(PREFIX):],
+            message.text[len(prefix):],
             message.attachments,
             message.from_id,
             message.peer_id,
+            message.date,
             message.raw_update
         )
     )

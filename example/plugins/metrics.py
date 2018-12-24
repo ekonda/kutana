@@ -10,6 +10,6 @@ async def on_metrics(message, env):
     process = psutil.Process(os.getpid())
 
     taken_memory = int(process.memory_info().rss / 2**20)
-    taken_time = time.time() - message.raw_update["object"]["date"]
+    taken_time = time.time() - message.date
 
     await env.reply("mem: ~{}mib; tim: {}".format(taken_memory, taken_time))

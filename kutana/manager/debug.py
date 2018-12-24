@@ -1,5 +1,6 @@
 """Manager and environment for debug purposes."""
 
+import time
 from kutana.manager.basic import BasicManager
 from kutana.plugin import Message
 from kutana.exceptions import ExitException
@@ -66,11 +67,11 @@ class DebugManager(BasicManager):
 
         if isinstance(update, str):
             return Message(
-                str(update), (), 1, 1, (1, str(update))
+                str(update), (), 1, 1, time.time(), (1, str(update))
             )
 
         return Message(
-            update[1], (), update[0], update[0], update
+            update[1], (), update[0], update[0], time.time(), update
         )
 
     async def send_message(self, message=None, peer_id=None, attachment=None):

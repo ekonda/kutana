@@ -276,7 +276,7 @@ class TestPlugins(KutanaTest):
 
         res = asyncio.get_event_loop().run_until_complete(
             wrapper(
-                Message("", attachments, 0, 0, {}),
+                Message("", attachments, 0, 0, 0, {}),
                 DebugEnvironment(None, 0)
             )
         )
@@ -295,7 +295,7 @@ class TestPlugins(KutanaTest):
 
         res = asyncio.get_event_loop().run_until_complete(
             wrapper(
-                Message("no text", ("attachment"), 0, 0, {}),
+                Message("no text", ("attachment"), 0, 0, 0, {}),
                 DebugEnvironment(None, 0)
             )
         )

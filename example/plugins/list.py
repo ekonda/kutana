@@ -14,6 +14,7 @@ async def on_startup(kutana, registered_plugins):
 
 
 @plugin.on_text("list")
+@plugin.on_attachment("photo", early=True)
 async def on_list(message, env):
     await env.reply(
         "Plugins:\n" +

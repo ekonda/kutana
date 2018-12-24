@@ -8,9 +8,6 @@ from kutana.environment import Environment
 class VKEnvironment(Environment):
     """Environment for :class:`.VKManager`"""
 
-    def spawn(self):
-        return self.__class__(self.manager, self, peer_id=self.peer_id)
-
     async def _upload_file_to_vk(self, upload_url, data):
         upload_result_resp = await self.manager.session.post(
             upload_url, data=data
@@ -76,15 +73,17 @@ class VKEnvironment(Environment):
             return ()
 
         if len(message) < 4096:
-            return (await self.manager.send_message(
-                message,
-                self.peer_id,
-                attachment,
-                sticker_id,
-                payload,
-                keyboard,
-                forward_messages
-            ),)
+            return (
+                await self.manager.send_message(
+                    message,
+                    self.peer_id,
+                    attachment,
+                    sticker_id,
+                    payload,
+                    keyboard,
+                    forward_messages
+                ),
+            )
 
         result = []
 

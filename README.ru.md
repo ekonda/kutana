@@ -74,6 +74,12 @@ async def on_echo(message, env, body):
 
 ## Доступные менеджеры
 - VKManager (для vk.com группы)
+- TGManager (для telegram.org)
+    - Тип `document` назван `doc` внутри движка.
+    - `TGAttachmentTemp` используется для хранения вложений до отправки с
+    помощью `send_message` или `reply`. Вложения не могут быть загружены иначе.
+    - Если вам нужно скачать файл (вложение) из телеграмма, вы должны
+    использовать `TGEnvironment.get_file_from_attachment`.
 
 ## Авторы
 - **Michael Krukov** - [@michaelkrukov](https://github.com/michaelkrukov)

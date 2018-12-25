@@ -74,6 +74,12 @@ async def on_echo(message, env, body):
 
 ## Available managers
 - VKManager (for vk.com groups)
+- TGManager (for telegram.org)
+    - `document`'s type is named `doc` inside of engine.
+    - `TGAttachmentTemp` is used for storing attachments before sending them
+    with `send_message` or `reply`. Attachments can't be uploaded other way.
+    - If you want to download file (attachment) from telegram, you have to use
+    `TGEnvironment.get_file_from_attachment`.
 
 ## Authors
 - **Michael Krukov** - [@michaelkrukov](https://github.com/michaelkrukov)

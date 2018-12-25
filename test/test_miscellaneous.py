@@ -1,6 +1,6 @@
 from kutana import VKResponse, VKEnvironment, DebugEnvironment, DebugManager, \
     Executor, load_plugins, load_configuration, VKManager, Environment, \
-    Plugin, logger
+    Plugin, logger, BasicManager
 import unittest
 import asyncio
 import logging
@@ -48,6 +48,16 @@ class TestMiscellaneous(unittest.TestCase):
         self.assertEqual(env.manager, inner_env.manager)
         self.assertEqual(env.parent_environment, None)
         self.assertEqual(inner_env.parent_environment, env)
+
+    def test_split_large_text(self):
+        split = BasicManager.split_large_text
+
+        self.assertEqual(split("abc"), ("abc",))
+
+        parts = split("abc" * 4096)
+
+        self.assertEqual(parts[0], ("abc" * 4096)[:4096])
+        self.assertEqual(len(parts), 3)
 
     def test_plugin_with_exception_callback(self):
         plugin = Plugin(exceptions=0)

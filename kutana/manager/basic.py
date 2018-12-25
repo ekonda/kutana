@@ -1,9 +1,26 @@
 """Base for managers."""
 
+
 class BasicManager:  # pragma: no cover
     """Base for manager."""
 
     type = "basic"
+
+    @staticmethod
+    def split_large_text(text):
+        """
+        Split text into chunks with length of 4096.
+
+        :param text: text for splitting
+        :rtype: tuple of chunks
+        """
+
+        if len(text) < 4096:
+            return (text,)
+
+        return tuple(
+            text[i : i + 4096] for i in range(0, len(text), 4096)
+        )
 
     async def get_environment(self, update):
         """

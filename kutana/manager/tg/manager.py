@@ -16,9 +16,9 @@ TGResponse = namedtuple(
 )
 
 TGResponse.__doc__ = """
-`error` is a boolean value indicating if errorhappened.
-`errors` contains array with happened errors.
-`response` contains result of reqeust if no errors happened.
+"error" is a boolean value indicating if errorhappened.
+"errors" contains array with happened errors.
+"response" contains result of reqeust if no errors happened.
 """
 
 
@@ -34,7 +34,7 @@ class TGManager(BasicManager):
 
     def __init__(self, token, proxy=None):
         if not token:
-            raise ValueError("No `token` specified")
+            raise ValueError('No "token" specified')
 
         self.session = None
         self.subsessions = []
@@ -43,7 +43,11 @@ class TGManager(BasicManager):
         self.proxy = proxy
 
         self.token = token
-        self.api_url = "https://api.telegram.org/bot{}/{{}}".format(self.token)
+
+        self.api_url = \
+            "https://api.telegram.org/bot{}/{{}}".format(self.token)
+        self.file_url = \
+            "https://api.telegram.org/file/bot{}/{{}}".format(self.token)
 
     async def __aenter__(self):
         self.subsessions.append(self.session)
@@ -70,8 +74,30 @@ class TGManager(BasicManager):
     async def get_background_coroutines(self, ensure_future):
         return ()
 
+    async def request_file(self, path):
+        """
+        Download file with specified path and return it as bytes.
+
+        :param path: Telegram's file's path for downloading
+        :rtype: bytes or None
+        """
+
+        try:
+            async with self.session.get(
+                    self.file_url.format(path), proxy=self.proxy
+                ) as response:
+
+                return await response.read()
+
+        except aiohttp.ClientError:
+            return None
+
     async def request(self, method, **kwargs):
-        """Perform request to telegram and return result."""
+        """
+        Perform request to telegram and return result.
+
+        :rtype: :class:`.TGResponse`
+        """
 
         data = {k: v for k, v in kwargs.items() if v is not None}
 
@@ -108,17 +134,34 @@ class TGManager(BasicManager):
             response=raw_respose["result"]
         )
 
-    async def send_message(self, message, peer_id, attachment=None):
-        """Send message to target peer_id with parameters."""
+    async def send_message(self, message, peer_id, attachment=None, **kwargs):
+        """
+        Send message to target peer_id with parameters.
+
+        :param message: text to send
+        :param peer_id: target recipient
+        :param attachment: list of instances of :class:`.Attachment` or
+            :class:`.TGAttachmentTemp`
+        :parma kwargs: arguments to send to telegram's `sendMessage`
+        :rtype: list of responses from telegram
+        """
+
+        if peer_id is None:
+            return ()
 
         peer_id_str = str(peer_id)
 
-        result = None
+        result = []
 
         if message:
-            result = await self.request(
-                "sendMessage", chat_id=peer_id, text=message
-            )
+            message_parts = self.split_large_text(message)
+
+            for part in message_parts:
+                result.append(
+                    await self.request(
+                        "sendMessage", chat_id=peer_id, text=part, **kwargs
+                    )
+                )
 
         if isinstance(attachment, (Attachment, TGAttachmentTemp)):
             attachment = [attachment]
@@ -130,25 +173,28 @@ class TGManager(BasicManager):
                 if isinstance(a, Attachment):
                     attachment_type = "document" if a.type == "doc" else a.type
 
-                    new_attachment.append((attachment_type, str(a.id)))
+                    new_attachment.append((attachment_type, str(a.id), {}))
 
                 elif isinstance(a, TGAttachmentTemp):
-                    new_attachment.append((a.type, a.content))
+                    new_attachment.append((a.type, a.content, a.kwargs))
 
             attachment = new_attachment
 
         if attachment:
-            for attachment_type, content in attachment:
+            for attachment_type, content, upload_kwargs in attachment:
                 if attachment_type not in ("document", "photo", "audio",
                                            "video", "voice"):
                     continue
 
-                result = await self.request(
-                    "send" + attachment_type.capitalize(),
-                    **{
-                        "chat_id": peer_id_str,
-                        attachment_type: content
-                    }
+                result.append(
+                    await self.request(
+                        "send" + attachment_type.capitalize(),
+                        **{
+                            "chat_id": peer_id_str,
+                            attachment_type: content,
+                            **upload_kwargs
+                        }
+                    )
                 )
 
         return result
@@ -177,7 +223,7 @@ class TGManager(BasicManager):
     def convert_to_attachment(attachment, attachment_type=None):
         """
         Create and return :class:`.Attachment` created from passed data. If
-        attachmnet type can't be determined passed `attachment_type`
+        attachment type can't be determined passed "attachment_type"
         well be used.
         """
 

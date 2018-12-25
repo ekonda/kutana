@@ -13,18 +13,18 @@ class DebugEnvironment(Environment):
     def spawn(self):
         return self.__class__(self.manager, self, peer_id=self.peer_id)
 
-    async def reply(self, message, attachment=None):
+    async def reply(self, message, attachment=None, **kwargs):
         """
         Send message to current message's sender.
-        See :func:`DebugEnvironment.send_message` for details.
+        See :func:`.send_message` for details.
         """
 
         await self.send_message(
-            message, peer_id=self.peer_id, attachment=attachment
+            message, peer_id=self.peer_id, attachment=attachment, **kwargs
         )
 
     async def send_message(self, *args, **kwargs):
-        """Proxy for manager's :func:`DebugManager.send_message` method."""
+        """Proxy for manager's :func:`.send_message` method."""
 
         await self.manager.send_message(*args, **kwargs)
 
@@ -80,7 +80,7 @@ class DebugManager(BasicManager):
 
         :param message: message to send
         :param peer_id: recipient's id
-        :param attachmnet: optional attachment or list of attachments to
+        :param attachment: optional attachment or list of attachments to
             reply with
         :rtype: None
         """

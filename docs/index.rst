@@ -135,6 +135,7 @@ Exmaple of working engine with :class:`VKManager`:
     :caption: Managers
 
     VKManager <src/kutana.manager.vk>
+    TGManager <src/kutana.manager.tg>
     DebugManager <src/kutana.manager.debug>
 
 .. toctree::

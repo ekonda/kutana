@@ -21,9 +21,9 @@ VKResponse = namedtuple(
 )
 
 VKResponse.__doc__ = """
-`error` is a boolean value indicating if errorhappened.
-`errors` contains array with happened errors.
-`response` contains result of reqeust if no errors happened.
+"error" is a boolean value indicating if errorhappened.
+"errors" contains array with happened errors.
+"response" contains result of reqeust if no errors happened.
 """
 
 
@@ -39,9 +39,9 @@ class VKRequest(asyncio.Future):
 
 class VKManager(BasicManager):
     """
-    Class for receiving updates from vk.com.
+    Class for receiving updates from vkontakte.
     Controller requires group's token. You can specify settings for
-    groups.setLongPollSettings with argument `longpoll_settings`.
+    groups.setLongPollSettings with argument "longpoll_settings".
     """
 
 
@@ -87,7 +87,7 @@ class VKManager(BasicManager):
         self.session = self.subsessions.pop(-1)
 
     async def raw_request(self, method, **kwargs):
-        """Perform api request to vk.com"""
+        """Perform raw api request to vkontakte"""
 
         data = {k: v for k, v in kwargs.items() if v is not None}
 
@@ -128,7 +128,11 @@ class VKManager(BasicManager):
         )
 
     async def request(self, method, **kwargs):
-        """Shedule execution of request to vk.com and return result."""
+        """
+        Perform request to vkontakte and return result.
+
+        :rtype: :class:`.VKResponse`
+        """
 
         request = VKRequest(
             method,
@@ -151,10 +155,22 @@ class VKManager(BasicManager):
                 response=""
             )
 
-    async def send_message(self, message, peer_id, attachment=None,
-                           sticker_id=None, payload=None, keyboard=None,
-                           forward_messages=None):
-        """Send message to target peer_id with parameters."""
+    async def send_message(self, message, peer_id, attachment=None, **kwargs):
+        """
+        Send message to target peer_id with parameters.
+
+        :param message: text to send
+        :param peer_id: target recipient
+        :param attachment: list of :class:`.Attachment` or attachments
+            as string
+        :parma kwargs: arguments to send to vkontakte's `messages.send`
+        :rtype: list of responses from telegram
+        """
+
+        if peer_id is None:
+            return ()
+
+        message_parts = self.split_large_text(message)
 
         if isinstance(attachment, Attachment):
             attachment = [attachment]
@@ -175,19 +191,31 @@ class VKManager(BasicManager):
 
             attachment = new_attachment
 
-        return await self.request(
-            "messages.send",
-            message=message,
-            peer_id=peer_id,
-            attachment=attachment,
-            sticker_id=sticker_id,
-            payload=payload,
-            keyboard=keyboard,
-            forward_messages=forward_messages
+        result = []
+
+        for part in message_parts[:-1]:
+            result.append(
+                await self.request(
+                    "messages.send",
+                    message=part,
+                    peer_id=peer_id
+                )
+            )
+
+        result.append(
+            await self.request(
+                "messages.send",
+                message=message_parts[-1],
+                peer_id=peer_id,
+                attachment=attachment,
+                **kwargs
+            )
         )
 
+        return result
+
     async def resolve_screen_name(self, screen_name):
-        """Return answer from vk.com with resolved passed screen name."""
+        """Return answer from vkontakte with resolved passed screen name."""
 
         if screen_name in NAIVE_CACHE:
             return NAIVE_CACHE[screen_name]
@@ -242,7 +270,7 @@ class VKManager(BasicManager):
     def convert_to_attachment(attachment, attachment_type=None):
         """
         Create and return :class:`.Attachment` created from passed data. If
-        attachmnet type can't be determined passed `attachment_type`
+        attachment type can't be determined passed "attachment_type"
         well be used.
         """
 

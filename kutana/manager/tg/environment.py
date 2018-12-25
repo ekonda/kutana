@@ -7,7 +7,7 @@ from kutana.environment import Environment
 
 TGAttachmentTemp = namedtuple(
     "TGAttachmentTemp",
-    "type content"
+    "type content kwargs"
 )
 
 
@@ -20,76 +20,70 @@ class TGEnvironment(Environment):
     """Environment for :class:`.TGManager`"""
 
     async def request(self, method, **kwargs):
-        """Proxy for manager's `request` method."""
+        """Proxy for manager's "request" method."""
 
         return await self.manager.request(method, **kwargs)
 
     async def send_message(self, message, peer_id, attachment=None):
-        """Proxy for manager's `send_message` method."""
+        """Proxy for manager's "send_message" method."""
 
         return await self.manager.send_message(
-            message,
-            peer_id,
-            attachment
+            message, peer_id, attachment
         )
 
-    async def reply(self, message, attachment=None):
+    async def reply(self, message, attachment=None, **kwargs):
         """
         Reply to currently processed message. If text is too long - message
         will be splitted into parts.
 
         :param message: message to reply with
-        :param attachmnet: optional attachment or list of attachments to
+        :param attachment: optional attachment or list of attachments to
             reply with
-        :param sticker_id: id of sticker to reply with
-        :param payload: json data to reply with (see vk.com/dev for details)
-        :param keyboard: json formatted keyboard to reply with (see
-            vk.com/dev for details)
-        :param forward_messages: messages's id to forward with reply
+        :param kwargs:
         :rtype: list with results of sending messages
         """
 
-        if self.peer_id is None:
-            return ()
-
-        if len(message) < 4096:
-            return (
-                await self.manager.send_message(
-                    message, self.peer_id, attachment
-                ),
-            )
-
-        result = []  # TODO: Move splitting to Manager
-
-        chunks = list(
-            message[i : i + 4096] for i in range(0, len(message), 4096)
+        return await self.send_message(
+            message, self.peer_id, attachment=attachment, **kwargs
         )
 
-        for chunk in chunks[:-1]:
-            result.append(
-                await self.manager.send_message(chunk, self.peer_id)
-            )
-
-        result.append(
-            await self.manager.send_message(
-                chunks[-1], self.peer_id, attachment
-            )
-        )
-
-        return result
-
-    async def upload_doc(self, file):
+    async def upload_doc(self, file, **kwargs):
         """
         Pack file to be sent with :func:`.send_message`
-        (or :func:`.reply`).
+        (or :func:`.reply`) as document.
+
+        :param file: photo as file or bytes
+        :param kwargs: arguments for telegram's "sendFile"
+        :rtype: :class:`.TGAttachmentTemp`
         """
 
-        return TGAttachmentTemp("document", file)
+        return TGAttachmentTemp("document", file, kwargs)
 
-    async def upload_photo(self, file):
+    async def upload_photo(self, file, **kwargs):
         """
-        Pack photo to be sent with :func:`.send_message`
-        (or :func:`.reply`).
+        Pack file to be sent with :func:`.send_message`
+        (or :func:`.reply`) as photo.
+
+        :param file: photo as file or bytes
+        :param kwargs: arguments for telegram's "sendPhoto"
+        :rtype: :class:`.TGAttachmentTemp`
         """
 
-        return TGAttachmentTemp("photo", file)
+        return TGAttachmentTemp("photo", file, kwargs)
+
+    async def get_file_from_attachment(self, attachment):
+        """
+        Try to download attachment with specified path and return it as bytes.
+
+        :param attachment: :class:`.Attachment`
+        :rtype: bytes or None
+        """
+
+        file_data = await self.manager.request(
+            "getFile", file_id=attachment.id
+        )
+
+        if file_data.error:
+            return None
+
+        return await self.manager.request_file(file_data.response["file_path"])

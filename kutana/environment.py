@@ -57,3 +57,15 @@ class Environment:
 
         self._message = message
         self._has_message = message is not None
+
+    async def reply(self, message, attachment=None, **kwargs):
+        """
+        Reply to currently processed message.
+
+        :param message: message to reply with
+        :param attachment: optional attachment or list of attachments
+        :param kwargs: arguments for request to service
+        :rtype: list with results of sending messages
+        """
+
+        raise NotImplementedError

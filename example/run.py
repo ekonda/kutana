@@ -7,7 +7,10 @@ if __name__ == "__main__":
 
     # Create VKManager
     manager = VKManager(
-        load_configuration("vk_token", "configuration.json")
+        load_configuration(
+            "vk_token",
+            "configuration.json"
+        )
     )
 
     # Add manager to engine

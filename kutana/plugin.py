@@ -120,8 +120,8 @@ class Plugin():
     def register(self, *callbacks, early=False):
         """Register for processing updates in this plugin.
 
-        If early is True, this callbacks will be executed
-        before callbacks (from other plugins too) with `early=False`.
+        If "early" is True, this callbacks will be executed
+        before callbacks (from other plugins too) with "early=False".
         """
 
         if early:
@@ -138,8 +138,8 @@ class Plugin():
 
         Arguments raw update and env is passed to callback.
 
-        If `early` is True, this callbacks will be executed
-        before callbacks (from other plugins too) with `early=False`.
+        If "early" is True, this callbacks will be executed
+        before callbacks (from other plugins too) with "early=False".
         """
 
         def _register_special(callback):
@@ -180,11 +180,11 @@ class Plugin():
 
     def on_raw(self, early=False):
         """Returns decorator for adding callbacks which is triggered
-        every time when update can't be turned into `Message` or
-        `Attachment` object. Arguments raw `update` and `env`
-        is passed to callback.
+        every time when update can't be turned into :class:`.Message` or
+        :class:`.Attachment` object. Arguments raw update and
+        :class:`.Environment` is passed to callback.
 
-        See :func:`Plugin.register` for info about `early`.
+        See :func:`Plugin.register` for info about "early".
         """
 
         def decorator(coro):
@@ -206,11 +206,11 @@ class Plugin():
         """Returns decorator for adding callbacks which is triggered
         when the message and any of the specified text are fully matched.
 
-        See :func:`Plugin.register` for info about `early`.
+        See :func:`Plugin.register` for info about "early".
         """
 
         if not texts:
-            raise ValueError("No texts passed to `Plugin.on_text`")
+            raise ValueError('No texts passed to "Plugin.on_text"')
 
         check_texts = list(text.strip().lower() for text in texts)
 
@@ -230,10 +230,10 @@ class Plugin():
         """Returns decorator for adding callbacks which is triggered
         when the message contains any of the specified texts.
 
-        Keyword argument `found_text` can be passed to callback with text
+        Keyword argument "found_text" can be passed to callback with text
         found in message.
 
-        See :func:`Plugin.register` for info about `early`.
+        See :func:`Plugin.register` for info about "early".
         """
 
         check_texts = tuple(text.strip().lower() for text in texts) or ("",)
@@ -243,6 +243,9 @@ class Plugin():
 
             async def wrapper(msg, env):
                 check_text = msg.text.strip().lower()
+
+                if not check_text:
+                    return "GOON"
 
                 for text in check_texts:
                     if text not in check_text:
@@ -266,8 +269,8 @@ class Plugin():
         """Returns decorator for adding callbacks which is triggered
         when the message starts with any of the specified texts.
 
-        Keyword arguments `body` (text after prefix), `args` (text after
-        prefix splitted by spaces) and `prefix` (text before body) can
+        Keyword arguments "body" (text after prefix), "args" (text after
+        prefix splitted by spaces) and "prefix" (text before body) can
         be passed to callback.
 
         See :func:`Plugin.register` for info about `early`.
@@ -319,10 +322,10 @@ class Plugin():
         """Returns decorator for adding callbacks which is triggered
         when the message matches the specified regular expression.
 
-        Keyword argument `match` can be passed to callback with
+        Keyword argument "match" can be passed to callback with
         :class:`re.Match` object for message.
 
-        See :func:`Plugin.register` for info about `early`.
+        See :func:`Plugin.register` for info about "early".
         """
 
         if isinstance(regexp, str):
@@ -359,7 +362,7 @@ class Plugin():
         when the message has attachments of the specified type
         (if no types specified, then any attachments).
 
-        See :func:`Plugin.register` for info about `early`.
+        See :func:`Plugin.register` for info about "early".
         """
 
         def decorator(coro):

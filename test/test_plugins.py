@@ -299,12 +299,31 @@ class TestPlugins(KutanaTest):
 
         res = asyncio.get_event_loop().run_until_complete(
             wrapper(
-                Message("no text", ("attachment"), 0, 0, 0, {}),
+                Message("text", ("attachment"), 0, 0, 0, {}),
                 DebugEnvironment(None, 0)
             )
         )
 
         self.assertEqual(res, "DONE")
+
+    def test_plugin_no_text(self):
+        plugin = Plugin()
+
+        async def on_has_text(message, env):
+            return "DONE"
+
+        plugin.on_has_text()(on_has_text)
+
+        wrapper = plugin._callbacks.normal[0]
+
+        res = asyncio.get_event_loop().run_until_complete(
+            wrapper(
+                Message("", ("attachment"), 0, 0, 0, {}),
+                DebugEnvironment(None, 0)
+            )
+        )
+
+        self.assertNotEqual(res, "DONE")
 
     def test_plugin_onstar(self):
         queue = ["привет", "отлично привет", "ecHo", "ab", "ae", "hello"]

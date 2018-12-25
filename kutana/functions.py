@@ -10,7 +10,7 @@ from kutana.logger import logger
 
 
 def is_done(value):
-    """Return True if value is None or equals to `"DONE"` otherwise False"""
+    """Return True if value is None or equals to "DONE" otherwise False"""
 
     return value is None or value == "DONE"
 

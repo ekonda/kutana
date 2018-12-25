@@ -15,7 +15,7 @@ logging.disable(logging.INFO)
 # You can set these values through environment variables:
 # TEST_TOKEN and TEST_UTOKEN.
 #
-# Alternatively you can use json file `configuration_test.json` with format like this:
+# Alternatively you can use json file "configuration_test.json" with format like this:
 # {
 #   "token": "токен группы",
 #   "utoken": "токен пользователя, который может писать в группу"
@@ -122,28 +122,11 @@ class TestManagerVk(unittest.TestCase):
             VKManager("")
 
     def test_vk_no_peer_id(self):
-        env = VKEnvironment(None, None)
+        env = VKEnvironment(VKManager("fake token"), None)
 
         res = self.kutana.loop.run_until_complete(env.reply("message"))
 
         self.assertEqual(res, ())
-
-    def test_vk_reply_message(self):
-        messages = []
-
-        class FakeManager:
-            async def send_message(self, message, *args):
-                messages.append(message)
-
-        env = VKEnvironment(FakeManager(), peer_id=0)
-
-        self.kutana.loop.run_until_complete(env.reply("abc"))
-        self.kutana.loop.run_until_complete(env.reply("abc" * 4096))
-
-        self.assertEqual(messages[0], "abc")
-        self.assertEqual(messages[1], ("abc" * 4096)[:4096])
-
-        self.assertEqual(len(messages), 4)
 
     def test_vk_manager_raw_request(self):
         async def test():

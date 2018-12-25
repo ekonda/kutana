@@ -39,13 +39,24 @@ class TGManager(BasicManager):
         self.session = None
         self.subsessions = []
 
-        self.running = True
-
         self.offset = 0
         self.proxy = proxy
 
         self.token = token
         self.api_url = "https://api.telegram.org/bot{}/{{}}".format(self.token)
+
+    async def __aenter__(self):
+        self.subsessions.append(self.session)
+
+        self.session = aiohttp.ClientSession()
+
+        return self
+
+    async def __aexit__(self, exc_type, exc, traceback):
+        if not self.session.closed:
+            await self.session.close()
+
+        self.session = self.subsessions.pop(-1)
 
     async def get_environment(self, update):
         if "message" in update:
@@ -62,18 +73,13 @@ class TGManager(BasicManager):
     async def request(self, method, **kwargs):
         """Perform request to telegram and return result."""
 
-        url = self.api_url.format(method)
-
-        data = {}
-
-        for k, v in kwargs.items():
-            if v is not None:
-                data[k] = v
+        data = {k: v for k, v in kwargs.items() if v is not None}
 
         try:
             async with self.session.post(
-                    url, proxy=self.proxy, data=data
+                    self.api_url.format(method), proxy=self.proxy, data=data
                 ) as response:
+
                 raw_respose_text = await response.text()
 
                 raw_respose = json.loads(raw_respose_text)
@@ -133,30 +139,17 @@ class TGManager(BasicManager):
 
         if attachment:
             for attachment_type, content in attachment:
-                if attachment_type == "document":
-                    result = await self.request(
-                        "sendDocument", chat_id=peer_id_str, document=content
-                    )
+                if attachment_type not in ("document", "photo", "audio",
+                                           "video", "voice"):
+                    continue
 
-                elif attachment_type == "photo":
-                    result = await self.request(
-                        "sendPhoto", chat_id=peer_id_str, photo=content
-                    )
-
-                elif attachment_type == "audio":
-                    result = await self.request(
-                        "sendAudio", chat_id=peer_id_str, audio=content
-                    )
-
-                elif attachment_type == "video":
-                    result = await self.request(
-                        "sendVideo", chat_id=peer_id_str, video=content
-                    )
-
-                elif attachment_type == "voice":
-                    result = await self.request(
-                        "sendVoice", chat_id=peer_id_str, video=content
-                    )
+                result = await self.request(
+                    "send" + attachment_type.capitalize(),
+                    **{
+                        "chat_id": peer_id_str,
+                        attachment_type: content
+                    }
+                )
 
         return result
 
@@ -243,7 +236,5 @@ class TGManager(BasicManager):
         return self.receiver
 
     async def dispose(self):
-        self.running = False
-
         if self.session:
             await self.session.close()

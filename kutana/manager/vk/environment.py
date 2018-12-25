@@ -85,7 +85,7 @@ class VKEnvironment(Environment):
                 ),
             )
 
-        result = []
+        result = []  # TODO: Move splitting to Manager
 
         chunks = list(
             message[i : i + 4096] for i in range(0, len(message), 4096)

@@ -6,22 +6,13 @@ if __name__ == "__main__":
     kutana = Kutana()
 
     # Create VKManager
-    manager1 = VKManager(
+    manager = VKManager(
         load_configuration("vk_token", "configuration.json")
-    )
-
-    manager2 = TGManager(
-        load_configuration("tg_token", "configuration.json"),
-        load_configuration("tg_proxy", "configuration.json"),
     )
 
     # Add manager to engine
     kutana.add_manager(
-        manager1
-    )
-
-    kutana.add_manager(
-        manager2
+        manager
     )
 
     # Load and register plugins

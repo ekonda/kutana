@@ -1,9 +1,7 @@
 """Environment for :class:`.TGManager`."""
 
-import json
 from collections import namedtuple
 
-import aiohttp
 from kutana.environment import Environment
 
 
@@ -57,13 +55,11 @@ class TGEnvironment(Environment):
         if len(message) < 4096:
             return (
                 await self.manager.send_message(
-                    message,
-                    self.peer_id,
-                    attachment
+                    message, self.peer_id, attachment
                 ),
             )
 
-        result = []
+        result = []  # TODO: Move splitting to Manager
 
         chunks = list(
             message[i : i + 4096] for i in range(0, len(message), 4096)
@@ -76,9 +72,7 @@ class TGEnvironment(Environment):
 
         result.append(
             await self.manager.send_message(
-                chunks[-1],
-                self.peer_id,
-                attachment
+                chunks[-1], self.peer_id, attachment
             )
         )
 

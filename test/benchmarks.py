@@ -37,7 +37,7 @@ class TestTiming(KutanaTest):
             time.time() - stime
         ))
 
-        self.assertLess(time.time() - stime, 1.5)
+        self.assertLess(time.time() - stime, 1)
 
     def test_raw_exec_time(self):
         self.target = ["message"] * 10000
@@ -56,7 +56,7 @@ class TestTiming(KutanaTest):
             time.time() - stime
         ))
 
-        self.assertLess(time.time() - stime, 1.5)
+        self.assertLess(time.time() - stime, 1)
 
 
 if __name__ == '__main__':

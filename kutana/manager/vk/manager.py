@@ -82,7 +82,6 @@ class VKManager(BasicManager):
 
     async def __aexit__(self, exc_type, exc, traceback):
         if not self.session.closed:
-
             await self.session.close()
 
         self.session = self.subsessions.pop(-1)
@@ -90,16 +89,14 @@ class VKManager(BasicManager):
     async def raw_request(self, method, **kwargs):
         """Perform api request to vk.com"""
 
-        url = self.api_url.format(method)
-
-        data = {}
-
-        for k, v in kwargs.items():
-            if v is not None:
-                data[k] = v
+        data = {k: v for k, v in kwargs.items() if v is not None}
 
         try:
-            async with self.session.post(url, data=data) as response:
+            async with self.session.post(
+                    self.api_url.format(method),
+                    data=data
+                ) as response:
+
                 raw_respose_text = await response.text()
 
                 raw_respose = json.loads(raw_respose_text)

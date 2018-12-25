@@ -267,7 +267,9 @@ class TestPlugins(KutanaTest):
         async def on_attachment(message, env):
             return "DONE"
 
-        wrapper = decorator(on_attachment)
+        decorator(on_attachment)
+
+        wrapper = plugin._callbacks.normal[0]
 
         attachments = [
             Attachment("audio", 0, 0, 0, 0, {}),
@@ -291,7 +293,9 @@ class TestPlugins(KutanaTest):
         async def on_attachment(message, env):
             return "DONE"
 
-        wrapper = decorator(on_attachment)
+        decorator(on_attachment)
+
+        wrapper = plugin._callbacks.normal[0]
 
         res = asyncio.get_event_loop().run_until_complete(
             wrapper(

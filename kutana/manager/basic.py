@@ -42,6 +42,29 @@ class BasicManager:  # pragma: no cover
 
         raise NotImplementedError
 
+    async def request(self, method, **kwargs):
+        """
+        Perform request to manager's service and return result.
+
+        :rtype: response
+        """
+
+        raise NotImplementedError
+
+    async def send_message(self, message, peer_id, attachment=None, **kwargs):
+        """
+        Send message to target user with "peer_id" with parameters. This can
+        vary in managers' implementations.
+
+        :param message: text to send
+        :param peer_id: target recipient
+        :param attachment: list of instances of :class:`.Attachment`
+        :parma kwargs: arguments to send to manager's methods
+        :rtype: list of responses
+        """
+
+        raise NotImplementedError
+
     async def get_background_coroutines(self, ensure_future):
         """
         Collect background coroutines for Kutana to run.

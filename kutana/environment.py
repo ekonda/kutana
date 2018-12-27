@@ -58,6 +58,20 @@ class Environment:
         self._message = message
         self._has_message = message is not None
 
+    async def request(self, method, **kwargs):
+        """Proxy for manager's "request" method."""
+
+        return await self.manager.request(
+            method, **kwargs
+        )
+
+    async def send_message(self, message, peer_id, attachment=None, **kwargs):
+        """Proxy for manager's "send_message" method."""
+
+        return await self.manager.send_message(
+            message, peer_id, attachment, **kwargs
+        )
+
     async def reply(self, message, attachment=None, **kwargs):
         """
         Reply to currently processed message.
@@ -66,6 +80,45 @@ class Environment:
         :param attachment: optional attachment or list of attachments
         :param kwargs: arguments for request to service
         :rtype: list with results of sending messages
+        """
+
+        return await self.manager.send_message(
+            message, self.peer_id, attachment, **kwargs
+        )
+
+    async def upload_doc(self, file, **kwargs):
+        """
+        Upload of prepare file to be sent with :func:`.send_message`
+        (or :func:`.reply`) as document. This can vary in managers'
+        implementations.
+
+        :param file: document as file or bytes
+        :param kwargs: arguments for manager's method
+        :rtype: :class:`.Attachment` or None
+        """
+
+        raise NotImplementedError
+
+    async def upload_photo(self, file, **kwargs):
+        """
+        Upload of prepare file to be sent with :func:`.send_message`
+        (or :func:`.reply`) as photo. This can vary in managers'
+        implementations.
+
+        :param file: photo as file or bytes
+        :param kwargs: arguments for manager's method
+        :rtype: :class:`.Attachment` or None
+        """
+
+        raise NotImplementedError
+
+    async def get_file_from_attachment(self, attachment):
+        """
+        Try to download passed attachment and return it as bytes. Return None
+        if error occured.
+
+        :param attachment: :class:`.Attachment`
+        :rtype: bytes or None
         """
 
         raise NotImplementedError

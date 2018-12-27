@@ -32,18 +32,6 @@ class VKEnvironment(Environment):
 
         return upload_result
 
-    async def request(self, method, **kwargs):
-        """Proxy for manager's "request" method."""
-
-        return await self.manager.request(method, **kwargs)
-
-    async def send_message(self, message, peer_id, attachment=None, **kwargs):
-        """Proxy for manager's "send_message" method."""
-
-        return await self.manager.send_message(
-            message, peer_id, attachment, **kwargs
-        )
-
     async def reply(self, message, attachment=None, **kwargs):
         """
         Reply to currently processed message.
@@ -59,12 +47,23 @@ class VKEnvironment(Environment):
             message, self.peer_id, attachment=attachment, **kwargs
         )
 
-    async def upload_doc(self, file, peer_id=None, group_id=None,
-                         doctype="doc", filename=None):
-        """Pass peer_id=False to upload with docs.getWallUploadServer."""
+    async def upload_doc(self, file, **kwargs):
+        """
+        Upload file to be sent with :func:`.send_message`
+        (or :func:`.reply`) as document. If you passed "peer_id", vkontakte's
+        method "docs.getWallUploadServer" will be used.
 
-        if peer_id is None:
+        :param file: document as file or bytes
+        :param kwargs: arguments for vkontakte's methods and optional
+            "filename"
+        :rtype: :class:`.Attachment` or None
+        """
+
+        if kwargs.get("peer_id") is None:
             peer_id = self.peer_id
+
+        else:
+            peer_id = kwargs["peer_id"]
 
         if isinstance(file, str):
             with open(file, "rb") as o:
@@ -72,13 +71,15 @@ class VKEnvironment(Environment):
 
         if peer_id:
             upload_data = await self.manager.request(
-                "docs.getMessagesUploadServer", peer_id=peer_id, type=doctype
+                "docs.getMessagesUploadServer",
+                peer_id=peer_id,
+                type=kwargs.get("doctype", "doc")
             )
 
         else:
             upload_data = await self.manager.request(
                 "docs.getWallUploadServer",
-                group_id=group_id or self.manager.group_id
+                group_id=kwargs.get("group_id") or self.manager.group_id
             )
 
         if "upload_url" not in upload_data.response:
@@ -87,7 +88,7 @@ class VKEnvironment(Environment):
         upload_url = upload_data.response["upload_url"]
 
         data = aiohttp.FormData()
-        data.add_field("file", file, filename=filename)
+        data.add_field("file", file, filename=kwargs.get("filename"))
 
         upload_result = await self._upload_file_to_vk(upload_url, data)
 
@@ -105,19 +106,22 @@ class VKEnvironment(Environment):
             attachments.response[0], "doc"
         )
 
-    async def upload_photo(self, file, peer_id=None):
+    async def upload_photo(self, file, **kwargs):
         """
-        Upload passed file to vkontakte. If `peer_id` was passed, file will be
-        uploaded for user with `peer_id`.
+        Upload file to be sent with :func:`.send_message`
+        (or :func:`.reply`) as photo. If "peer_id" was passed, file will be
+        uploaded for user with "peer_id".
 
-        :param file: file to be uploaded. Can be bytes, file-like object or
-            path to file as string
-        :param peer_id: user's id to file to be uploaded for
-        :rtype: :class:`.Attachment`
+        :param file: photo as file or bytes
+        :param kwargs: arguments for vkontakte's methods
+        :rtype: :class:`.Attachment` or None
         """
 
-        if peer_id is None:
+        if kwargs.get("peer_id") is None:
             peer_id = self.peer_id
+
+        else:
+            peer_id = kwargs.get("peer_id")
 
         if isinstance(file, str):
             with open(file, "rb") as fh:
@@ -150,3 +154,10 @@ class VKEnvironment(Environment):
         return self.manager.convert_to_attachment(
             attachments.response[0], "photo"
         )
+
+    async def get_file_from_attachment(self, attachment):
+        if not attachment or not attachment.link:
+            return None
+
+        async with self.manager.session.get(attachment.link) as response:
+            return await response.read()

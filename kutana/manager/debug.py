@@ -10,38 +10,20 @@ from kutana.environment import Environment
 class DebugEnvironment(Environment):
     """Environment for :class:`.DebugManager`."""
 
-    def spawn(self):
-        return self.__class__(self.manager, self, peer_id=self.peer_id)
-
-    async def reply(self, message, attachment=None, **kwargs):
-        """
-        Send message to current message's sender.
-        See :func:`.send_message` for details.
-        """
-
-        await self.send_message(
-            message, peer_id=self.peer_id, attachment=attachment, **kwargs
-        )
-
-    async def send_message(self, *args, **kwargs):
-        """Proxy for manager's :func:`.send_message` method."""
-
-        await self.manager.send_message(*args, **kwargs)
-
-    async def upload_doc(self, thing, **__):
+    async def upload_doc(self, file, **kwargs):
         """Return first argument."""
 
-        return thing
+        return file
 
-    async def upload_photo(self, thing, **__):
+    async def upload_photo(self, file, **kwargs):
         """Return first argument."""
 
-        return thing
+        return file
 
-    async def request(self, *_, **__):
-        """Do nothing."""
+    async def get_file_from_attachment(self, attachment):
+        """Return first argument."""
 
-        return None
+        return attachment
 
 
 class DebugManager(BasicManager):
@@ -55,6 +37,11 @@ class DebugManager(BasicManager):
 
         self.queue = list(texts)
         self.dead = False
+
+    async def request(self, method, **kwargs):  # pylint: disable=W0613
+        """Placeholder for debug's "request" method."""
+
+        return None
 
     @staticmethod
     async def convert_to_message(update):
@@ -74,7 +61,7 @@ class DebugManager(BasicManager):
             update[1], (), update[0], update[0], time.time(), update
         )
 
-    async def send_message(self, message=None, peer_id=None, attachment=None):
+    async def send_message(self, message, peer_id, attachment=None, **kwargs):
         """
         Send message to specified user or user with id 1.
 
@@ -82,10 +69,11 @@ class DebugManager(BasicManager):
         :param peer_id: recipient's id
         :param attachment: optional attachment or list of attachments to
             reply with
+        :param kwargs: optional parameters (means nothing)
         :rtype: None
         """
 
-        peer_id = peer_id if peer_id is not None else 1
+        peer_id = 1 if peer_id is None else peer_id
 
         if peer_id not in self.replies_all:
             self.replies_all[peer_id] = []

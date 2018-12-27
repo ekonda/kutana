@@ -13,7 +13,7 @@ test:
 	$(python) -m unittest discover -s test
 
 cov:
-	coverage run -m unittest discover -s test
+	coverage run --source=kutana/ -m unittest discover -s test
 	coverage report --include=kutana/*
 	coverage html
 

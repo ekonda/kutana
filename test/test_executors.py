@@ -94,40 +94,6 @@ class TestExecutors(KutanaTest):
 
             logger.setLevel(logging.CRITICAL)
 
-    def test_two_debug(self):
-        self.target = ["message"]
-        self.called = 0
-
-        with self.debug_manager(self.target):
-
-            with self.debug_manager(self.target):
-
-                async def new_update(update, env):
-                    await env.reply(update)
-                    self.called += 1
-
-                self.kutana.executor.register(new_update)
-
-        self.assertEqual(self.called, 2)
-
-    def test_two_callbacks_and_two_debugs(self):
-            queue = ["message"]
-
-            self.target = ["message"] * 2
-
-            with self.debug_manager(queue):
-
-                with self.debug_manager(queue):
-
-                    async def new_update_1(update, env):
-                        await env.reply(update)
-
-                    async def new_update_2(update, env):
-                        await env.reply(update)  # will never be called
-
-                    self.kutana.executor.register(new_update_1)
-                    self.kutana.executor.register(new_update_2)
-
     def test_decorate_or_call(self):
         self.target = ["message"]
 

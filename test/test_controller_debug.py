@@ -19,9 +19,23 @@ class TestManagerDebug(KutanaTest):
         with self.debug_manager(["132"]) as plugin:
 
             async def on_text(message, env):
-                self.assertEqual("photo", await env.upload_photo("photo"))
+                attachment = await env.upload_photo("photo")
+
+                self.assertEqual("photo", attachment)
+                self.assertEqual(
+                    "photo", await env.get_file_from_attachment(attachment)
+                )
 
             plugin.on_has_text()(on_text)
+
+    def test_send_message(self):
+        self.target = ["message"]
+
+        with self.debug_manager(["echo message"]) as plugin:
+            async def on_echo(message, env, body):
+                await env.send_message(body, 1)
+
+            plugin.on_startswith_text("echo")(on_echo)
 
     def test_multiple_senders_plain(self):
         self.target = ["message1"]

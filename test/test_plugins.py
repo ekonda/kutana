@@ -259,7 +259,7 @@ class TestPlugins(KutanaTest):
 
             plugin.on_startswith_text("echo")(on_echo)
 
-    def test_plugin_attachments_type(self):
+    def test_plugin_no_attachments_type(self):
         plugin = Plugin()
 
         decorator = plugin.on_attachment("photo")
@@ -273,7 +273,7 @@ class TestPlugins(KutanaTest):
 
         attachments = [
             Attachment("audio", 0, 0, 0, 0, {}),
-            Attachment("image", 0, 0, 0, 0, {})
+            Attachment("video", 0, 0, 0, 0, {})
         ]
 
         res = asyncio.get_event_loop().run_until_complete(
@@ -300,6 +300,29 @@ class TestPlugins(KutanaTest):
         res = asyncio.get_event_loop().run_until_complete(
             wrapper(
                 Message("text", ("attachment"), 0, 0, 0, {}),
+                DebugEnvironment(None, 0)
+            )
+        )
+
+        self.assertEqual(res, "DONE")
+
+    def test_plugin_attachments_type(self):
+        plugin = Plugin()
+
+        decorator = plugin.on_attachment("photo")
+
+        async def on_attachment(message, env):
+            return "DONE"
+
+        decorator(on_attachment)
+
+        wrapper = plugin._callbacks.normal[0]
+
+        res = asyncio.get_event_loop().run_until_complete(
+            wrapper(
+                Message(
+                    "text", [Attachment("photo", 0, 0, 0, 0, {})], 0, 0, 0, {}
+                ),
                 DebugEnvironment(None, 0)
             )
         )
@@ -343,7 +366,9 @@ class TestPlugins(KutanaTest):
             plugin.on_has_text("привет")(zero_trigger)
 
 
-            async def one_trigger(message, env):
+            async def one_trigger(message, env, match):
+                self.assertTrue(match.group(0), "ab")
+
                 self.result |= 1 << 1
 
             plugin.on_regexp_text(r"a(b|c)")(one_trigger)

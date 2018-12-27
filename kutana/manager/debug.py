@@ -1,6 +1,7 @@
 """Manager and environment for debug purposes."""
 
 import time
+import asyncio
 from kutana.manager.basic import BasicManager
 from kutana.plugin import Message
 from kutana.exceptions import ExitException
@@ -37,6 +38,8 @@ class DebugManager(BasicManager):
 
         self.queue = list(texts)
         self.dead = False
+
+        self.counter = 0
 
     async def request(self, method, **kwargs):  # pylint: disable=W0613
         """Placeholder for debug's "request" method."""
@@ -101,7 +104,11 @@ class DebugManager(BasicManager):
         return DebugEnvironment(self, peer_id=peer_id)
 
     async def get_background_coroutines(self, ensure_future):
-        return []
+        async def count():
+            self.counter += 1
+            await asyncio.sleep(1)
+
+        return [count()]
 
     async def get_receiver_coroutine_function(self):
         async def rec():

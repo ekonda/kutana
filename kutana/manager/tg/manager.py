@@ -37,7 +37,6 @@ class TGManager(BasicManager):
             raise ValueError('No "token" specified')
 
         self.session = None
-        self.subsessions = []
 
         self.offset = 0
         self.proxy = proxy
@@ -48,19 +47,6 @@ class TGManager(BasicManager):
             "https://api.telegram.org/bot{}/{{}}".format(self.token)
         self.file_url = \
             "https://api.telegram.org/file/bot{}/{{}}".format(self.token)
-
-    async def __aenter__(self):
-        self.subsessions.append(self.session)
-
-        self.session = aiohttp.ClientSession()
-
-        return self
-
-    async def __aexit__(self, exc_type, exc, traceback):
-        if not self.session.closed:
-            await self.session.close()
-
-        self.session = self.subsessions.pop(-1)
 
     async def get_environment(self, update):
         if "message" in update:
@@ -82,6 +68,9 @@ class TGManager(BasicManager):
         :rtype: bytes or None
         """
 
+        if not self.session:
+            self.session = aiohttp.ClientSession()
+
         try:
             async with self.session.get(
                     self.file_url.format(path), proxy=self.proxy
@@ -98,6 +87,9 @@ class TGManager(BasicManager):
 
         :rtype: :class:`.TGResponse`
         """
+
+        if not self.session:
+            self.session = aiohttp.ClientSession()
 
         data = {k: v for k, v in kwargs.items() if v is not None}
 

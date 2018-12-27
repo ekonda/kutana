@@ -59,8 +59,6 @@ class VKManager(BasicManager):
         self.group_id = None
         self.longpoll = None
 
-        self.subsessions = []
-
         self.running = True
         self.requests_queue = []
 
@@ -73,21 +71,11 @@ class VKManager(BasicManager):
             .format(self.token, self.version)
         self.longpoll_url = "{}?act=a_check&key={}&wait=25&ts={}"
 
-    async def __aenter__(self):
-        self.subsessions.append(self.session)
-
-        self.session = aiohttp.ClientSession()
-
-        return self
-
-    async def __aexit__(self, exc_type, exc, traceback):
-        if not self.session.closed:
-            await self.session.close()
-
-        self.session = self.subsessions.pop(-1)
-
     async def raw_request(self, method, **kwargs):
         """Perform raw api request to vkontakte"""
+
+        if not self.session:
+            self.session = aiohttp.ClientSession()
 
         data = {k: v for k, v in kwargs.items() if v is not None}
 
@@ -131,8 +119,11 @@ class VKManager(BasicManager):
         """
         Perform request to vkontakte and return result.
 
+        :param timeout: timeout for gettings response from vkontakte
         :rtype: :class:`.VKResponse`
         """
+
+        timeout = kwargs.pop("_timeout", 30)
 
         request = VKRequest(
             method,
@@ -141,10 +132,8 @@ class VKManager(BasicManager):
 
         self.requests_queue.append(request)
 
-        await request
-
         try:
-            return await asyncio.wait_for(request, timeout=10)
+            return await asyncio.wait_for(request, timeout=timeout)
 
         except asyncio.TimeoutError:
             return VKResponse(
@@ -285,7 +274,7 @@ class VKManager(BasicManager):
             m_s_wid = 0
 
             for i, size in enumerate(body["sizes"]):
-                if size["width"] > m_s_wid:
+                if size["width"] >= m_s_wid:
                     m_s_wid = size["width"]
                     m_s_ind = i
 

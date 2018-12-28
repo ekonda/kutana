@@ -118,6 +118,7 @@ class TGManager(BasicManager):
                         raw_respose.get("description", "")
                     ))
                 ),
+                response=""
             )
 
         return TGResponse(
@@ -151,7 +152,7 @@ class TGManager(BasicManager):
             for part in message_parts:
                 result.append(
                     await self.request(
-                        "sendMessage", chat_id=peer_id, text=part, **kwargs
+                        "sendMessage", chat_id=peer_id_str, text=part, **kwargs
                     )
                 )
 

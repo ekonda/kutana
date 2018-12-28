@@ -296,6 +296,13 @@ class VKManager(BasicManager):
         )
 
     async def get_environment(self, update):
+        """
+        Returns environment for update.
+
+        :param update: update from vkontakte
+        :rtype: :class:`.VKEnvironment`
+        """
+
         return VKEnvironment(self, peer_id=update["object"].get("peer_id"))
 
     @staticmethod
@@ -372,12 +379,13 @@ class VKManager(BasicManager):
     async def update_longpoll_data(self):
         """Update manager's longpoll data"""
 
-        longpoll = await self.raw_request("groups.getLongPollServer", group_id=self.group_id)
+        longpoll = await self.raw_request(
+            "groups.getLongPollServer", group_id=self.group_id
+        )
 
         if longpoll.error:
             raise ValueError(
-                "Couldn't get longpoll information\n{}"
-                .format(
+                "Couldn't get longpoll information\n{}".format(
                     longpoll.errors
                 )
             )

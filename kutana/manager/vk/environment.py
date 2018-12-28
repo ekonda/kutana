@@ -44,7 +44,7 @@ class VKEnvironment(Environment):
         """
 
         return await self.manager.send_message(
-            message, self.peer_id, attachment=attachment, **kwargs
+            message, self.peer_id, attachment, **kwargs
         )
 
     async def upload_doc(self, file, **kwargs):

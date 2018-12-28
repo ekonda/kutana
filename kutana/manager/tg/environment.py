@@ -27,12 +27,13 @@ class TGEnvironment(Environment):
         :param message: message to reply with
         :param attachment: optional attachment or list of attachments to
             reply with
-        :param kwargs:
+        :param kwargs: arguments for telegrams's "sendMessage",
+            "sendPhoto" etc.
         :rtype: list with results of sending messages
         """
 
-        return await self.send_message(
-            message, self.peer_id, attachment=attachment, **kwargs
+        return await self.manager.send_message(
+            message, self.peer_id, attachment, **kwargs
         )
 
     async def upload_doc(self, file, **kwargs):
@@ -45,7 +46,7 @@ class TGEnvironment(Environment):
         :rtype: :class:`.TGAttachmentTemp`
         """
 
-        return TGAttachmentTemp("document", file, kwargs)
+        return TGAttachmentTemp("doc", file, kwargs)
 
     async def upload_photo(self, file, **kwargs):
         """

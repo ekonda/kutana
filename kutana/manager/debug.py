@@ -47,7 +47,7 @@ class DebugManager(BasicManager):
         return None
 
     @staticmethod
-    async def convert_to_message(update):
+    async def create_message(update):
         # update = (sender_id, message)
         # or
         # update = (message_from_user_with_id_1)

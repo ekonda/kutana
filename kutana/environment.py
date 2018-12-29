@@ -38,7 +38,7 @@ class Environment:
 
     def has_message(self):
         """
-        Return True if message was converted from update
+        Return True if message was created from update
         (successfully or not).
         """
 

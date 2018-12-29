@@ -192,7 +192,7 @@ class TGManager(BasicManager):
 
         return result
 
-    async def convert_to_message(self, update):
+    async def create_message(self, update):
         if "message" not in update:
             return None
 
@@ -200,7 +200,7 @@ class TGManager(BasicManager):
 
         for key in ("audio", "photo", "video", "document"):
             attachments.append(
-                self.convert_to_attachment(update["message"].get(key), key)
+                self.create_attachment(update["message"].get(key), key)
             )
 
         return Message(
@@ -213,7 +213,7 @@ class TGManager(BasicManager):
         )
 
     @staticmethod
-    def convert_to_attachment(attachment, attachment_type=None):
+    def create_attachment(attachment, attachment_type=None):
         """
         Create and return :class:`.Attachment` created from passed data. If
         attachment type can't be determined passed "attachment_type"

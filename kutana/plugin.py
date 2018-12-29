@@ -95,7 +95,7 @@ class Plugin():
             message = env.get_message()
 
         else:
-            message = await env.manager.convert_to_message(update)
+            message = await env.manager.create_message(update)
 
             env.set_message(message)
 

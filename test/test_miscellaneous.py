@@ -106,7 +106,7 @@ class TestMiscellaneous(unittest.TestCase):
         loop = asyncio.get_event_loop()
 
         message = loop.run_until_complete(
-            env.manager.convert_to_message(
+            env.manager.create_message(
                 {"object": {"date": 1, "random_id": 0, "fwd_messages": [],
                 "important": False, "peer_id": 1,
                 "text": "echo [club1|\u0421\u043e] 123", "attachments": [],
@@ -120,7 +120,7 @@ class TestMiscellaneous(unittest.TestCase):
         self.assertEqual(message.attachments, ())
 
         message = loop.run_until_complete(
-            env.manager.convert_to_message(
+            env.manager.create_message(
                 {"object": {"date": 1, "random_id": 0, "fwd_messages": [],
                 "important": False, "peer_id": 1,
                 "text": "echo [club1|\u0421\u043e] 123", "attachments": [],

@@ -95,7 +95,7 @@ class VKEnvironment(Environment):
         if attachments.error:
             return None
 
-        return self.manager.convert_to_attachment(
+        return self.manager.create_attachment(
             attachments.response[0], "doc"
         )
 
@@ -140,7 +140,7 @@ class VKEnvironment(Environment):
         if attachments.error:
             return None
 
-        return self.manager.convert_to_attachment(
+        return self.manager.create_attachment(
             attachments.response[0], "photo"
         )
 

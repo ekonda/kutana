@@ -207,8 +207,8 @@ class TestManagerVk(unittest.TestCase):
             mngr.dispose()
         )
 
-    def test_tg_convert_to_attachment(self):
-        attachment = TGManager.convert_to_attachment(
+    def test_tg_create_attachment(self):
+        attachment = TGManager.create_attachment(
             {"file_id": 13}, "document"
         )
 
@@ -216,7 +216,7 @@ class TestManagerVk(unittest.TestCase):
         self.assertEqual(attachment.id, 13)
         self.assertEqual(attachment.link, None)
 
-        attachment = TGManager.convert_to_attachment(
+        attachment = TGManager.create_attachment(
             [{"file_id": 13}], "photo"
         )
 
@@ -224,16 +224,16 @@ class TestManagerVk(unittest.TestCase):
         self.assertEqual(attachment.id, 13)
         self.assertEqual(attachment.link, None)
 
-        attachment = TGManager.convert_to_attachment(None, "video")
+        attachment = TGManager.create_attachment(None, "video")
 
         self.assertEqual(attachment, None)
 
 
-    def test_tg_convert_to_message(self):
+    def test_tg_create_message(self):
         mngr = TGManager("token")
 
         message = self.loop.run_until_complete(
-            mngr.convert_to_message({"message": {
+            mngr.create_message({"message": {
                 "text": "text",
                 "from": {"id": 1},
                 "chat": {"id": 2},
@@ -248,7 +248,7 @@ class TestManagerVk(unittest.TestCase):
         self.assertEqual(message.date, 0)
 
         message = self.loop.run_until_complete(
-            mngr.convert_to_message({})
+            mngr.create_message({})
         )
 
         self.assertEqual(message, None)

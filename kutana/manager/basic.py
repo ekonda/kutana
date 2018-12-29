@@ -32,7 +32,7 @@ class BasicManager:  # pragma: no cover
 
         raise NotImplementedError
 
-    async def convert_to_message(self, update):
+    async def create_message(self, update):
         """
         Create and return :class:`.Message` from raw_update.
 

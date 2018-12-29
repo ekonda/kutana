@@ -129,7 +129,7 @@ class TestManagerVk(unittest.TestCase):
             "peer_id": 0
         })
 
-    def test_vk_manager_convert_to_attachment(self):
+    def test_vk_manager_create_attachment(self):
         test_attachment_raw = {
             "id": 13, "album_id": 13, "owner_id": 1, "sizes":
             [{"type": "s", "url": "url", "width": 0, "height": 0}],
@@ -138,7 +138,7 @@ class TestManagerVk(unittest.TestCase):
             "can_comment": 1, "can_repost": 1, "tags": {"count": 0}
         }
 
-        attachment = VKManager.convert_to_attachment(
+        attachment = VKManager.create_attachment(
             test_attachment_raw, "photo"
         )
 
@@ -149,7 +149,7 @@ class TestManagerVk(unittest.TestCase):
         self.assertEqual(attachment.link, "url")
         self.assertEqual(attachment.raw_attachment, test_attachment_raw)
 
-    def test_vk_manager_convert_to_attachment_no_type(self):
+    def test_vk_manager_create_attachment_no_type(self):
         test_attachment_raw = {
             "type": "photo",
             "photo": {
@@ -162,7 +162,7 @@ class TestManagerVk(unittest.TestCase):
             }
         }
 
-        attachment = VKManager.convert_to_attachment(
+        attachment = VKManager.create_attachment(
             test_attachment_raw
         )
 
@@ -173,13 +173,13 @@ class TestManagerVk(unittest.TestCase):
         self.assertEqual(attachment.link, "url")
         self.assertEqual(attachment.raw_attachment, test_attachment_raw)
 
-    def test_vk_manager_convert_to_attachment_doc(self):
+    def test_vk_manager_create_attachment_doc(self):
         test_attachment_raw = {
             "id": 13, "owner_id": 1, "title": "rrrrr.png", "size": 119900,
             "ext": "png", "url": "url", "date": 0, "type": 4,
         }
 
-        attachment = VKManager.convert_to_attachment(
+        attachment = VKManager.create_attachment(
             test_attachment_raw, "doc"
         )
 
@@ -190,13 +190,13 @@ class TestManagerVk(unittest.TestCase):
         self.assertEqual(attachment.link, "url")
         self.assertEqual(attachment.raw_attachment, test_attachment_raw)
 
-    def test_vk_manager_convert_to_attachment_doc_no_link(self):
+    def test_vk_manager_create_attachment_doc_no_link(self):
         test_attachment_raw = {
             "id": 13, "owner_id": 1, "title": "rrrrr.png", "size": 119900,
             "ext": "png", "date": 0, "type": 4,
         }
 
-        attachment = VKManager.convert_to_attachment(
+        attachment = VKManager.create_attachment(
             test_attachment_raw, "doc"
         )
 
@@ -473,7 +473,7 @@ class TestManagerVk(unittest.TestCase):
         class FakeManager:
             group_id = 10
 
-            def convert_to_attachment(self, att, typ):
+            def create_attachment(self, att, typ):
                 actions.append((att, typ))
 
                 return "file"

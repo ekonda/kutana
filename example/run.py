@@ -1,24 +1,27 @@
-from kutana import Kutana, VKController, load_plugins, \
+from kutana import Kutana, VKManager, load_plugins, \
     load_configuration
 
+if __name__ == "__main__":
+    # Create engine
+    kutana = Kutana()
 
-# Create engine
-kutana = Kutana()
+    # Create VKManager
+    manager = VKManager(
+        load_configuration(
+            "vk_token",
+            "configuration.json"
+        )
+    )
 
-# Create VKController
-controller = VKController(
-    load_configuration("vk_token", "configuration.json")
-)
+    # Add manager to engine
+    kutana.add_manager(
+        manager
+    )
 
-# Add controller to engine
-kutana.add_controller(
-    controller
-)
+    # Load and register plugins
+    kutana.executor.register_plugins(
+        load_plugins("plugins/")
+    )
 
-# Load and register plugins
-kutana.executor.register_plugins(
-    *load_plugins("example/plugins/")
-)
-
-# Run engine
-kutana.run()
+    # Run engine
+    kutana.run()

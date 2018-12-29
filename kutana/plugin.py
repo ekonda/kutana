@@ -1,14 +1,20 @@
-from kutana.structures import objdict
-from collections import namedtuple
+"""Structures and classes for plugins."""
+
 import re
+import inspect
+from collections import namedtuple
+
+from kutana.functions import is_done
 
 
 Message = namedtuple(
     "Message",
-    "text attachments from_id peer_id raw_update"
+    "text attachments from_id peer_id date raw_update"
 )
 
-Message.__doc__ = "Text message witch possible attachments."
+Message.__doc__ = """
+Text message witch possible attachments.
+"""
 
 
 Attachment = namedtuple(
@@ -16,159 +22,124 @@ Attachment = namedtuple(
     "type id owner_id access_key link raw_attachment"
 )
 
-Attachment.__doc__ = "Detailed information about attachment."
+Attachment.__doc__ = """
+Detailed information about attachment.
+"""
+
+
+Callbacks = namedtuple(
+    "Callbacks",
+    "normal raw"
+)
+
+Callbacks.__doc__ = """
+Structure for grouping callbacks inside of :class:`.Plugin`.
+"""
 
 
 class Plugin():
     """Class for creating extensions for kutana engine."""
 
     def __init__(self, **kwargs):
-        self._callbacks = []
-        self._callbacks_raw = []
-
-        self._ecallbacks = []
-        self._ecallbacks_raw = []
+        self._callbacks = Callbacks([], [])
+        self._callbacks_early = Callbacks([], [])
 
         self._callbacks_special = []
 
         self._callbacks_dispose = []
-        self._callback_startup = None
+        self._callbacks_startup = []
 
         self.priority = 400
 
         for k, v in kwargs.items():
             setattr(self, k, v)
 
-    @staticmethod
-    def _done_if_none(value):
-        """Return "DONE" if value is None. Otherwise return value."""
-
-        if value is None:
-            return "DONE"
-
-        return value
-
     def _prepare_callbacks(self):
         """Return callbacks for registration in executor."""
 
         callbacks = []
 
-        if self._callback_startup:
-            async def wrapper_for_startup(update, eenv):
-                await self._proc_startup(update, eenv)
+        if self._callbacks_early.normal or self._callbacks_early.raw:
 
-            wrapper_for_startup.priority = self.priority
-
-            callbacks.append(wrapper_for_startup)
-
-        if self._ecallbacks or self._ecallbacks_raw:
-
-            async def wrapper_for_early(update, eenv):
+            async def wrapper_for_early(update, env):
                 return await self._proc_update(
-                    update, eenv, (self._ecallbacks, self._ecallbacks_raw)
+                    update, env, self._callbacks_early
                 )
 
             wrapper_for_early.priority = self.priority + 200
 
             callbacks.append(wrapper_for_early)
 
-        if self._callbacks or self._callbacks_raw:
+        if self._callbacks.normal or self._callbacks.raw:
 
-            async def wrapper(update, eenv):
+            async def wrapper(update, env):
                 return await self._proc_update(
-                    update, eenv, (self._callbacks, self._callbacks_raw)
+                    update, env, self._callbacks
                 )
 
             wrapper.priority = self.priority
 
             callbacks.append(wrapper)
 
-        callbacks += self._callbacks_special
+        callbacks.extend(self._callbacks_special)
 
         return callbacks
 
-    async def _proc_startup(self, update, eenv):
-        if eenv.ctrl_type != "kutana":
-            return
-
-        if update["update_type"] == "startup":
-            if self._callback_startup:
-                await self._callback_startup(
-                    update,
-                    objdict(eenv=eenv, **eenv)
-                )
-
     @staticmethod
-    async def _proc_update(update, eenv, cbs=None):
-        """Process update with eenv and target callbacks.
+    async def _proc_update(update, env, callbacks):
+        """Process update with env and target callbacks.
         If no callbacks passed raises RuntimeException.
         """
 
-        if cbs is None:
-            raise RuntimeError
-
-        if eenv.ctrl_type == "kutana":
-            return
-
-        env = objdict(eenv=eenv, **eenv)
-
-        if "_cached_message" in eenv:
-            message = eenv["_cached_message"]
+        if env.has_message():
+            message = env.get_message()
 
         else:
-            message = await eenv.convert_to_message(update, eenv)
+            message = await env.manager.create_message(update)
 
-            eenv["_cached_message"] = message
+            env.set_message(message)
 
-        if message is None:
-            if not cbs[1]:
-                return
-
-            async def call(cb):
-                return await cb(
-                    update,
-                    env
-                )
-
-            callbacks = cbs[1]
+        if message:
+            callbacks_type = 0  # callbacks for messages
 
         else:
+            callbacks_type = 1  # callbacks for raw
 
-            async def call(cb):
-                return await cb(
-                    message,
-                    message.attachments,
-                    env,
-                )
+        inner_env = env.spawn()
 
-            callbacks = cbs[0]
+        for callback in callbacks[callbacks_type]:
+            if callbacks_type == 1:
+                res = await callback(update, inner_env)
 
-        for callback in callbacks:
-            comm = await call(callback)
+            else:
+                res = await callback(message, inner_env)
 
-            if comm == "DONE":
+            if res == "DONE":
                 return "DONE"
 
     def register(self, *callbacks, early=False):
         """Register for processing updates in this plugin.
 
-        If early is True, this callbacks will be executed
-        before callbacks (from other plugins too) with `early=False`.
+        If "early" is True, this callbacks will be executed
+        before callbacks (from other plugins too) with "early=False".
         """
 
-        callbacks_list = self._ecallbacks if early else self._callbacks
+        if early:
+            callbacks_list = self._callbacks_early.normal
+        else:
+            callbacks_list = self._callbacks.normal
 
         for callback in callbacks:
             callbacks_list.append(callback)
 
     def register_special(self, *callbacks, early=False):
         """Register callback for processing updates in this plugins's
-        executor. Return decorator for registering callback.
+        executor directly. Return decorator for registering callback.
 
-        Arguments `env` and raw `update` is passed to callback.
+        Arguments raw update and env is passed to callback.
 
-        If `early` is True, this callbacks will be executed
-        before callbacks (from other plugins too) with `early=False`.
+        If "early" is True, this callbacks will be executed
+        before callbacks (from other plugins too) with "early=False".
         """
 
         def _register_special(callback):
@@ -196,12 +167,12 @@ class Plugin():
     def on_startup(self):
         """Returns decorator for adding callbacks which is triggered
         at the startup of kutana. Decorated coroutine receives update and
-        plugin environment (although this env is only accessible in startup by
-        only this decoraed coroutine).
+        plugin environment (although this env is only accessible in plugin by
+        decoraed coroutines).
         """
 
         def decorator(coro):
-            self._callback_startup = coro
+            self._callbacks_startup.append(coro)
 
             return coro
 
@@ -209,18 +180,23 @@ class Plugin():
 
     def on_raw(self, early=False):
         """Returns decorator for adding callbacks which is triggered
-        every time when update can't be turned into `Message` or
-        `Attachment` object. Arguments raw `update` and `env`
-        is passed to callback.
+        every time when update can't be turned into :class:`.Message` or
+        :class:`.Attachment` object. Arguments raw update and
+        :class:`.Environment` is passed to callback.
 
-        See :func:`Plugin.register` for info about `early`.
+        See :func:`Plugin.register` for info about "early".
         """
 
         def decorator(coro):
-            if early:
-                self._ecallbacks_raw.append(coro)
+            async def wrapper(update, env):
+                if is_done(await coro(update, env)):
+                    return "DONE"
 
-            self._callbacks_raw.append(coro)
+            if early:
+                self._callbacks_early.raw.append(wrapper)
+
+            else:
+                self._callbacks.raw.append(wrapper)
 
             return coro
 
@@ -230,24 +206,23 @@ class Plugin():
         """Returns decorator for adding callbacks which is triggered
         when the message and any of the specified text are fully matched.
 
-        See :func:`Plugin.register` for info about `early`.
+        See :func:`Plugin.register` for info about "early".
         """
 
+        if not texts:
+            raise ValueError('No texts passed to "Plugin.on_text"')
+
+        check_texts = list(text.strip().lower() for text in texts)
+
         def decorator(coro):
-            check_texts = list(text.strip().lower() for text in texts)
-
-            async def wrapper(message, attachments, env):
+            async def wrapper(message, env):
                 if message.text.strip().lower() in check_texts:
-                    comm = self._done_if_none(
-                        await coro(message, attachments, env)
-                    )
-
-                    if comm == "DONE":
+                    if is_done(await coro(message, env)):
                         return "DONE"
 
             self.register(wrapper, early=early)
 
-            return wrapper
+            return coro
 
         return decorator
 
@@ -255,35 +230,38 @@ class Plugin():
         """Returns decorator for adding callbacks which is triggered
         when the message contains any of the specified texts.
 
-        Fills env for callback with:
+        Keyword argument "found_text" can be passed to callback with text
+        found in message.
 
-        - "found_text" - text found in message.
-
-        See :func:`Plugin.register` for info about `early`.
+        See :func:`Plugin.register` for info about "early".
         """
 
-        def decorator(coro):
-            check_texts = tuple(text.strip().lower() for text in texts) or ("",)
+        check_texts = tuple(text.strip().lower() for text in texts) or ("",)
 
-            async def wrapper(message, attachments, env):
-                check_text = message.text.strip().lower()
+        def decorator(coro):
+            signature = inspect.signature(coro)
+
+            async def wrapper(msg, env):
+                check_text = msg.text.strip().lower()
+
+                if not check_text:
+                    return "GOON"
 
                 for text in check_texts:
                     if text not in check_text:
                         continue
 
-                    env["found_text"] = text
+                    kwargs = {}
 
-                    comm = self._done_if_none(
-                        await coro(message, attachments, env)
-                    )
+                    if "found_text" in signature.parameters:
+                        kwargs["found_text"] = text
 
-                    if comm == "DONE":
+                    if is_done(await coro(msg, env, **kwargs)):
                         return "DONE"
 
             self.register(wrapper, early=early)
 
-            return wrapper
+            return coro
 
         return decorator
 
@@ -291,17 +269,17 @@ class Plugin():
         """Returns decorator for adding callbacks which is triggered
         when the message starts with any of the specified texts.
 
-        Fills env for callback with:
-
-        - "body" - text without prefix.
-        - "args" - text without prefix splitted in bash-like style.
-        - "prefix" - prefix.
+        Keyword arguments "body" (text after prefix), "args" (text after
+        prefix splitted by spaces) and "prefix" (text before body) can
+        be passed to callback.
 
         See :func:`Plugin.register` for info about `early`.
         """
 
+        check_texts = tuple(text.lstrip().lower() for text in texts)
+
         def decorator(coro):
-            check_texts = tuple(text.lstrip().lower() for text in texts)
+            signature = inspect.signature(coro)
 
             def search_prefix(message):
                 for text in check_texts:
@@ -310,26 +288,33 @@ class Plugin():
 
                 return None
 
-            async def wrapper(message, attachments, env):
-                search_result = search_prefix(message.text.lower())
+            async def wrapper(msg, env):
+                search_result = search_prefix(msg.text.lower())
 
                 if search_result is None:
                     return
 
-                env["body"] = message.text[len(search_result):].strip()
-                env["args"] = env["body"].split()
-                env["prefix"] = message.text[:len(search_result)].strip()
+                kwargs = {}
 
-                comm = self._done_if_none(
-                    await coro(message, attachments, env)
-                )
+                if "body" in signature.parameters:
+                    kwargs["body"] = msg.text[len(search_result):].strip()
 
-                if comm == "DONE":
+                if "args" in signature.parameters:
+                    if "body" in kwargs:
+                        kwargs["args"] = kwargs["body"].split()
+
+                    else:
+                        kwargs["args"] = msg.text[len(search_result):].split()
+
+                if "prefix" in signature.parameters:
+                    kwargs["prefix"] = msg.text[:len(search_result)].strip()
+
+                if is_done(await coro(msg, env, **kwargs)):
                     return "DONE"
 
             self.register(wrapper, early=early)
 
-            return wrapper
+            return coro
 
         return decorator
 
@@ -337,11 +322,10 @@ class Plugin():
         """Returns decorator for adding callbacks which is triggered
         when the message matches the specified regular expression.
 
-        Fills env for callback with:
+        Keyword argument "match" can be passed to callback with
+        :class:`re.Match` object for message.
 
-        - "match" - match.
-
-        See :func:`Plugin.register` for info about `early`.
+        See :func:`Plugin.register` for info about "early".
         """
 
         if isinstance(regexp, str):
@@ -351,24 +335,25 @@ class Plugin():
             compiled = regexp
 
         def decorator(coro):
-            async def wrapper(message, attachments, env):
+            signature = inspect.signature(coro)
+
+            async def wrapper(message, env):
                 match = compiled.match(message.text)
 
                 if not match:
                     return
 
-                env["match"] = match
+                kwargs = {}
 
-                comm = self._done_if_none(
-                    await coro(message, attachments, env)
-                )
+                if "match" in signature.parameters:
+                    kwargs["match"] = match
 
-                if comm == "DONE":
+                if is_done(await coro(message, env, **kwargs)):
                     return "DONE"
 
             self.register(wrapper, early=early)
 
-            return wrapper
+            return coro
 
         return decorator
 
@@ -377,11 +362,13 @@ class Plugin():
         when the message has attachments of the specified type
         (if no types specified, then any attachments).
 
-        See :func:`Plugin.register` for info about `early`.
+        See :func:`Plugin.register` for info about "early".
         """
 
         def decorator(coro):
-            async def wrapper(message, attachments, env):
+            async def wrapper(message, env):
+                attachments = message.attachments
+
                 if not attachments:
                     return
 
@@ -392,21 +379,11 @@ class Plugin():
                     else:
                         return
 
-                comm = self._done_if_none(
-                    await coro(message, attachments, env)
-                )
-
-                if comm == "DONE":
+                if is_done(await coro(message, env)):
                     return "DONE"
 
             self.register(wrapper, early=early)
 
-            return wrapper
+            return coro
 
         return decorator
-
-    async def dispose(self):
-        """Free resources and prepare for shutdown."""
-
-        for callback in self._callbacks_dispose:
-            await callback()

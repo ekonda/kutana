@@ -1,5 +1,6 @@
 # Kutana
 configuration*.json
+.run.py
 
 # VSCode
 .vscode/

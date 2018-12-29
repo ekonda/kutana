@@ -1,4 +1,4 @@
-from kutana import Kutana, DebugController, Plugin
+from kutana import Kutana, DebugManager, Plugin
 from contextlib import contextmanager
 import unittest
 
@@ -9,13 +9,13 @@ class KutanaTest(unittest.TestCase):
         self.target = []
 
     @contextmanager
-    def debug_controller(self, queue):
+    def debug_manager(self, queue):
         if self.kutana is None:
             self.kutana = Kutana()
 
-        self.controller = DebugController(*queue)
+        self.manager = DebugManager(*queue)
 
-        self.kutana.add_controller(self.controller)
+        self.kutana.add_manager(self.manager)
 
         self.plugin = Plugin()
 
@@ -25,8 +25,8 @@ class KutanaTest(unittest.TestCase):
             yield self.plugin
         finally:
             for plugin in self.plugins:
-                self.kutana.executor.register_plugins(plugin)
+                self.kutana.executor.register_plugins([plugin])
 
             self.kutana.run()
 
-        self.assertEqual(self.target, self.controller.replies)
+        self.assertEqual(self.target, self.manager.replies)

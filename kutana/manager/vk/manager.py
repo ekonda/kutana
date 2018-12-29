@@ -1,13 +1,18 @@
-from kutana.controller_vk.vkwrappers import make_reply, make_upload_docs,\
-    make_upload_photo
-from kutana.controller_vk.converter import convert_to_message
-from kutana.controller_basic import BasicController
-from kutana.plugin import Attachment
-from kutana.logger import logger
-from collections import namedtuple
+"""Manager for interacting with VKontakte"""
+
 import asyncio
-import aiohttp
 import json
+import re
+from collections import namedtuple
+
+import aiohttp
+from kutana.logger import logger
+from kutana.manager.basic import BasicManager
+from kutana.manager.vk.environment import VKEnvironment
+from kutana.plugin import Attachment, Message
+
+
+NAIVE_CACHE = {}
 
 
 VKResponse = namedtuple(
@@ -15,16 +20,16 @@ VKResponse = namedtuple(
     "error errors response"
 )
 
-VKResponse.__doc__ = """ `error` is a boolean value indicating if error
-happened.
-
-`errors` contains array with happened errors.
-
-`response` contains result of reqeust if no errors happened.
+VKResponse.__doc__ = """
+"error" is a boolean value indicating if errorhappened.
+"errors" contains array with happened errors.
+"response" contains result of reqeust if no errors happened.
 """
 
 
 class VKRequest(asyncio.Future):
+    """Class for queueing requests to VKontakte"""
+
     def __init__(self, method, kwargs):
         super().__init__()
 
@@ -32,13 +37,16 @@ class VKRequest(asyncio.Future):
         self.kwargs = kwargs
 
 
-class VKController(BasicController):
-    """Class for receiving updates from vk.com.
+class VKManager(BasicManager):
+    """
+    Class for receiving updates from vkontakte.
     Controller requires group's token. You can specify settings for
-    groups.setLongPollSettings with argument `longpoll_settings`.
+    groups.setLongPollSettings with argument "longpoll_settings".
     """
 
-    type = "vk"
+
+    type = "vkontakte"
+
 
     def __init__(self, token, execute_pause=0.05, longpoll_settings=None):
         if not token:
@@ -50,8 +58,6 @@ class VKController(BasicController):
         self.session = None
         self.group_id = None
         self.longpoll = None
-
-        self.subsessions = []
 
         self.running = True
         self.requests_queue = []
@@ -65,38 +71,25 @@ class VKController(BasicController):
             .format(self.token, self.version)
         self.longpoll_url = "{}?act=a_check&key={}&wait=25&ts={}"
 
-    async def __aenter__(self):
-        self.subsessions.append(self.session)
-
-        self.session = aiohttp.ClientSession()
-
-        return self
-
-    async def __aexit__(self, exc_type, exc, tb):
-        if not self.session.closed:
-
-            await self.session.close()
-
-        self.session = self.subsessions.pop(-1)
-
     async def raw_request(self, method, **kwargs):
-        """Perform api request to vk.com"""
+        """Perform raw api request to vkontakte"""
 
-        url = self.api_url.format(method)
+        if not self.session:
+            self.session = aiohttp.ClientSession()
 
-        data = {}
-
-        for k, v in kwargs.items():
-            if v is not None:
-                data[k] = v
+        data = {k: v for k, v in kwargs.items() if v is not None}
 
         try:
-            async with self.session.post(url, data=data) as response:
+            async with self.session.post(
+                    self.api_url.format(method),
+                    data=data
+                ) as response:
+
                 raw_respose_text = await response.text()
 
                 raw_respose = json.loads(raw_respose_text)
 
-        except Exception as e:
+        except (json.JSONDecodeError, aiohttp.ClientError) as e:
             return VKResponse(
                 error=True,
                 errors=(("Kutana", str(type(e)) + ": " + str(e)),),
@@ -107,7 +100,7 @@ class VKController(BasicController):
             return VKResponse(
                 error=True,
                 errors=(
-                    ("VK_req", raw_respose.get("error","")),
+                    ("VK_req", raw_respose.get("error", "")),
                     ("VK_exe", raw_respose.get("execute_errors", ""))
                 ),
                 response=raw_respose.get("response", "")
@@ -116,26 +109,33 @@ class VKController(BasicController):
         return VKResponse(
             error=False,
             errors=(
-                ("VK_req", raw_respose.get("error","")),
+                ("VK_req", raw_respose.get("error", "")),
                 ("VK_exe", raw_respose.get("execute_errors", ""))
             ),
             response=raw_respose["response"]
         )
 
     async def request(self, method, **kwargs):
-        """Shedule execution of request to vk.com and return result."""
+        """
+        Perform request to vkontakte and return result.
 
-        request = VKRequest(
+        :param method: method to call
+        :param timeout: timeout for gettings response from vkontakte
+        :param kwargs: parameters for method
+        :rtype: :class:`.VKResponse`
+        """
+
+        timeout = kwargs.pop("_timeout", 30)
+
+        req = VKRequest(
             method,
             kwargs
         )
 
-        self.requests_queue.append(request)
-
-        await request
+        self.requests_queue.append(req)
 
         try:
-            return await asyncio.wait_for(request, timeout=10)
+            return await asyncio.wait_for(req, timeout=timeout)
 
         except asyncio.TimeoutError:
             return VKResponse(
@@ -146,10 +146,22 @@ class VKController(BasicController):
                 response=""
             )
 
-    async def send_message(self, message, peer_id, attachment=None,
-            sticker_id=None, payload=None, keyboard=None,
-            forward_messages=None):
-        """Send message to target peer_id with parameters."""
+    async def send_message(self, message, peer_id, attachment=None, **kwargs):
+        """
+        Send message to target peer_id with parameters.
+
+        :param message: text to send
+        :param peer_id: target recipient
+        :param attachment: list of :class:`.Attachment` or attachments
+            as string
+        :parma kwargs: arguments to send to vkontakte's `messages.send`
+        :rtype: list of responses from telegram
+        """
+
+        if peer_id is None:
+            return ()
+
+        message_parts = self.split_large_text(message)
 
         if isinstance(attachment, Attachment):
             attachment = [attachment]
@@ -170,32 +182,130 @@ class VKController(BasicController):
 
             attachment = new_attachment
 
-        return await self.request(
-            "messages.send",
-            message=message,
-            peer_id=peer_id,
-            attachment=attachment,
-            sticker_id=sticker_id,
-            payload=payload,
-            keyboard=keyboard,
-            forward_messages=forward_messages
+        result = []
+
+        for part in message_parts[:-1]:
+            result.append(
+                await self.request(
+                    "messages.send",
+                    message=part,
+                    peer_id=peer_id
+                )
+            )
+
+        result.append(
+            await self.request(
+                "messages.send",
+                message=message_parts[-1],
+                peer_id=peer_id,
+                attachment=attachment,
+                **kwargs
+            )
         )
 
-    async def setup_env(self, update, eenv):
-        peer_id = update["object"].get("peer_id")
+        return result
 
-        if update["type"] == "message_new":
-            eenv["reply"] = make_reply(self, peer_id)
+    async def resolve_screen_name(self, screen_name):
+        """Return answer from vkontakte with resolved passed screen name."""
 
-        eenv["send_message"] = self.send_message
+        if screen_name in NAIVE_CACHE:
+            return NAIVE_CACHE[screen_name]
 
-        eenv["upload_photo"] = make_upload_photo(self, peer_id)
-        eenv["upload_doc"] = make_upload_docs(self, peer_id)
+        result = await self.request(
+            "utils.resolveScreenName",
+            screen_name=screen_name
+        )
 
-        eenv["request"] = self.request
+        NAIVE_CACHE[screen_name] = result
 
-    async def convert_to_message(self, update, eenv):
-        return await convert_to_message(update, eenv)
+        return result
+
+    async def create_message(self, update):
+        if update["type"] != "message_new":
+            return None
+
+        obj = update["object"]
+
+        text = obj["text"]
+
+        if "conversation_message_id" in obj:
+            cursor = 0
+            new_text = ""
+
+            for match in re.finditer(r"\[(.+?)\|.+?\]", text):
+                resp = await self.resolve_screen_name(match.group(1))
+
+                new_text += text[cursor : match.start()]
+
+                cursor = match.end()
+
+                if not resp.response or resp.response["object_id"] == update["group_id"]:
+                    continue
+
+                new_text += text[match.start() : match.end()]
+
+            new_text += text[cursor :]
+
+            text = new_text.lstrip()
+
+        return Message(
+            text,
+            tuple(self.create_attachment(a) for a in obj["attachments"]),
+            obj.get("from_id"),
+            obj.get("peer_id"),
+            obj.get("date"),
+            update
+        )
+
+    @staticmethod
+    def create_attachment(attachment, attachment_type=None):
+        """
+        Create and return :class:`.Attachment` created from passed data. If
+        attachment type can't be determined passed "attachment_type"
+        well be used.
+        """
+
+        if "type" in attachment and attachment["type"] in attachment:
+            body = attachment[attachment["type"]]
+            attachment_type = attachment["type"]
+        else:
+            body = attachment
+
+        if "sizes" in body:
+            m_s_ind = -1
+            m_s_wid = 0
+
+            for i, size in enumerate(body["sizes"]):
+                if size["width"] >= m_s_wid:
+                    m_s_wid = size["width"]
+                    m_s_ind = i
+
+            link = body["sizes"][m_s_ind]["url"]  # src
+
+        elif "url" in body:
+            link = body["url"]
+
+        else:
+            link = None
+
+        return Attachment(
+            attachment_type,
+            body.get("id"),
+            body.get("owner_id"),
+            body.get("access_key"),
+            link,
+            attachment
+        )
+
+    async def get_environment(self, update):
+        """
+        Returns environment for update.
+
+        :param update: update from vkontakte
+        :rtype: :class:`.VKEnvironment`
+        """
+
+        return VKEnvironment(self, peer_id=update["object"].get("peer_id"))
 
     @staticmethod
     def _set_results_to_requests(result, requests):
@@ -234,7 +344,7 @@ class VKController(BasicController):
             except asyncio.InvalidStateError:
                 pass
 
-    async def _msg_exec_loop(self, ensure_future):
+    async def _msg_exec_loop(self, _):
         while self.running:
             await asyncio.sleep(self.execute_pause)
 
@@ -269,12 +379,15 @@ class VKController(BasicController):
         return (self._msg_exec_loop(ensure_future),)
 
     async def update_longpoll_data(self):
-        longpoll = await self.raw_request("groups.getLongPollServer", group_id=self.group_id)
+        """Update manager's longpoll data"""
+
+        longpoll = await self.raw_request(
+            "groups.getLongPollServer", group_id=self.group_id
+        )
 
         if longpoll.error:
             raise ValueError(
-                "Couldn't get longpoll information\n{}"
-                .format(
+                "Couldn't get longpoll information\n{}".format(
                     longpoll.errors
                 )
             )
@@ -284,17 +397,19 @@ class VKController(BasicController):
         }
 
     async def receiver(self):
+        """Return new updates for bot from vkontakte."""
+
         try:
             async with self.session.post(
-                self.longpoll_url.format(
-                    self.longpoll["server"],
-                    self.longpoll["key"],
-                    self.longpoll["ts"],
-                )
+                    self.longpoll_url.format(
+                        self.longpoll["server"],
+                        self.longpoll["key"],
+                        self.longpoll["ts"],
+                    )
             ) as resp:
                 response = await resp.json()
 
-        except Exception:
+        except (json.JSONDecodeError, aiohttp.ClientError):
             return ()
 
         if "ts" in response:
@@ -384,10 +499,11 @@ class VKController(BasicController):
 
         await self.update_longpoll_data()
 
-        logger.info("logged in as \"{}\" ( https://vk.com/club{} )".format(
+        logger.info(
+            "logged in as \"%s\" ( https://vk.com/club%s )",
             current_group_s.response[0]["name"],
             current_group_s.response[0]["id"]
-        ))
+        )
 
         return self.receiver
 

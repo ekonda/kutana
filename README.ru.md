@@ -29,11 +29,11 @@ python -m pip install kutana
 ```
 
 ## Использование
-- Создать основной объект движка Kutana и добавить контроллеры.
+- Создать основной объект движка Kutana и добавить менеджеры.
 - Зарегистрировать плагины в "исполнителе" и импортировать плагины с помощью функциии `load_plugins`. Файлы c плагинами должны быть python модулями с доступным `plugin` полем, в котором должен находиться экземпляр класса `Plugin`.
 - Запустить движок.
 
-Пример `run.py` (Токен для VKController будет загружен из файла
+Пример `run.py` (Токен для VKManager будет загружен из файла
 "configuration.json" и плагины будут загружены из папки "plugins/")
 ```py
 from kutana import *
@@ -41,13 +41,20 @@ from kutana import *
 # Создание движка
 kutana = Kutana()
 
-# Добавление VKController в движок
-kutana.add_controller(
-    VKController(load_configuration("vk_token", "configuration.json"))
+# Добавление VKManager в движок
+kutana.add_manager(
+    VKManager(
+        load_configuration(
+            "vk_token",
+            "configuration.json"
+        )
+    )
 )
 
 # Загрузить и зарегистрировать плагины
-kutana.executor.register_plugins(*load_plugins("plugins/"))
+kutana.executor.register_plugins(
+    load_plugins("plugins/")
+)
 
 # Запустить движок
 kutana.run()
@@ -61,12 +68,18 @@ from kutana import Plugin
 plugin = Plugin(name="Echo")
 
 @plugin.on_startswith_text("echo")
-async def on_echo(message, attachments, env):
-    await env.reply("{}".format(env.body))
+async def on_echo(message, env, body):
+    await env.reply("{}".format(body))
 ```
 
-## Доступные контроллеры
-- VKController (vk.com группы)
+## Доступные менеджеры
+- VKManager (для vk.com группы)
+- TGManager (для telegram.org)
+    - Тип `document` назван `doc` внутри движка.
+    - `TGAttachmentTemp` используется для хранения вложений до отправки с
+    помощью `send_message` или `reply`. Вложения не могут быть загружены иначе.
+    - Если вам нужно скачать файл (вложение) из телеграмма, вы должны
+    использовать `TGEnvironment.get_file_from_attachment`.
 
 ## Авторы
 - **Michael Krukov** - [@michaelkrukov](https://github.com/michaelkrukov)

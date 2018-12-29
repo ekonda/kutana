@@ -85,6 +85,8 @@ class TGManager(BasicManager):
         """
         Perform request to telegram and return result.
 
+        :param method: method to call
+        :param kwargs: parameters for method
         :rtype: :class:`.TGResponse`
         """
 

@@ -1,14 +1,11 @@
 import asyncio
 import json
 import logging
-import os
-import time
 import types
 import unittest
 
 import aiohttp
-import requests
-from kutana import (Attachment, ExitException, Kutana, Plugin, VKManager,
+from kutana import (Attachment, ExitException, Kutana, VKManager,
                     VKResponse, VKRequest, VKEnvironment)
 
 
@@ -399,15 +396,15 @@ class TestManagerVk(unittest.TestCase):
 
         mngr.raw_request = types.MethodType(raw_request, mngr)
 
-        request = VKRequest("fake.method", {})
+        req = VKRequest("fake.method", {})
 
-        mngr.requests_queue.append(request)
+        mngr.requests_queue.append(req)
 
         self.loop.run_until_complete(
             mngr._msg_exec_loop(None)
         )
 
-        response = self.loop.run_until_complete(request)
+        response = self.loop.run_until_complete(req)
 
         self.assertFalse(response.error)
         self.assertEqual(response.response, "response")
@@ -450,9 +447,9 @@ class TestManagerVk(unittest.TestCase):
 
         mngr.raw_request = types.MethodType(raw_request, mngr)
 
-        request = VKRequest("users.get", {"user_ids": "sdfsdfsdfsdfsdf"})
+        req = VKRequest("users.get", {"user_ids": "sdfsdfsdfsdfsdf"})
 
-        mngr.requests_queue.append(request)
+        mngr.requests_queue.append(req)
 
         logging.disable(logging.ERROR)
 
@@ -462,7 +459,7 @@ class TestManagerVk(unittest.TestCase):
 
         logging.disable(logging.INFO)
 
-        response = self.loop.run_until_complete(request)
+        response = self.loop.run_until_complete(req)
 
         self.assertTrue(response.error)
         self.assertEqual(response.errors[0][0], "VK_req")

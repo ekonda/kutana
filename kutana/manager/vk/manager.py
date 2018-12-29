@@ -119,21 +119,23 @@ class VKManager(BasicManager):
         """
         Perform request to vkontakte and return result.
 
+        :param method: method to call
         :param timeout: timeout for gettings response from vkontakte
+        :param kwargs: parameters for method
         :rtype: :class:`.VKResponse`
         """
 
         timeout = kwargs.pop("_timeout", 30)
 
-        request = VKRequest(
+        req = VKRequest(
             method,
             kwargs
         )
 
-        self.requests_queue.append(request)
+        self.requests_queue.append(req)
 
         try:
-            return await asyncio.wait_for(request, timeout=timeout)
+            return await asyncio.wait_for(req, timeout=timeout)
 
         except asyncio.TimeoutError:
             return VKResponse(

@@ -1,4 +1,3 @@
-import base64
 from kutana import Plugin, get_path
 
 

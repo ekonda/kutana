@@ -1,15 +1,12 @@
 import asyncio
 import json
 import logging
-import os
-import time
 import types
 import unittest
 
 import aiohttp
-import requests
 from kutana import (Attachment, ExitException, Kutana, Plugin, TGManager,
-                    TGResponse, TGEnvironment)
+                    TGResponse)
 from kutana.manager.tg.environment import TGAttachmentTemp
 
 

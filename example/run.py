@@ -1,5 +1,5 @@
 from kutana import Kutana, VKManager, load_plugins, \
-    load_configuration, TGManager
+    load_configuration
 
 if __name__ == "__main__":
     # Create engine

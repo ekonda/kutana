@@ -5,8 +5,8 @@ import types
 import unittest
 
 import aiohttp
-from kutana import (Attachment, ExitException, Kutana, VKManager,
-                    VKResponse, VKRequest, VKEnvironment)
+from kutana import (Attachment, VKManager, VKResponse, VKRequest,
+                    VKEnvironment)
 
 
 class TestManagerVk(unittest.TestCase):
@@ -470,7 +470,8 @@ class TestManagerVk(unittest.TestCase):
         class FakeManager:
             group_id = 10
 
-            def create_attachment(self, att, typ):
+            @staticmethod
+            def create_attachment(att, typ):
                 actions.append((att, typ))
 
                 return "file"

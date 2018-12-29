@@ -6,6 +6,7 @@ Subpackages
 
 .. toctree::
 
+    kutana.manager.tg
     kutana.manager.vk
 
 Submodules

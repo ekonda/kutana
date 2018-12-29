@@ -12,4 +12,4 @@ async def on_metrics(message, env):
     taken_memory = int(process.memory_info().rss / 2**20)
     taken_time = time.time() - message.date
 
-    await env.reply("mem: ~{}mib; tim: {}".format(taken_memory, taken_time))
+    await env.reply("mem: ~{}mib; tim: {}s".format(taken_memory, taken_time))

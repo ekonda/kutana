@@ -36,11 +36,44 @@ class TestManagerVk(unittest.TestCase):
     def test_vk_manager_raw_request(self):
         mngr = VKManager("token")
 
-        response = self.loop.run_until_complete(
-            mngr.raw_request("any.method", a1="v1", a2="v2")
-        )
+        class FakePost:
+            def __init__(self, url, data):
+                pass
 
-        self.assertEqual(response.errors[0][1]["error_code"], 5)
+            async def __aenter__(self):
+                class FakeResponse:
+                    status = 200
+
+                    async def text(self):
+                        return json.dumps(
+                            {"error":{"error_code":5,"error_msg":"User authori"
+                            "zation failed: invalid access_token (4).",
+                            "request_params":[{"key":"oauth","value":"1"},
+                            {"key":"method","value":"any.method"},{"key":"v",
+                            "value":"5.80"},{"key":"a1","value":"v1"},{
+                            "key":"a2","value":"v2"}]}}
+                        )
+
+                return FakeResponse()
+
+            async def __aexit__(self, exc_type, exc, tb):
+                pass
+
+        def post(self, url, data):
+            return FakePost(url, data)
+
+        async def test():
+            mngr.session = aiohttp.ClientSession()
+
+            mngr.session.post = types.MethodType(post, mngr.session)
+
+            response = await mngr.raw_request("any.method", a1="v1", a2="v2")
+
+            self.assertEqual(response.errors[0][1]["error_code"], 5)
+
+        self.loop.run_until_complete(
+            test()
+        )
 
         self.loop.run_until_complete(
             mngr.dispose()
@@ -434,3 +467,244 @@ class TestManagerVk(unittest.TestCase):
         self.assertTrue(response.error)
         self.assertEqual(response.errors[0][0], "VK_req")
         self.assertEqual(response.response, "")
+
+    @staticmethod
+    def get_fake_manager(actions):
+        class FakeManager:
+            group_id = 10
+
+            def convert_to_attachment(self, att, typ):
+                actions.append((att, typ))
+
+                return "file"
+
+            async def request(self, method, **kwargs):
+                if method == "docs.getMessagesUploadServer":
+                    actions.append((method, kwargs))
+                    return VKResponse(False, (), {"upload_url": "url1"})
+
+                if method == "docs.getWallUploadServer":
+                    actions.append((method, kwargs))
+                    return VKResponse(False, (), {"upload_url": "url2"})
+
+                if method == "photos.getMessagesUploadServer":
+                    actions.append((method, kwargs))
+                    return VKResponse(False, (), {"upload_url": "url3"})
+
+                if method == "photos.saveMessagesPhoto":
+                    actions.append((method, kwargs))
+                    return VKResponse(False, (), ["attachment"])
+
+                if method == "docs.save":
+                    actions.append((method, kwargs))
+                    return VKResponse(False, (), ["attachment"])
+
+                raise ValueError
+
+        return FakeManager()
+
+    def test_vk_upload_doc(self):
+        actions = []
+
+        env = VKEnvironment(self.get_fake_manager(actions), None)
+
+        async def _upload_file_to_vk(self, url, data):
+            return {"doc": "upload"}
+
+        env._upload_file_to_vk = types.MethodType(_upload_file_to_vk, env)
+
+        attachment = self.loop.run_until_complete(
+            env.upload_doc(b"file")
+        )
+
+        self.assertEqual(attachment, "file")
+
+        self.assertEqual(len(actions), 3)
+
+        self.assertEqual(
+            actions[0], ('docs.getWallUploadServer', {'group_id': 10})
+        )
+
+        self.assertEqual(
+            actions[1], ('docs.save', {'doc': 'upload'})
+        )
+
+        self.assertEqual(
+            actions[2], ('attachment', 'doc')
+        )
+
+    def test_vk_upload_doc_w_peer_id(self):
+        actions = []
+
+        env = VKEnvironment(self.get_fake_manager(actions), None)
+
+        async def _upload_file_to_vk(self, url, data):
+            return {"doc": "upload"}
+
+        env._upload_file_to_vk = types.MethodType(_upload_file_to_vk, env)
+
+        attachment = self.loop.run_until_complete(
+            env.upload_doc(b"file", peer_id=2)
+        )
+
+        self.assertEqual(attachment, "file")
+
+        self.assertEqual(len(actions), 3)
+
+        self.assertEqual(
+            actions[0],
+            ('docs.getMessagesUploadServer', {'peer_id': 2, 'type': 'doc'})
+        )
+
+        self.assertEqual(
+            actions[1], ('docs.save', {'doc': 'upload'})
+        )
+
+        self.assertEqual(
+            actions[2], ('attachment', 'doc')
+        )
+
+    def test_vk_upload_photo(self):
+        actions = []
+
+        env = VKEnvironment(self.get_fake_manager(actions), None)
+
+        async def _upload_file_to_vk(self, url, data):
+            return {"doc": "upload"}
+
+        env._upload_file_to_vk = types.MethodType(_upload_file_to_vk, env)
+
+        attachment = self.loop.run_until_complete(
+            env.upload_photo(b"file")
+        )
+
+        self.assertEqual(attachment, "file")
+
+        self.assertEqual(len(actions), 3)
+
+        self.assertEqual(
+            actions[0], ('photos.getMessagesUploadServer', {'peer_id': None})
+        )
+
+        self.assertEqual(
+            actions[1], ('photos.saveMessagesPhoto', {'doc': 'upload'})
+        )
+
+        self.assertEqual(
+            actions[2], ('attachment', 'photo')
+        )
+
+    def test_vk_upload_photo_w_peer_id(self):
+        actions = []
+
+        env = VKEnvironment(self.get_fake_manager(actions), None)
+
+        async def _upload_file_to_vk(self, url, data):
+            return {"doc": "upload"}
+
+        env._upload_file_to_vk = types.MethodType(_upload_file_to_vk, env)
+
+        attachment = self.loop.run_until_complete(
+            env.upload_photo(b"file", peer_id=2)
+        )
+
+        self.assertEqual(attachment, "file")
+
+        self.assertEqual(len(actions), 3)
+
+        self.assertEqual(
+            actions[0],
+            ('photos.getMessagesUploadServer', {'peer_id': 2})
+        )
+
+        self.assertEqual(
+            actions[1], ('photos.saveMessagesPhoto', {'doc': 'upload'})
+        )
+
+        self.assertEqual(
+            actions[2], ('attachment', 'photo')
+        )
+
+    def test_upload_file_to_vk(self):
+        class FakePost:
+            def __init__(self, url, data):
+                pass
+
+            async def __aenter__(self):
+                class FakeResponse:
+                    status = 200
+
+                    async def text(self):
+                        return json.dumps({"test": "test"})
+
+                return FakeResponse()
+
+            async def __aexit__(self, exc_type, exc, tb):
+                pass
+
+        class Session:
+            post = FakePost
+
+        class Manager:
+            session = Session()
+
+        env = VKEnvironment(Manager(), None)
+
+        result = self.loop.run_until_complete(
+            env._upload_file_to_vk("nice_url", {"nice": "data"})
+        )
+
+        self.assertEqual(result, {"test": "test"})
+
+    def test_upload_file_to_vk_error(self):
+        class FakePost:
+            def __init__(self, url, data):
+                pass
+
+            async def __aenter__(self):
+                class FakeResponse:
+                    status = 200
+
+                    async def text(self):
+                        return json.dumps({"error": "exists"})
+
+                return FakeResponse()
+
+            async def __aexit__(self, exc_type, exc, tb):
+                pass
+
+        class Session:
+            post = FakePost
+
+        class Manager:
+            session = Session()
+
+        env = VKEnvironment(Manager())
+
+        result = self.loop.run_until_complete(
+            env._upload_file_to_vk("nice_url", {"nice": "data"})
+        )
+
+        self.assertEqual(result, None)
+
+    def test_vk_get_file_from_attachment_empty(self):
+        mngr = VKManager("token")
+
+        async def test():
+            mngr.session = aiohttp.ClientSession()
+
+            env = VKEnvironment(mngr)
+
+            res = await env.get_file_from_attachment(None)
+
+            self.assertEqual(res, None)
+
+            res = await env.get_file_from_attachment(
+                Attachment("photo", 13, 1, None, None, {})
+            )
+
+            self.assertEqual(res, None)
+
+        self.loop.run_until_complete(test())
+
+        self.loop.run_until_complete(mngr.dispose())

@@ -9,14 +9,11 @@ class VKEnvironment(Environment):
     """Environment for :class:`.VKManager`"""
 
     async def _upload_file_to_vk(self, upload_url, data):
-        upload_result_resp = await self.manager.session.post(
-            upload_url, data=data
-        )
+        async with self.manager.session.post(upload_url, data=data) as resp:
+            if resp.status != 200:
+                return None
 
-        if not upload_result_resp:
-            return None
-
-        upload_result_text = await upload_result_resp.text()
+            upload_result_text = await resp.text()
 
         if not upload_result_text:
             return None
@@ -65,10 +62,6 @@ class VKEnvironment(Environment):
         else:
             peer_id = kwargs["peer_id"]
 
-        if isinstance(file, str):
-            with open(file, "rb") as o:
-                file = o.read()
-
         if peer_id:
             upload_data = await self.manager.request(
                 "docs.getMessagesUploadServer",
@@ -82,7 +75,7 @@ class VKEnvironment(Environment):
                 group_id=kwargs.get("group_id") or self.manager.group_id
             )
 
-        if "upload_url" not in upload_data.response:
+        if upload_data.error:
             return None
 
         upload_url = upload_data.response["upload_url"]
@@ -99,7 +92,7 @@ class VKEnvironment(Environment):
             "docs.save", **upload_result
         )
 
-        if not attachments.response:
+        if attachments.error:
             return None
 
         return self.manager.convert_to_attachment(
@@ -123,15 +116,11 @@ class VKEnvironment(Environment):
         else:
             peer_id = kwargs.get("peer_id")
 
-        if isinstance(file, str):
-            with open(file, "rb") as fh:
-                file = fh.read()
-
         upload_data = await self.manager.request(
             "photos.getMessagesUploadServer", peer_id=peer_id
         )
 
-        if "upload_url" not in upload_data.response:
+        if upload_data.error:
             return None
 
         upload_url = upload_data.response["upload_url"]
@@ -148,7 +137,7 @@ class VKEnvironment(Environment):
             "photos.saveMessagesPhoto", **upload_result
         )
 
-        if not attachments.response:
+        if attachments.error:
             return None
 
         return self.manager.convert_to_attachment(

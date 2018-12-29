@@ -11,8 +11,8 @@ instant messengers and other systems.
 
 .. note::
     We apologize in advance for errors and omissions in this documentation.
-    If you can help improve the documentation corrections or modifications,
-    we will be very grateful.
+    If you can help improve the documentation correctness, we will be very
+    grateful.
 
 ====================
 Kutana documentation
@@ -20,9 +20,9 @@ Kutana documentation
 
 Overview
 --------
-Kutana is a engine for developing bots for social networks, messengers and
+Kutana is an engine for developing bots for social networks, messengers and
 other services. Kutana heavily uses asyncio and coroutines. It supports
-different backends (like vk.com, telegram.org etc.) throught different
+different backends (like vk.com, telegram.org etc.) through different
 managers.
 
 Workflow
@@ -36,15 +36,15 @@ Callbacks process updates one by one while callbacks returns anything but
 `"DONE"`. If callback returns `"DONE"`, update is considered processed and is
 dropped.
 
-Callbacks has priorities. It's just a number, but in order to not get lost in
+Callbacks has priorities. It's just a number, but to not get lost in
 priorities it is highly recommended to use default priority - 400. It you
 need to run your callback earlier, you can register your callback with
 `early=True` argument. This will increase priority by 200, so it will be called
 before most of usual callbacks.
 
 Executers can use plugins. Plugins contains logically grouped callbacks with
-orbitrary data like plugins's name, description etc. Plugins register their
-callbacks in executor, and executer register callbacks in kutana. Plugins'
+arbitrary data like plugins's name, description etc. Plugins register their
+callbacks in executor, and executor register callbacks in kutana. Plugins'
 callbacks can return None (implicitly or explicitly) or `"DONE"` to mark
 update as processed.
 
@@ -80,13 +80,13 @@ Callback function for processing raw update from service looks like that:
 
 
 Callback receives two arguments - raw update's data as dict and
-:class:`.Environment`. It's pretty straight forward and theese callbacks
+:class:`.Environment`. It's pretty straight forward and these callbacks
 is used when you need to add something special to workflow often connected with
 concrete service.
 
 Plugins
 -------
-See :class:`.Plugin` for list of available callback registators. Example
+See :class:`.Plugin` for list of available callback registrators. Example
 of simple plugin:
 
 .. code-block:: python
@@ -105,11 +105,11 @@ plugin can be registered in :class:`.Executor`.
 
 .. note::
 
-    Plugins uses callback's signature to determine if it needs to pass some
+    Plugins uses callback's signature to decide if it needs to pass some
     arguments. It means that you have to use `functools.wraps` to properly
     wrap callback.
 
-Exmaple of working engine with :class:`VKManager`:
+Example of working engine with :class:`.VKManager`:
 
 .. code-block:: python
 

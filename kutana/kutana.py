@@ -7,6 +7,7 @@ from kutana.executor import Executor
 
 
 class Kutana:
+
     """Main class for constructing engine."""
 
     def __init__(self, executor=None, loop=None):
@@ -29,7 +30,7 @@ class Kutana:
     async def process_update(self, mngr, update):
         """Create environment and process update from manager."""
 
-        await self.executor(update, await mngr.get_environment(update))
+        await self.executor.process(update, await mngr.get_environment(update))
 
     def ensure_future(self, awaitable):
         """Shurtcut for asyncio.ensure_loop with active loop."""
@@ -53,7 +54,7 @@ class Kutana:
                     )
                 )
 
-            await asyncio.sleep(0.01)
+            await asyncio.sleep(0)
 
     def run(self):
         """Start engine."""

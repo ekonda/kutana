@@ -21,13 +21,16 @@ VKResponse = namedtuple(
 )
 
 VKResponse.__doc__ = """
-"error" is a boolean value indicating if errorhappened.
-"errors" contains array with happened errors.
-"response" contains result of reqeust if no errors happened.
+Response from vkontakte.
+
+:param error: boolean value indicating if error happened
+:param errors: array with happened errors
+:param response: result of reqeust if no errors happened
 """
 
 
 class VKRequest(asyncio.Future):
+
     """Class for queueing requests to VKontakte"""
 
     def __init__(self, method, kwargs):
@@ -38,6 +41,7 @@ class VKRequest(asyncio.Future):
 
 
 class VKManager(BasicManager):
+
     """
     Class for receiving updates from vkontakte.
     Controller requires group's token. You can specify settings for

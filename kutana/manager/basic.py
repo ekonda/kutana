@@ -1,7 +1,8 @@
 """Base for managers."""
 
 
-class BasicManager:  # pragma: no cover
+class BasicManager:
+
     """Base for manager."""
 
     type = "basic"

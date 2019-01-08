@@ -1,7 +1,6 @@
 """Manager and environment for debug purposes."""
 
 import time
-import asyncio
 from kutana.manager.basic import BasicManager
 from kutana.plugin import Message
 from kutana.exceptions import ExitException
@@ -9,6 +8,7 @@ from kutana.environment import Environment
 
 
 class DebugEnvironment(Environment):
+
     """Environment for :class:`.DebugManager`."""
 
     async def upload_doc(self, file, **kwargs):
@@ -28,6 +28,7 @@ class DebugEnvironment(Environment):
 
 
 class DebugManager(BasicManager):
+
     """Shoots target texts once and contains replied data."""
 
     type = "debug"
@@ -106,7 +107,6 @@ class DebugManager(BasicManager):
     async def get_background_coroutines(self, ensure_future):
         async def count():
             self.counter += 1
-            await asyncio.sleep(1)
 
         return [count()]
 

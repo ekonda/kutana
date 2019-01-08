@@ -269,7 +269,7 @@ class TestPlugins(KutanaTest):
 
         decorator(on_attachment)
 
-        wrapper = plugin._callbacks.normal[0]
+        wrapper = plugin._callbacks[0]
 
         attachments = [
             Attachment("audio", 0, 0, 0, 0, {}),
@@ -295,7 +295,7 @@ class TestPlugins(KutanaTest):
 
         decorator(on_attachment)
 
-        wrapper = plugin._callbacks.normal[0]
+        wrapper = plugin._callbacks[0]
 
         res = asyncio.get_event_loop().run_until_complete(
             wrapper(
@@ -316,7 +316,7 @@ class TestPlugins(KutanaTest):
 
         decorator(on_attachment)
 
-        wrapper = plugin._callbacks.normal[0]
+        wrapper = plugin._callbacks[0]
 
         res = asyncio.get_event_loop().run_until_complete(
             wrapper(
@@ -337,7 +337,7 @@ class TestPlugins(KutanaTest):
 
         plugin.on_has_text()(on_has_text)
 
-        wrapper = plugin._callbacks.normal[0]
+        wrapper = plugin._callbacks[0]
 
         res = asyncio.get_event_loop().run_until_complete(
             wrapper(

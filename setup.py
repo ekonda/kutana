@@ -10,11 +10,13 @@ import os
 import sys
 
 
-VERSION = "2.0.0"
+VERSION = "2.1.0"
 
 
 class VerifyVersionCommand(install):
+
     """Custom command to verify that the git tag matches our version."""
+
     description = 'verify that the git tag matches our version'
 
     def run(self):

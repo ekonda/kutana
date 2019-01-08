@@ -13,10 +13,15 @@ TGAttachmentTemp = namedtuple(
 
 TGAttachmentTemp.__doc__ = """
 Tricky namedtuple for storing not yet uploaded files.
+
+:param type: attachment's type
+:param content: attachment's content
+:param kwargs: kwargs for telegram's methods
 """
 
 
 class TGEnvironment(Environment):
+
     """Environment for :class:`.TGManager`"""
 
     async def reply(self, message, attachment=None, **kwargs):

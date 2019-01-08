@@ -22,10 +22,8 @@ class TestMiscellaneous(unittest.TestCase):
         loop.run_until_complete(executor.startup(None))
 
         loop.run_until_complete(
-            executor("message",
-                DebugEnvironment(
-                    DebugManager(), peer_id=0
-                )
+            executor.process(
+                "message", DebugEnvironment(DebugManager(), peer_id=0)
             )
         )
 
@@ -84,7 +82,7 @@ class TestMiscellaneous(unittest.TestCase):
         logger.setLevel(logging.CRITICAL)
 
         loop.run_until_complete(
-            executor(
+            executor.process(
                 "message", DebugEnvironment(DebugManager(), peer_id=0)
             )
         )

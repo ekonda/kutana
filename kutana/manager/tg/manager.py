@@ -16,13 +16,16 @@ TGResponse = namedtuple(
 )
 
 TGResponse.__doc__ = """
-"error" is a boolean value indicating if errorhappened.
-"errors" contains array with happened errors.
-"response" contains result of reqeust if no errors happened.
+Response from telegram.
+
+:param error: boolean value indicating if error happened
+:param errors: array with happened errors
+:param response: result of reqeust if no errors happened
 """
 
 
 class TGManager(BasicManager):
+
     """
     Class for receiving updates from telegram. Controller requires bot's
     token.

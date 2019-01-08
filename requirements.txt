@@ -1,6 +1,4 @@
 requests
-cchardet
 aiohttp
-aiodns
 
 psutil  # for example/

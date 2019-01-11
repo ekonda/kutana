@@ -4,10 +4,11 @@
 :license: MIT, see LICENSE for more details.
 """
 
-from setuptools.command.install import install
-import setuptools
 import os
 import sys
+
+import setuptools
+from setuptools.command.install import install
 
 
 VERSION = "2.1.0"

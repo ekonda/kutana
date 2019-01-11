@@ -33,13 +33,19 @@ class Kutana:
         await self.executor.process(update, await mngr.get_environment(update))
 
     def ensure_future(self, awaitable):
-        """Shurtcut for asyncio.ensure_loop with active loop."""
+        """
+        Schedule awaitable with asyncio.ensure_loop in current loop.
+        Add task to list of running tasks.
 
-        future = asyncio.ensure_future(awaitable, loop=self.loop)
+        :param awaitable: awaitable for scheduling
+        :rtype: scheduled task
+        """
 
-        self.tasks.append(future)
+        task = asyncio.ensure_future(awaitable, loop=self.loop)
 
-        return future
+        self.tasks.append(task)
+
+        return task
 
     async def loop_for_manager(self, mngr):
         """Receive and process updates from target manager."""

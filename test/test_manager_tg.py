@@ -254,29 +254,31 @@ class TestManagerVk(unittest.TestCase):
         mngr = TGManager("token")
 
         async def prepare():
-            mngr.session = aiohttp.ClientSession()
+            class FakeSession:
+                def post(self, url, proxy, data):
+                    class FakePost:
+                        def __init__(self, url, proxy, data):
+                            pass
 
-            class FakePost:
-                def __init__(self, url, proxy, data):
+                        async def __aenter__(self):
+                            class FakeResponse:
+                                async def text(self):
+                                    return json.dumps({
+                                        "ok": True,
+                                        "result": "result"
+                                    })
+
+                            return FakeResponse()
+
+                        async def __aexit__(self, exc_type, exc, tb):
+                            pass
+
+                    return FakePost(url, proxy, data)
+
+                async def close(self):
                     pass
 
-                async def __aenter__(self):
-                    class FakeResponse:
-                        async def text(self):
-                            return json.dumps({
-                                "ok": True,
-                                "result": "result"
-                            })
-
-                    return FakeResponse()
-
-                async def __aexit__(self, exc_type, exc, tb):
-                    pass
-
-            def post(self, url, proxy, data):
-                return FakePost(url, proxy, data)
-
-            mngr.session.post = types.MethodType(post, mngr.session)
+            mngr.session = FakeSession()
 
         self.loop.run_until_complete(prepare())
 
@@ -298,31 +300,33 @@ class TestManagerVk(unittest.TestCase):
         exception = None
 
         async def prepare():
-            mngr.session = aiohttp.ClientSession()
+            class FakeSession:
+                def post(self, url, proxy, data):
+                    class FakePost:
+                        def __init__(self, url, proxy, data):
+                            pass
 
-            class FakePost:
-                def __init__(self, url, proxy, data):
+                        async def __aenter__(self):
+                            class FakeResponse:
+                                async def text(self):
+                                    if exception:
+                                        raise exception
+
+                                    return json.dumps({
+                                        "ok": False
+                                    })
+
+                            return FakeResponse()
+
+                        async def __aexit__(self, exc_type, exc, tb):
+                            pass
+
+                    return FakePost(url, proxy, data)
+
+                async def close(self):
                     pass
 
-                async def __aenter__(self):
-                    class FakeResponse:
-                        async def text(self):
-                            if exception:
-                                raise exception
-
-                            return json.dumps({
-                                "ok": False
-                            })
-
-                    return FakeResponse()
-
-                async def __aexit__(self, exc_type, exc, tb):
-                    pass
-
-            def post(self, url, proxy, data):
-                return FakePost(url, proxy, data)
-
-            mngr.session.post = types.MethodType(post, mngr.session)
+            mngr.session = FakeSession()
 
         self.loop.run_until_complete(prepare())
 

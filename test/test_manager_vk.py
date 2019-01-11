@@ -33,36 +33,38 @@ class TestManagerVk(unittest.TestCase):
     def test_vk_manager_raw_request(self):
         mngr = VKManager("token")
 
-        class FakePost:
-            def __init__(self, url, data):
+        class FakeSession:
+            def post(self, url, data):
+                class FakePost:
+                    def __init__(self, url, data):
+                        pass
+
+                    async def __aenter__(self):
+                        class FakeResponse:
+                            status = 200
+
+                            async def text(self):
+                                return json.dumps(
+                                    {"error":{"error_code":5,"error_msg":"User authori"
+                                    "zation failed: invalid access_token (4).",
+                                    "request_params":[{"key":"oauth","value":"1"},
+                                    {"key":"method","value":"any.method"},{"key":"v",
+                                    "value":"5.80"},{"key":"a1","value":"v1"},{
+                                    "key":"a2","value":"v2"}]}}
+                                )
+
+                        return FakeResponse()
+
+                    async def __aexit__(self, exc_type, exc, tb):
+                        pass
+
+                return FakePost(url, data)
+
+            async def close(self):
                 pass
-
-            async def __aenter__(self):
-                class FakeResponse:
-                    status = 200
-
-                    async def text(self):
-                        return json.dumps(
-                            {"error":{"error_code":5,"error_msg":"User authori"
-                            "zation failed: invalid access_token (4).",
-                            "request_params":[{"key":"oauth","value":"1"},
-                            {"key":"method","value":"any.method"},{"key":"v",
-                            "value":"5.80"},{"key":"a1","value":"v1"},{
-                            "key":"a2","value":"v2"}]}}
-                        )
-
-                return FakeResponse()
-
-            async def __aexit__(self, exc_type, exc, tb):
-                pass
-
-        def post(self, url, data):
-            return FakePost(url, data)
 
         async def test():
-            mngr.session = aiohttp.ClientSession()
-
-            mngr.session.post = types.MethodType(post, mngr.session)
+            mngr.session = FakeSession()
 
             response = await mngr.raw_request("any.method", a1="v1", a2="v2")
 
@@ -276,32 +278,34 @@ class TestManagerVk(unittest.TestCase):
                 "ts": 0, "server": "server", "key": "key"
             }
 
-            mngr.session = aiohttp.ClientSession()
+            class FakeSession:
+                def post(self, url):
+                    class FakePost:
+                        def __init__(self, url):
+                            pass
 
-            class FakePost:
-                def __init__(self, url):
+                        async def __aenter__(self):
+                            class FakeResponse:
+                                async def json(self):
+                                    return {
+                                        "ts": "4",
+                                        "updates": [
+                                            {"type": "type", "object": "object"},
+                                            "update2"
+                                        ]
+                                    }
+
+                            return FakeResponse()
+
+                        async def __aexit__(self, exc_type, exc, tb):
+                            pass
+
+                    return FakePost(url)
+
+                async def close(self):
                     pass
 
-                async def __aenter__(self):
-                    class FakeResponse:
-                        async def json(self):
-                            return {
-                                "ts": "4",
-                                "updates": [
-                                    {"type": "type", "object": "object"},
-                                    "update2"
-                                ]
-                            }
-
-                    return FakeResponse()
-
-                async def __aexit__(self, exc_type, exc, tb):
-                    pass
-
-            def post(self, url):
-                return FakePost(url)
-
-            mngr.session.post = types.MethodType(post, mngr.session)
+            mngr.session = FakeSession()
 
         self.loop.run_until_complete(prepare())
 
@@ -321,26 +325,28 @@ class TestManagerVk(unittest.TestCase):
                 "ts": 0, "server": "server", "key": "key"
             }
 
-            mngr.session = aiohttp.ClientSession()
+            class FakeSession:
+                def post(self, url):
+                    class FakePost:
+                        def __init__(self, url):
+                            pass
 
-            class FakePost:
-                def __init__(self, url):
+                        async def __aenter__(self):
+                            class FakeResponse:
+                                async def json(self):
+                                    return {"failed": 2}
+
+                            return FakeResponse()
+
+                        async def __aexit__(self, exc_type, exc, tb):
+                            pass
+
+                    return FakePost(url)
+
+                async def close(self):
                     pass
 
-                async def __aenter__(self):
-                    class FakeResponse:
-                        async def json(self):
-                            return {"failed": 2}
-
-                    return FakeResponse()
-
-                async def __aexit__(self, exc_type, exc, tb):
-                    pass
-
-            def post(self, url):
-                return FakePost(url)
-
-            mngr.session.post = types.MethodType(post, mngr.session)
+            mngr.session = FakeSession()
 
             async def update_longpoll_data(self):
                 self.longpoll = "updated"

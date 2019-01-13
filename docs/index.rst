@@ -114,7 +114,7 @@ Example of working engine with :class:`.VKManager`:
 .. code-block:: python
 
     from kutana import Kutana, VKManager, \
-        load_plugins, load_configuration
+        load_plugins, load_value
 
     kutana = Kutana()
 

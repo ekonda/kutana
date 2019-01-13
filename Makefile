@@ -18,5 +18,5 @@ cov:
 	coverage html
 
 lint:
-	pylint --variable-rgx='[a-z_][a-z0-9_]{0,30}$$' --max-args=8 \
+	$(python) -m pylint --variable-rgx='[a-z_][a-z0-9_]{0,30}$$' --max-args=8 \
 		--max-attributes=12 kutana/

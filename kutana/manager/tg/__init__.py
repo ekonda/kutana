@@ -15,8 +15,8 @@ Example of initializating TGManager:
 .. code-block:: python
 
     manager2 = TGManager(
-        load_configuration("tg_token", "configuration.json"),
-        load_configuration("tg_proxy", "configuration.json"),
+        load_value("tg_token", "configuration.json"),
+        load_value("tg_proxy", "configuration.json"),
     )
 
 .. note::

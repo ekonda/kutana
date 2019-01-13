@@ -14,7 +14,7 @@ from kutana.manager.debug import DebugManager, DebugEnvironment
 from kutana.manager.vk import VKManager, VKRequest, VKResponse, VKEnvironment
 from kutana.manager.tg import TGManager, TGResponse, TGEnvironment
 
-from kutana.functions import get_path, load_configuration, import_module, \
+from kutana.functions import get_path, load_value, import_module, \
     load_plugins, is_done
 
 NAME = "kutana"

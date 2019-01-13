@@ -23,7 +23,7 @@ def is_done(value):
 
 def get_path(root, path):
     """
-    Shortcut for "join(dirname(root), path)".
+    Shortcut for ``join(dirname(root), path)``.
 
     :param root: root path
     :param path: path to file or folder

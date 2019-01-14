@@ -1,5 +1,4 @@
-docs:
-.PHONY: all test apidoc
+.PHONY: all test docs
 
 python=python3
 

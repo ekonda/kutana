@@ -6,19 +6,8 @@ import os
 from os.path import dirname, isdir, join
 import re
 
+from kutana.plugin import Plugin
 from kutana.logger import logger
-
-
-def is_done(value):
-    """
-    Helper function for deciding if value is sign of successfull
-    update's procession.
-
-    :param value: value to interpret
-    :rtype: True if value is None or equals to "DONE" otherwise False
-    """
-
-    return value is None or value == "DONE"
 
 
 def get_path(root, path):
@@ -64,7 +53,7 @@ def import_module(name, path):
     return module
 
 
-def load_plugin(path, plugins_list=None):
+def load_plugin(path, plugins_list=None, verbose=False):
     """
     Load plugin from specified path. If plugins_list is specified,
     loaded plugin will be added to this list.
@@ -76,7 +65,7 @@ def load_plugin(path, plugins_list=None):
 
     module = import_module(path, path)
 
-    if hasattr(module, "plugin"):
+    if hasattr(module, "plugin") and isinstance(module.plugin, Plugin):
         if plugins_list is not None:
             plugins_list.append(module.plugin)
 
@@ -84,7 +73,8 @@ def load_plugin(path, plugins_list=None):
 
         return module.plugin
 
-    logger.warning("No plugin found in \"%s\"", path)
+    if verbose:
+        logger.warning("No plugin found in \"%s\"", path)
 
     return None
 

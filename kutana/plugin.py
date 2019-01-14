@@ -1,10 +1,8 @@
 """Structures and classes for plugins."""
 
-import re
 import inspect
+import re
 from collections import namedtuple
-
-from kutana.functions import is_done
 
 
 Message = namedtuple(
@@ -39,6 +37,18 @@ Detailed information about attachment.
 :param link: lint to attachment (can be None)
 :param raw_attachment: raw attachment from service
 """
+
+
+def is_done(value):
+    """
+    Helper function for deciding if value is sign of successfull
+    update's procession.
+
+    :param value: value to interpret
+    :rtype: True if value is None or equals to "DONE" otherwise False
+    """
+
+    return value is None or value == "DONE"
 
 
 class Plugin:

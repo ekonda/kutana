@@ -1,9 +1,13 @@
+docs:
 .PHONY: all test apidoc
 
 python=python3
 
 all:
 	export PYTHONPATH=$(PWD); cd example; $(python) run.py
+
+alt:
+	export PYTHONPATH=$(PWD); cd example; $(python) .run.py
 
 docs:
 	sphinx-apidoc --separate -o docs/src/ . $(PWD)/setup.py; cd docs; \

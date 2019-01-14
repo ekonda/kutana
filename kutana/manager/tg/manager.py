@@ -1,14 +1,15 @@
 """Manager for interacting with telegram."""
 
+import asyncio
 import json
 from collections import namedtuple
 
 import aiohttp
+
 from kutana.logger import logger
 from kutana.manager.basic import BasicManager
-from kutana.manager.tg.environment import TGEnvironment, TGAttachmentTemp
+from kutana.manager.tg.environment import TGAttachmentTemp, TGEnvironment
 from kutana.plugin import Attachment, Message
-
 
 TGResponse = namedtuple(
     "TGResponse",
@@ -35,7 +36,7 @@ class TGManager(BasicManager):
     type = "telegram"
 
 
-    def __init__(self, token, proxy=None):
+    def __init__(self, token, request_pause=0.05, proxy=None):
         if not token:
             raise ValueError('No "token" specified')
 
@@ -43,6 +44,9 @@ class TGManager(BasicManager):
 
         self.offset = 0
         self.proxy = proxy
+
+        self.request_pause = request_pause
+        self.limit_control = asyncio.Lock()
 
         self.token = token
 
@@ -75,9 +79,8 @@ class TGManager(BasicManager):
             self.session = aiohttp.ClientSession()
 
         try:
-            async with self.session.get(
-                    self.file_url.format(path), proxy=self.proxy
-                ) as response:
+            async with self.session.get(self.file_url.format(path),
+                                        proxy=self.proxy) as response:
 
                 return await response.read()
 
@@ -98,10 +101,12 @@ class TGManager(BasicManager):
 
         data = {k: v for k, v in kwargs.items() if v is not None}
 
+        await self.limit_control.acquire()
+
         try:
-            async with self.session.post(
-                    self.api_url.format(method), proxy=self.proxy, data=data
-                ) as response:
+            async with self.session.post(self.api_url.format(method),
+                                         proxy=self.proxy,
+                                         data=data) as response:
 
                 raw_respose_text = await response.text()
 
@@ -113,6 +118,11 @@ class TGManager(BasicManager):
                 errors=(("Kutana", str(type(e)) + ": " + str(e)),),
                 response=""
             )
+
+        finally:
+            await asyncio.sleep(self.request_pause)
+
+            self.limit_control.release()
 
         if not raw_respose["ok"]:
             return TGResponse(

@@ -11,7 +11,7 @@ import setuptools
 from setuptools.command.install import install
 
 
-VERSION = "2.1.1"
+VERSION = "2.1.2"
 
 
 class VerifyVersionCommand(install):

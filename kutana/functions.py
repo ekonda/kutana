@@ -73,7 +73,7 @@ def load_plugin(path, plugins_list=None, verbose=False):
 
         return module.plugin
 
-    if verbose:
+    if verbose:  # pragma: no cover
         logger.warning("No plugin found in \"%s\"", path)
 
     return None

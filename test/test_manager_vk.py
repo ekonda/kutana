@@ -94,7 +94,9 @@ class TestManagerVk(unittest.TestCase):
         mngr = VKManager("token")
 
         responses = self.loop.run_until_complete(
-            mngr.send_message("text for message", 0, ["attachment"], _timeout=0)
+            mngr.send_message(
+                "text for message", 0, ["attachment"], random_id=0, _timeout=0
+            )
         )
 
         response = responses[0]
@@ -105,7 +107,7 @@ class TestManagerVk(unittest.TestCase):
         self.assertEqual(mngr.requests_queue[0].kwargs, {
             "message": "text for message",
             "attachment": "attachment,",
-            "peer_id": 0
+            "peer_id": 0, "random_id": 0
         })
 
     def test_vk_manager_send_message_attachment(self):
@@ -114,7 +116,9 @@ class TestManagerVk(unittest.TestCase):
         attachment = Attachment("photo", 1, 0, None, None, None)
 
         responses = self.loop.run_until_complete(
-            mngr.send_message("text for message", 0, attachment, _timeout=0)
+            mngr.send_message(
+                "text for message", 0, attachment, _timeout=0
+            )
         )
 
         response = responses[0]
@@ -122,10 +126,12 @@ class TestManagerVk(unittest.TestCase):
         self.assertTrue(response.error)
         self.assertEqual(len(mngr.requests_queue), 1)
         self.assertEqual(mngr.requests_queue[0].method, "messages.send")
+        self.assertIsNotNone(mngr.requests_queue[0].kwargs.get("random_id"))
         self.assertEqual(mngr.requests_queue[0].kwargs, {
             "message": "text for message",
             "attachment": "photo0_1,",
-            "peer_id": 0
+            "peer_id": 0,
+            "random_id": mngr.requests_queue[0].kwargs.get("random_id")
         })
 
     def test_vk_manager_create_attachment(self):
@@ -389,7 +395,7 @@ class TestManagerVk(unittest.TestCase):
 
         self.loop.run_until_complete(mngr.dispose())
 
-    def test_vk_msg_exec_loop(self):
+    def test_vk_exec_loop(self):
         mngr = VKManager("token")
 
         async def raw_request(_, method, **kwargs):
@@ -406,16 +412,24 @@ class TestManagerVk(unittest.TestCase):
 
         mngr.requests_queue.append(req)
 
+        tasks = []
+        def ensure(task):
+            _task = asyncio.ensure_future(task, loop=self.loop)
+            tasks.append(_task)
+            return _task
+
         self.loop.run_until_complete(
-            mngr._msg_exec_loop(None)
+            mngr._exec_loop(ensure)
         )
+
+        self.loop.run_until_complete(asyncio.gather(*tasks))
 
         response = self.loop.run_until_complete(req)
 
         self.assertFalse(response.error)
         self.assertEqual(response.response, "response")
 
-    def test_vk_msg_exec_loop_error(self):
+    def test_vk_exec_loop_error(self):
         mngr = VKManager("token")
 
         async def raw_request(_, method, **kwargs):
@@ -459,9 +473,17 @@ class TestManagerVk(unittest.TestCase):
 
         logging.disable(logging.ERROR)
 
+        tasks = []
+        def ensure(task):
+            _task = asyncio.ensure_future(task, loop=self.loop)
+            tasks.append(_task)
+            return _task
+
         self.loop.run_until_complete(
-            mngr._msg_exec_loop(None)
+            mngr._exec_loop(ensure)
         )
+
+        self.loop.run_until_complete(asyncio.gather(*tasks))
 
         logging.disable(logging.INFO)
 

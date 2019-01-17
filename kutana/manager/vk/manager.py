@@ -47,13 +47,19 @@ class VKManager(BasicManager):
     Class for receiving updates from vkontakte.
     Controller requires group's token. You can specify settings for
     groups.setLongPollSettings with argument "longpoll_settings".
+
+    :param token: bot's token
+    :param executes_per_second: how many "execute" requests per second bot
+        can send
+    :param longpoll_settings: values for group's longpoll settings
+    :param api_version: vkontakte's api version to use in requests
     """
 
 
     type = "vkontakte"
 
 
-    def __init__(self, token, execute_pause=0.05, longpoll_settings=None,
+    def __init__(self, token, executes_per_second=19, longpoll_settings=None,
                  api_version="5.92"):
 
         if not token:
@@ -71,7 +77,7 @@ class VKManager(BasicManager):
 
         self.version = api_version
         self.token = token
-        self.execute_pause = execute_pause
+        self.execute_pause = 1 / executes_per_second
         self.longpoll_settings = longpoll_settings
 
         api_url_base = "https://api.vk.com"

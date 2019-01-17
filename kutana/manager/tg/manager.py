@@ -28,15 +28,18 @@ Response from telegram.
 class TGManager(BasicManager):
 
     """
-    Class for receiving updates from telegram. Controller requires bot's
-    token.
+    Class for receiving updates from telegram.
+
+    :param token: bot's token
+    :param messages_per_seconds: how many messages per second bot can send
+    :param proxy: proxy to use for bot's requests
     """
 
 
     type = "telegram"
 
 
-    def __init__(self, token, request_pause=0.05, proxy=None):
+    def __init__(self, token, messages_per_second=29, proxy=None):
         if not token:
             raise ValueError('No "token" specified')
 
@@ -45,8 +48,8 @@ class TGManager(BasicManager):
         self.offset = 0
         self.proxy = proxy
 
-        self.request_pause = request_pause
-        self.limit_control = asyncio.Lock()
+        self.send_messages_pause = 1 / messages_per_second
+        self.send_messages_lock = asyncio.Lock()
 
         self.token = token
 
@@ -101,8 +104,6 @@ class TGManager(BasicManager):
 
         data = {k: v for k, v in kwargs.items() if v is not None}
 
-        await self.limit_control.acquire()
-
         try:
             async with self.session.post(self.api_url.format(method),
                                          proxy=self.proxy,
@@ -118,11 +119,6 @@ class TGManager(BasicManager):
                 errors=(("Kutana", str(type(e)) + ": " + str(e)),),
                 response=""
             )
-
-        finally:
-            await asyncio.sleep(self.request_pause)
-
-            self.limit_control.release()
 
         if not raw_respose["ok"]:
             return TGResponse(
@@ -145,6 +141,31 @@ class TGManager(BasicManager):
     async def send_message(self, message, peer_id, attachment=None, **kwargs):
         """
         Send message to target peer_id with parameters.
+
+        :param message: text to send
+        :param peer_id: target recipient
+        :param attachment: list of instances of :class:`.Attachment` or
+            :class:`.TGAttachmentTemp`
+        :parma kwargs: arguments to send to telegram's `sendMessage`
+        :rtype: list of responses from telegram
+        """
+
+        await self.send_messages_lock.acquire()
+
+        try:
+            return await self._send_message(
+                message, peer_id, attachment, **kwargs
+            )
+
+        finally:
+            await asyncio.sleep(self.send_messages_pause)
+
+            self.send_messages_lock.release()
+
+    async def _send_message(self, message, peer_id, attachment=None, **kwargs):
+        """
+        Send message to target peer_id with parameters without checking for
+        limits.
 
         :param message: text to send
         :param peer_id: target recipient

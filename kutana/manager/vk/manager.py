@@ -3,6 +3,7 @@
 import asyncio
 import json
 import re
+from random import random
 from collections import namedtuple
 
 import aiohttp
@@ -21,13 +22,16 @@ VKResponse = namedtuple(
 )
 
 VKResponse.__doc__ = """
-"error" is a boolean value indicating if errorhappened.
-"errors" contains array with happened errors.
-"response" contains result of reqeust if no errors happened.
+Response from vkontakte.
+
+:param error: boolean value indicating if error happened
+:param errors: array with happened errors
+:param response: result of reqeust if no errors happened
 """
 
 
 class VKRequest(asyncio.Future):
+
     """Class for queueing requests to VKontakte"""
 
     def __init__(self, method, kwargs):
@@ -38,17 +42,26 @@ class VKRequest(asyncio.Future):
 
 
 class VKManager(BasicManager):
+
     """
     Class for receiving updates from vkontakte.
     Controller requires group's token. You can specify settings for
     groups.setLongPollSettings with argument "longpoll_settings".
+
+    :param token: bot's token
+    :param executes_per_second: how many "execute" requests per second bot
+        can send
+    :param longpoll_settings: values for group's longpoll settings
+    :param api_version: vkontakte's api version to use in requests
     """
 
 
     type = "vkontakte"
 
 
-    def __init__(self, token, execute_pause=0.05, longpoll_settings=None):
+    def __init__(self, token, executes_per_second=19, longpoll_settings=None,
+                 api_version="5.92"):
+
         if not token:
             raise ValueError("No `token` specified")
 
@@ -62,14 +75,17 @@ class VKManager(BasicManager):
         self.running = True
         self.requests_queue = []
 
-        self.version = "5.80"
+        self.version = api_version
         self.token = token
-        self.execute_pause = execute_pause
+        self.execute_pause = 1 / executes_per_second
         self.longpoll_settings = longpoll_settings
 
-        self.api_url = "https://api.vk.com/method/{{}}?access_token={}&v={}" \
-            .format(self.token, self.version)
-        self.longpoll_url = "{}?act=a_check&key={}&wait=25&ts={}"
+        api_url_base = "https://api.vk.com"
+        api_url_template = api_url_base + "/method/{{}}?access_token={}&v={}"
+
+        self.api_url = api_url_template.format(self.token, self.version)
+
+        self.longpoll_url_template = "{}?act=a_check&key={}&wait=25&ts={}"
 
     async def raw_request(self, method, **kwargs):
         """Perform raw api request to vkontakte"""
@@ -80,10 +96,8 @@ class VKManager(BasicManager):
         data = {k: v for k, v in kwargs.items() if v is not None}
 
         try:
-            async with self.session.post(
-                    self.api_url.format(method),
-                    data=data
-                ) as response:
+            async with self.session.post(self.api_url.format(method),
+                                         data=data) as response:
 
                 raw_respose_text = await response.text()
 
@@ -171,9 +185,10 @@ class VKManager(BasicManager):
 
             for a in attachment:
                 if isinstance(a, Attachment):
-                    new_attachment += \
-                        "{}{}_{}".format(a.type, a.owner_id, a.id) + \
+                    new_attachment += (
+                        "{}{}_{}".format(a.type, a.owner_id, a.id) +
                         ("_" + a.access_key if a.access_key else "")
+                    )
 
                 else:
                     new_attachment += str(a)
@@ -192,6 +207,9 @@ class VKManager(BasicManager):
                     peer_id=peer_id
                 )
             )
+
+        if "random_id" not in kwargs:
+            kwargs["random_id"] = int(random() * 4294967296) - 2147483648
 
         result.append(
             await self.request(
@@ -239,7 +257,8 @@ class VKManager(BasicManager):
 
                 cursor = match.end()
 
-                if not resp.response or resp.response["object_id"] == update["group_id"]:
+                if not resp.response \
+                        or resp.response["object_id"] == update["group_id"]:
                     continue
 
                 new_text += text[match.start() : match.end()]
@@ -307,9 +326,13 @@ class VKManager(BasicManager):
 
         return VKEnvironment(self, peer_id=update["object"].get("peer_id"))
 
-    @staticmethod
-    def _set_results_to_requests(result, requests):
-        err_no = 0
+    async def _exec_perform(self, code, requests):
+        result = await self.raw_request("execute", code=code)
+
+        if result.error:
+            logger.error(result.errors)
+
+        errors_amount = 0
 
         if result.errors and result.errors[-1][0] == "VK_exe":
             execute_errors = result.errors[-1][1]
@@ -319,32 +342,31 @@ class VKManager(BasicManager):
 
         for res, req in zip(result.response, requests):
             if res is False:
-                if len(execute_errors) > err_no:
-                    known_error = execute_errors[err_no]
-                    err_no += 1
+                known_error = "unknown error"
 
-                else:
-                    known_error = ""
+                if len(execute_errors) > errors_amount:
+                    known_error = execute_errors[errors_amount]
+                    errors_amount += 1
 
-                res = VKResponse(
+                response = VKResponse(
                     error=True,
                     errors=(("VK_req", known_error),),
                     response=""
                 )
 
             else:
-                res = VKResponse(
+                response = VKResponse(
                     error=False,
                     errors=(),
                     response=res
                 )
 
             try:
-                req.set_result(res)
+                req.set_result(response)
             except asyncio.InvalidStateError:
                 pass
 
-    async def _msg_exec_loop(self, _):
+    async def _exec_loop(self, ensure_future):
         while self.running:
             await asyncio.sleep(self.execute_pause)
 
@@ -368,15 +390,10 @@ class VKManager(BasicManager):
 
             code += "];"
 
-            result = await self.raw_request("execute", code=code)
-
-            if result.error:
-                logger.error(result.errors)
-
-            self._set_results_to_requests(result, requests)
+            ensure_future(self._exec_perform(code, requests))
 
     async def get_background_coroutines(self, ensure_future):
-        return (self._msg_exec_loop(ensure_future),)
+        return (self._exec_loop(ensure_future),)
 
     async def update_longpoll_data(self):
         """Update manager's longpoll data"""
@@ -399,14 +416,14 @@ class VKManager(BasicManager):
     async def receiver(self):
         """Return new updates for bot from vkontakte."""
 
+        longpoll_url = self.longpoll_url_template.format(
+            self.longpoll["server"],
+            self.longpoll["key"],
+            self.longpoll["ts"],
+        )
+
         try:
-            async with self.session.post(
-                    self.longpoll_url.format(
-                        self.longpoll["server"],
-                        self.longpoll["key"],
-                        self.longpoll["ts"],
-                    )
-            ) as resp:
+            async with self.session.post(longpoll_url) as resp:
                 response = await resp.json()
 
         except (json.JSONDecodeError, aiohttp.ClientError):
@@ -452,49 +469,23 @@ class VKManager(BasicManager):
             group_id=self.group_id,
             api_version=self.version,
             enabled=1,
-            **{
-                **dict(
-                    message_new=1,
-                    message_reply=0,
-                    message_allow=0,
-                    message_deny=0,
-                    message_edit=0,
-                    photo_new=0,
-                    audio_new=0,
-                    video_new=0,
-                    wall_reply_new=0,
-                    wall_reply_edit=0,
-                    wall_reply_delete=0,
-                    wall_reply_restore=0,
-                    wall_post_new=0,
-                    wall_repost=0,
-                    board_post_new=0,
-                    board_post_edit=0,
-                    board_post_restore=0,
-                    board_post_delete=0,
-                    photo_comment_new=0,
-                    photo_comment_edit=0,
-                    photo_comment_delete=0,
-                    photo_comment_restore=0,
-                    video_comment_new=0,
-                    video_comment_edit=0,
-                    video_comment_delete=0,
-                    video_comment_restore=0,
-                    market_comment_new=0,
-                    market_comment_edit=0,
-                    market_comment_delete=0,
-                    market_comment_restore=0,
-                    poll_vote_new=0,
-                    group_join=0,
-                    group_leave=0,
-                    group_change_settings=0,
-                    group_change_photo=0,
-                    group_officers_edit=0,
-                    user_block=0,
-                    user_unblock=0
-                ),
-                **self.longpoll_settings
-            }
+            **dict(
+                message_new=1, message_reply=0, message_allow=0,
+                message_deny=0, message_edit=0, photo_new=0, audio_new=0,
+                video_new=0, wall_reply_new=0, wall_reply_edit=0,
+                wall_reply_delete=0, wall_reply_restore=0, wall_post_new=0,
+                wall_repost=0, board_post_new=0, board_post_edit=0,
+                board_post_restore=0, board_post_delete=0, photo_comment_new=0,
+                photo_comment_edit=0, photo_comment_delete=0,
+                photo_comment_restore=0, video_comment_new=0,
+                video_comment_edit=0, video_comment_delete=0,
+                video_comment_restore=0, market_comment_new=0,
+                market_comment_edit=0, market_comment_delete=0,
+                market_comment_restore=0, poll_vote_new=0, group_join=0,
+                group_leave=0, group_change_settings=0, group_change_photo=0,
+                group_officers_edit=0, user_block=0, user_unblock=0
+            ),
+            **self.longpoll_settings
         )
 
         await self.update_longpoll_data()

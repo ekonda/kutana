@@ -44,7 +44,7 @@ kutana = Kutana()
 # Добавление VKManager в движок
 kutana.add_manager(
     VKManager(
-        load_configuration(
+        load_value(
             "vk_token",
             "configuration.json"
         )

@@ -1,5 +1,5 @@
 from kutana import Kutana, VKManager, load_plugins, \
-    load_configuration
+    load_value
 
 if __name__ == "__main__":
     # Create engine
@@ -7,7 +7,7 @@ if __name__ == "__main__":
 
     # Create VKManager
     manager = VKManager(
-        load_configuration(
+        load_value(
             "vk_token",
             "configuration.json"
         )

@@ -6,36 +6,44 @@ import os
 from os.path import dirname, isdir, join
 import re
 
+from kutana.plugin import Plugin
 from kutana.logger import logger
 
 
-def is_done(value):
-    """Return True if value is None or equals to "DONE" otherwise False"""
+def get_path(root, path):
+    """
+    Shortcut for ``join(dirname(root), path)``.
 
-    return value is None or value == "DONE"
+    :param root: root path
+    :param path: path to file or folder
+    :rtype: path to file or folder relative to root
+    """
 
-
-def get_path(rootpath, wantedpath):
-    """Return path to wantedpath relative to rootpath."""
-
-    return join(
-        dirname(rootpath),
-        wantedpath
-    )
+    return join(dirname(root), path)
 
 
-def load_configuration(target, path):
-    """Load specified in target key from json file in specified path."""
+def load_value(key, path):
+    """
+    Load value for key from json object in file in specified path.
+
+    :param key: key
+    :param path: path to json file
+    :rtype: value for key from json object
+    """
 
     with open(path, "r") as fh:
         config = json.load(fh)
 
-    return config.get(target)
+    return config.get(key)
 
 
 def import_module(name, path):
-    """Import module from specified path with specified name.
-    Return imported module.
+    """
+    Import module from specified path with specified name.
+
+    :param name: module's name
+    :param path: path to module's file
+    :rtype: imported module
     """
 
     spec = importlib.util.spec_from_file_location(name, path)
@@ -45,28 +53,39 @@ def import_module(name, path):
     return module
 
 
-def load_plugin(path, plugins_list=None):
-    """Load plugin from specified path. If plugins_list is specified,
-    loaded plugin will be added to this lsit.
-    Return loaded module or None if no plugin found.
+def load_plugin(path, plugins_list=None, verbose=False):
+    """
+    Load plugin from specified path. If plugins_list is specified,
+    loaded plugin will be added to this list.
+
+    :param path: path to plugin's file
+    :param plugins_list: list to add loaded plugin to (optional)
+    :rtype: loaded module or None if no plugin found
     """
 
     module = import_module(path, path)
 
-    if hasattr(module, "plugin"):
-        plugins_list.append(module.plugin)
+    if hasattr(module, "plugin") and isinstance(module.plugin, Plugin):
+        if plugins_list is not None:
+            plugins_list.append(module.plugin)
 
         logger.info("Loaded plugin \"%s\"", path)
 
         return module.plugin
 
-    logger.warning("No plugin found in \"%s\"", path)
+    if verbose:  # pragma: no cover
+        logger.warning("No plugin found in \"%s\"", path)
 
     return None
 
 
 def load_plugins(folder):
-    """Import all plugins from target folder recursively."""
+    """
+    Import all plugins from target folder recursively.
+
+    :param folder: path to target folder
+    :rtype: list of loaded plugins
+    """
 
     plugins_list = []
 
@@ -76,11 +95,7 @@ def load_plugins(folder):
         if isdir(path):
             plugins_list += load_plugins(path)
 
-            continue
-
-        if not re.match(r"^[^_].*\.py$", name):
-            continue
-
-        load_plugin(path, plugins_list)
+        elif re.match(r"^[^_].*\.py$", name):
+            load_plugin(path, plugins_list)
 
     return plugins_list

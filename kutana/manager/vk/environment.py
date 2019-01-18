@@ -6,6 +6,7 @@ from kutana.environment import Environment
 
 
 class VKEnvironment(Environment):
+
     """Environment for :class:`.VKManager`"""
 
     async def _upload_file_to_vk(self, upload_url, data):

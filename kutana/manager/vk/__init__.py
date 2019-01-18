@@ -14,7 +14,7 @@ Example of initializating VKManager:
 .. code-block:: python
 
     manager1 = VKManager(
-        load_configuration("vk_token", "configuration.json")
+        load_value("vk_token", "configuration.json")
     )
 
 """

@@ -4,17 +4,20 @@
 :license: MIT, see LICENSE for more details.
 """
 
-from setuptools.command.install import install
-import setuptools
 import os
 import sys
 
+import setuptools
+from setuptools.command.install import install
 
-VERSION = "2.0.0"
+
+VERSION = "2.1.3"
 
 
 class VerifyVersionCommand(install):
+
     """Custom command to verify that the git tag matches our version."""
+
     description = 'verify that the git tag matches our version'
 
     def run(self):

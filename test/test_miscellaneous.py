@@ -1,5 +1,5 @@
 from kutana import VKResponse, VKEnvironment, DebugEnvironment, DebugManager, \
-    Executor, load_plugins, load_configuration, VKManager, Environment, \
+    Executor, load_plugins, load_value, VKManager, Environment, \
     Plugin, logger, BasicManager
 import unittest
 import asyncio
@@ -9,8 +9,10 @@ import logging
 class TestMiscellaneous(unittest.TestCase):
     def test_load_plugins(self):
         loaded_plugins = load_plugins("test/test_plugins/")
+        loaded_plugins.sort(key=lambda plugin: plugin.name)
 
         self.assertEqual(len(loaded_plugins), 2)
+
         self.assertEqual(loaded_plugins[0].name, "Memory")
         self.assertEqual(loaded_plugins[1].name, "My file")
 
@@ -22,22 +24,20 @@ class TestMiscellaneous(unittest.TestCase):
         loop.run_until_complete(executor.startup(None))
 
         loop.run_until_complete(
-            executor("message",
-                DebugEnvironment(
-                    DebugManager(), peer_id=0
-                )
+            executor.process(
+                "message", DebugEnvironment(DebugManager(), peer_id=0)
             )
         )
 
         self.assertEqual(loaded_plugins[0].memory, "message")
         self.assertEqual(loaded_plugins[1].my_file, ":)")
 
-    def test_load_configuration(self):
-        value = load_configuration("key", "test/test_assets/sample.json")
+    def test_load_value(self):
+        value = load_value("key", "test/test_assets/sample.json")
 
         self.assertEqual(value, "value")
 
-        value = load_configuration("key2", "test/test_assets/sample.json")
+        value = load_value("key2", "test/test_assets/sample.json")
 
         self.assertEqual(value, {"keynkey": "hvalue"})
 
@@ -84,7 +84,7 @@ class TestMiscellaneous(unittest.TestCase):
         logger.setLevel(logging.CRITICAL)
 
         loop.run_until_complete(
-            executor(
+            executor.process(
                 "message", DebugEnvironment(DebugManager(), peer_id=0)
             )
         )

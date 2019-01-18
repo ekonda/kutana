@@ -1,6 +1,7 @@
 """Base environment for manager."""
 
 class Environment:
+
     """Base environment for manager."""
 
     __slots__ = (

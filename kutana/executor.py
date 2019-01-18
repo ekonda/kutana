@@ -6,6 +6,7 @@ from kutana.logger import logger
 
 
 class Executor:
+
     """Class performing callbacks management."""
 
     def __init__(self):
@@ -103,7 +104,13 @@ class Executor:
 
         return _register_dispose
 
-    async def __call__(self, update, env):
+    async def process(self, update, env):
+        """
+        Process passed update with passed :class:`.Environment`
+
+        :param update: update to process
+        :param env: :class:`.Environment` to process with
+        """
         try:
             for callback in self.callbacks:
                 if await callback(update, env) == "DONE":

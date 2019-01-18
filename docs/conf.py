@@ -22,7 +22,7 @@ sys.path.insert(0, os.path.abspath('../'))
 # -- Project information -----------------------------------------------------
 
 project = 'Kutana'
-copyright = '2018, Michael Krukov'
+copyright = '2019, Michael Krukov'
 author = 'Michael Krukov'
 
 # The short X.Y version
@@ -154,7 +154,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'Kutana', 'Kutana Documentation',
-     author, 'Kutana', 'One line description of project.',
+     author, 'Kutana', 'Engine for bots.',
      'Miscellaneous'),
 ]
 
@@ -162,4 +162,4 @@ texinfo_documents = [
 # -- Extension configuration -------------------------------------------------
 
 def setup(app):
-    app.add_stylesheet('css/custom.css')
+    pass

@@ -1,9 +1,12 @@
-.PHONY: all test apidoc
+.PHONY: all test docs
 
 python=python3
 
 all:
 	export PYTHONPATH=$(PWD); cd example; $(python) run.py
+
+alt:
+	export PYTHONPATH=$(PWD); cd example; $(python) .run.py
 
 docs:
 	sphinx-apidoc --separate -o docs/src/ . $(PWD)/setup.py; cd docs; \
@@ -18,5 +21,5 @@ cov:
 	coverage html
 
 lint:
-	pylint --variable-rgx='[a-z_][a-z0-9_]{0,30}$$' --max-args=8 \
+	$(python) -m pylint --variable-rgx='[a-z_][a-z0-9_]{0,30}$$' --max-args=8 \
 		--max-attributes=12 kutana/

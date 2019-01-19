@@ -445,7 +445,7 @@ class TestManagerVk(unittest.TestCase):
 
             mngr.running = False
 
-            raw_respose = {
+            raw_response = {
                 "response": [False],
                 "execute_errors": [
                     {
@@ -463,10 +463,10 @@ class TestManagerVk(unittest.TestCase):
             return VKResponse(
                 True,
                 (
-                    ("VK_req", raw_respose.get("error", "")),
-                    ("VK_exe", raw_respose.get("execute_errors", ""))
+                    ("VK_req", raw_response.get("error", "")),
+                    ("VK_exe", raw_response.get("execute_errors", ""))
                 ),
-                raw_respose.get("response", "")
+                raw_response.get("response", "")
             )
 
         mngr.raw_request = types.MethodType(raw_request, mngr)

@@ -1,5 +1,4 @@
-from kutana import Kutana, VKManager, load_plugins, \
-    load_value, set_logger_level
+from kutana import Kutana, VKManager, load_plugins, load_value
 
 
 if __name__ == "__main__":

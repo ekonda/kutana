@@ -5,8 +5,8 @@ import types
 import unittest
 
 import aiohttp
-from kutana import (Attachment, VKManager, VKResponse, VKRequest,
-                    VKEnvironment, set_logger_level)
+from kutana import (Attachment, VKEnvironment, VKManager, VKRequest,
+                    VKResponse, set_logger_level)
 
 
 class TestManagerVk(unittest.TestCase):

@@ -1,9 +1,10 @@
-from kutana import VKResponse, VKEnvironment, DebugEnvironment, DebugManager, \
-    Executor, load_plugins, load_value, VKManager, Environment, \
-    Plugin, set_logger_level, BasicManager
-import unittest
 import asyncio
 import logging
+import unittest
+
+from kutana import (BasicManager, DebugEnvironment, DebugManager, Environment,
+                    Executor, Plugin, VKEnvironment, VKManager, VKResponse,
+                    load_plugins, load_value, set_logger_level)
 
 
 class TestMiscellaneous(unittest.TestCase):

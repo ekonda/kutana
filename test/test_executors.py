@@ -1,4 +1,4 @@
-from kutana import logger
+from kutana import set_logger_level
 from test_framework import KutanaTest
 import logging
 
@@ -8,7 +8,7 @@ logging.disable(logging.INFO)
 
 class TestExecutors(KutanaTest):
     def tearDown(self):
-        logger.setLevel(logging.ERROR)
+        set_logger_level(logging.ERROR)
 
     def test_just_debug(self):
         self.target = ["message"]
@@ -78,7 +78,7 @@ class TestExecutors(KutanaTest):
             self.kutana.executor.register(new_error, error=True)
             self.kutana.executor.register(new_error_no, error=True)
 
-            logger.setLevel(logging.CRITICAL)
+            set_logger_level(logging.CRITICAL)
 
         self.assertEqual(self.called, 1)
 
@@ -92,7 +92,7 @@ class TestExecutors(KutanaTest):
 
             self.kutana.executor.register(new_update)
 
-            logger.setLevel(logging.CRITICAL)
+            set_logger_level(logging.CRITICAL)
 
     def test_decorate_or_call(self):
         self.target = ["message"]

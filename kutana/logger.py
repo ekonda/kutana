@@ -20,3 +20,15 @@ logger = logging.getLogger("kutana")  # pylint: disable=C0103
 logger.setLevel(LEVEL)
 logger.addHandler(handler_stream)
 logger.addHandler(handler_file)
+
+
+def set_logger_level(level):
+    """
+    Set logging level for stream, file and logger.
+
+    :param level: logging level to set
+    """
+
+    handler_file.setLevel(level)
+    handler_stream.setLevel(level)
+    logger.setLevel(level)

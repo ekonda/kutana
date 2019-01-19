@@ -6,7 +6,7 @@ import unittest
 
 import aiohttp
 from kutana import (Attachment, VKManager, VKResponse, VKRequest,
-                    VKEnvironment)
+                    VKEnvironment, set_logger_level)
 
 
 class TestManagerVk(unittest.TestCase):
@@ -66,7 +66,11 @@ class TestManagerVk(unittest.TestCase):
         async def test():
             mngr.session = FakeSession()
 
+            set_logger_level(logging.CRITICAL)
+
             response = await mngr.raw_request("any.method", a1="v1", a2="v2")
+
+            set_logger_level(logging.ERROR)
 
             self.assertEqual(response.errors[0][1]["error_code"], 5)
 
@@ -523,7 +527,7 @@ class TestManagerVk(unittest.TestCase):
 
                 if method == "docs.save":
                     actions.append((method, kwargs))
-                    return VKResponse(False, (), ["attachment"])
+                    return VKResponse(False, (), "attachment")
 
                 raise ValueError
 

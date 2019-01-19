@@ -95,6 +95,8 @@ class VKManager(BasicManager):
 
         data = {k: v for k, v in kwargs.items() if v is not None}
 
+        raw_respose = {}
+
         try:
             async with self.session.post(self.api_url.format(method),
                                          data=data) as response:
@@ -103,7 +105,12 @@ class VKManager(BasicManager):
 
                 raw_respose = json.loads(raw_respose_text)
 
+                logger.debug("Method: %s; Data: %s; Response: %s", method,
+                             data, raw_respose)
+
         except (json.JSONDecodeError, aiohttp.ClientError) as e:
+            logger.debug("Method: %s; Data: %s; No response", method, data)
+
             return VKResponse(
                 error=True,
                 errors=(("Kutana", str(type(e)) + ": " + str(e)),),

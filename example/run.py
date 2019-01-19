@@ -1,5 +1,6 @@
 from kutana import Kutana, VKManager, load_plugins, \
-    load_value
+    load_value, set_logger_level
+
 
 if __name__ == "__main__":
     # Create engine

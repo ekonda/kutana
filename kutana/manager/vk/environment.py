@@ -97,7 +97,7 @@ class VKEnvironment(Environment):
             return None
 
         return self.manager.create_attachment(
-            attachments.response[0], "doc"
+            attachments.response, "doc"
         )
 
     async def upload_photo(self, file, **kwargs):

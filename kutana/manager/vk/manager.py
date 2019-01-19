@@ -95,38 +95,45 @@ class VKManager(BasicManager):
 
         data = {k: v for k, v in kwargs.items() if v is not None}
 
+        raw_response = {}
+
         try:
             async with self.session.post(self.api_url.format(method),
                                          data=data) as response:
 
-                raw_respose_text = await response.text()
+                raw_response_text = await response.text()
 
-                raw_respose = json.loads(raw_respose_text)
+                raw_response = json.loads(raw_response_text)
+
+                logger.debug("Method: %s; Data: %s; Response: %s", method,
+                             data, raw_response)
 
         except (json.JSONDecodeError, aiohttp.ClientError) as e:
+            logger.debug("Method: %s; Data: %s; No response", method, data)
+
             return VKResponse(
                 error=True,
                 errors=(("Kutana", str(type(e)) + ": " + str(e)),),
                 response=""
             )
 
-        if "error" in raw_respose:
+        if "error" in raw_response:
             return VKResponse(
                 error=True,
                 errors=(
-                    ("VK_req", raw_respose.get("error", "")),
-                    ("VK_exe", raw_respose.get("execute_errors", ""))
+                    ("VK_req", raw_response.get("error", "")),
+                    ("VK_exe", raw_response.get("execute_errors", ""))
                 ),
-                response=raw_respose.get("response", "")
+                response=raw_response.get("response", "")
             )
 
         return VKResponse(
             error=False,
             errors=(
-                ("VK_req", raw_respose.get("error", "")),
-                ("VK_exe", raw_respose.get("execute_errors", ""))
+                ("VK_req", raw_response.get("error", "")),
+                ("VK_exe", raw_response.get("execute_errors", ""))
             ),
-            response=raw_respose["response"]
+            response=raw_response["response"]
         )
 
     async def request(self, method, **kwargs):

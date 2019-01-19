@@ -109,9 +109,9 @@ class TGManager(BasicManager):
                                          proxy=self.proxy,
                                          data=data) as response:
 
-                raw_respose_text = await response.text()
+                raw_response_text = await response.text()
 
-                raw_respose = json.loads(raw_respose_text)
+                raw_response = json.loads(raw_response_text)
 
         except (json.JSONDecodeError, aiohttp.ClientError) as e:
             return TGResponse(
@@ -120,13 +120,13 @@ class TGManager(BasicManager):
                 response=""
             )
 
-        if not raw_respose["ok"]:
+        if not raw_response["ok"]:
             return TGResponse(
                 error=True,
                 errors=(
                     ("TG_err", (
-                        raw_respose.get("error_code", ""),
-                        raw_respose.get("description", "")
+                        raw_response.get("error_code", ""),
+                        raw_response.get("description", "")
                     ))
                 ),
                 response=""
@@ -135,7 +135,7 @@ class TGManager(BasicManager):
         return TGResponse(
             error=False,
             errors=(),
-            response=raw_respose["result"]
+            response=raw_response["result"]
         )
 
     async def send_message(self, message, peer_id, attachment=None, **kwargs):

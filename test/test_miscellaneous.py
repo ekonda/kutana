@@ -1,9 +1,10 @@
-from kutana import VKResponse, VKEnvironment, DebugEnvironment, DebugManager, \
-    Executor, load_plugins, load_value, VKManager, Environment, \
-    Plugin, logger, BasicManager
-import unittest
 import asyncio
 import logging
+import unittest
+
+from kutana import (BasicManager, DebugEnvironment, DebugManager, Environment,
+                    Executor, Plugin, VKEnvironment, VKManager, VKResponse,
+                    load_plugins, load_value, set_logger_level)
 
 
 class TestMiscellaneous(unittest.TestCase):
@@ -81,7 +82,7 @@ class TestMiscellaneous(unittest.TestCase):
 
         loop = asyncio.get_event_loop()
 
-        logger.setLevel(logging.CRITICAL)
+        set_logger_level(logging.CRITICAL)
 
         loop.run_until_complete(
             executor.process(
@@ -89,7 +90,7 @@ class TestMiscellaneous(unittest.TestCase):
             )
         )
 
-        logger.setLevel(logging.ERROR)
+        set_logger_level(logging.ERROR)
 
         self.assertEqual(plugin.exceptions, 1)  # pylint: disable=E1101
 

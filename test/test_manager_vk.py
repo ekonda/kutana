@@ -5,8 +5,8 @@ import types
 import unittest
 
 import aiohttp
-from kutana import (Attachment, VKManager, VKResponse, VKRequest,
-                    VKEnvironment)
+from kutana import (Attachment, VKEnvironment, VKManager, VKRequest,
+                    VKResponse, set_logger_level)
 
 
 class TestManagerVk(unittest.TestCase):
@@ -66,7 +66,11 @@ class TestManagerVk(unittest.TestCase):
         async def test():
             mngr.session = FakeSession()
 
+            set_logger_level(logging.CRITICAL)
+
             response = await mngr.raw_request("any.method", a1="v1", a2="v2")
+
+            set_logger_level(logging.ERROR)
 
             self.assertEqual(response.errors[0][1]["error_code"], 5)
 
@@ -441,7 +445,7 @@ class TestManagerVk(unittest.TestCase):
 
             mngr.running = False
 
-            raw_respose = {
+            raw_response = {
                 "response": [False],
                 "execute_errors": [
                     {
@@ -459,10 +463,10 @@ class TestManagerVk(unittest.TestCase):
             return VKResponse(
                 True,
                 (
-                    ("VK_req", raw_respose.get("error", "")),
-                    ("VK_exe", raw_respose.get("execute_errors", ""))
+                    ("VK_req", raw_response.get("error", "")),
+                    ("VK_exe", raw_response.get("execute_errors", ""))
                 ),
-                raw_respose.get("response", "")
+                raw_response.get("response", "")
             )
 
         mngr.raw_request = types.MethodType(raw_request, mngr)
@@ -523,7 +527,7 @@ class TestManagerVk(unittest.TestCase):
 
                 if method == "docs.save":
                     actions.append((method, kwargs))
-                    return VKResponse(False, (), ["attachment"])
+                    return VKResponse(False, (), "attachment")
 
                 raise ValueError
 

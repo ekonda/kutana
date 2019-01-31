@@ -5,7 +5,7 @@ import os
 
 plugin = Plugin(name="Metrics")
 
-@plugin.on_startswith_text("metrics")
+@plugin.on_text("metrics")
 async def on_metrics(message, env):
     process = psutil.Process(os.getpid())
 

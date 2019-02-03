@@ -1,17 +1,21 @@
 """Base environment for manager."""
 
+import types
+
+
 class Environment:
 
     """Base environment for manager."""
 
     __slots__ = (
-        "_has_message", "_message", "manager", "parent_environment", "peer_id",
-        "exception"
+        "manager", "parent", "peer_id", "exception",
+        "_has_message", "_message",
+        "__dict__"
     )
 
     def __init__(self, manager, parent_environment=None, peer_id=None):
         self.manager = manager
-        self.parent_environment = parent_environment
+        self.parent = parent_environment
 
         self.peer_id = peer_id
 
@@ -19,6 +23,32 @@ class Environment:
 
         self._has_message = None
         self._message = None
+
+    def replace_method(self, method_name, method):
+        """
+        Replaces this instance's method with specified name with passed method
+
+        Example:
+
+        .. code-block:: python
+
+            async def replacement(self, message):
+                print(message)
+
+            env = Environment(manager)
+            env.replace_method("reply", replacement)
+            await env.reply("hey")  # will print "hey"
+
+        .. note::
+
+            Many methods are coroutine, so you should replace coroutines with
+            coroutines and normal functions with functions.
+
+        :param method_name: method's name to replace
+        :param method: method to replace with
+        """
+
+        self.__setattr__(method_name, types.MethodType(method, self))
 
     @property
     def manager_type(self):

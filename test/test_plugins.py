@@ -1,7 +1,9 @@
-from kutana import Plugin, Message, Attachment, DebugEnvironment
-from test_framework import KutanaTest
 import asyncio
 import re
+
+from kutana import Attachment, DebugEnvironment, Message, Plugin
+
+from test_framework import KutanaTest
 
 
 class TestPlugins(KutanaTest):
@@ -249,7 +251,7 @@ class TestPlugins(KutanaTest):
         self.assertEqual(self.counter, 2)
         self.assertEqual(self.disposed, 1)
 
-    def test_environment_reply(self):
+    def test_reply(self):
         self.target = ["echo message"]
 
         with self.debug_manager(self.target) as plugin:

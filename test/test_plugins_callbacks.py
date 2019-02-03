@@ -1,4 +1,5 @@
 from kutana import Plugin
+
 from test_framework import KutanaTest
 
 

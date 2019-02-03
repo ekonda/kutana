@@ -100,8 +100,11 @@ of simple plugin:
         await env.reply("{}".format(body))
 
 Callback `on_echo` can have (or can not have) keyword arguments `body`,
-`args`, `prefix`. Kutana will pass corresponding values to keywords. This
-plugin can be registered in :class:`.Executor`.
+`args`, `prefix`. Kutana will pass corresponding values to keywords. You
+should use :func:`functools.wraps` decorator to save signatures of your
+coroutines to allow kutana to find keyword arguments in decorated callbacks.
+This plugin can be registered in :class:`.Executor`.
+
 
 .. note::
 

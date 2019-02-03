@@ -1,6 +1,8 @@
-from kutana import set_logger_level
-from test_framework import KutanaTest
 import logging
+
+from kutana import set_logger_level
+
+from test_framework import KutanaTest
 
 
 logging.disable(logging.INFO)

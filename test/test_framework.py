@@ -1,6 +1,7 @@
-from kutana import Kutana, DebugManager, Plugin
-from contextlib import contextmanager
 import unittest
+from contextlib import contextmanager
+
+from kutana import DebugManager, Kutana, Plugin
 
 
 class KutanaTest(unittest.TestCase):

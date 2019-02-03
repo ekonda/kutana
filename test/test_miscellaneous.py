@@ -2,9 +2,9 @@ import asyncio
 import logging
 import unittest
 
-from kutana import (BasicManager, DebugEnvironment, DebugManager, Environment,
-                    Executor, Plugin, VKEnvironment, VKManager, VKResponse,
-                    load_plugins, load_value, set_logger_level)
+from kutana import (BasicManager, DebugEnvironment, DebugManager, Executor,
+                    Plugin, VKEnvironment, VKManager, VKResponse, load_plugins,
+                    load_value, set_logger_level)
 
 
 class TestMiscellaneous(unittest.TestCase):
@@ -41,14 +41,6 @@ class TestMiscellaneous(unittest.TestCase):
         value = load_value("key2", "test/test_assets/sample.json")
 
         self.assertEqual(value, {"keynkey": "hvalue"})
-
-    def test_environment_spawn(self):
-        env = Environment("manager")
-        inner_env = env.spawn()
-
-        self.assertEqual(env.manager, inner_env.manager)
-        self.assertEqual(env.parent_environment, None)
-        self.assertEqual(inner_env.parent_environment, env)
 
     def test_split_large_text(self):
         split = BasicManager.split_large_text

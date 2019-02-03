@@ -6,9 +6,10 @@ if __name__ == '__main__':
     sys.path.insert(0, os.getcwd())
 
 
-from test_framework import KutanaTest
-import unittest
 import time
+import unittest
+
+from test_framework import KutanaTest
 
 
 class TestTiming(KutanaTest):

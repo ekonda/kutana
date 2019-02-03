@@ -26,7 +26,7 @@ async def on_has_text(message, env):
     else:
         return "DONE"
 
-    env.parent_environment.set_message(
+    env.parent.set_message(
         Message(
             message.text[len(prefix):],
             message.attachments,

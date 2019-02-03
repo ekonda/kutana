@@ -1,7 +1,6 @@
 import asyncio
-import logging
 
-from kutana import Environment, set_logger_level
+from kutana import Environment
 
 from test_framework import KutanaTest
 

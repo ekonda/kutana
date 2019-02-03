@@ -476,23 +476,25 @@ class VKManager(BasicManager):
             group_id=self.group_id,
             api_version=self.version,
             enabled=1,
-            **dict(
-                message_new=1, message_reply=0, message_allow=0,
-                message_deny=0, message_edit=0, photo_new=0, audio_new=0,
-                video_new=0, wall_reply_new=0, wall_reply_edit=0,
-                wall_reply_delete=0, wall_reply_restore=0, wall_post_new=0,
-                wall_repost=0, board_post_new=0, board_post_edit=0,
-                board_post_restore=0, board_post_delete=0, photo_comment_new=0,
-                photo_comment_edit=0, photo_comment_delete=0,
-                photo_comment_restore=0, video_comment_new=0,
-                video_comment_edit=0, video_comment_delete=0,
-                video_comment_restore=0, market_comment_new=0,
-                market_comment_edit=0, market_comment_delete=0,
-                market_comment_restore=0, poll_vote_new=0, group_join=0,
-                group_leave=0, group_change_settings=0, group_change_photo=0,
-                group_officers_edit=0, user_block=0, user_unblock=0
-            ),
-            **self.longpoll_settings
+            **{
+                **dict(
+                    message_new=1, message_reply=0, message_allow=0,
+                    message_deny=0, message_edit=0, photo_new=0, audio_new=0,
+                    video_new=0, wall_reply_new=0, wall_reply_edit=0,
+                    wall_reply_delete=0, wall_reply_restore=0, wall_post_new=0,
+                    wall_repost=0, board_post_new=0, board_post_edit=0,
+                    board_post_restore=0, board_post_delete=0, photo_comment_new=0,
+                    photo_comment_edit=0, photo_comment_delete=0,
+                    photo_comment_restore=0, video_comment_new=0,
+                    video_comment_edit=0, video_comment_delete=0,
+                    video_comment_restore=0, market_comment_new=0,
+                    market_comment_edit=0, market_comment_delete=0,
+                    market_comment_restore=0, poll_vote_new=0, group_join=0,
+                    group_leave=0, group_change_settings=0, group_change_photo=0,
+                    group_officers_edit=0, user_block=0, user_unblock=0
+                ),
+                **self.longpoll_settings
+            }
         )
 
         await self.update_longpoll_data()

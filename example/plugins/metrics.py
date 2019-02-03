@@ -3,7 +3,9 @@ import psutil
 import time
 import os
 
+
 plugin = Plugin(name="Metrics")
+
 
 @plugin.on_text("metrics")
 async def on_metrics(message, env):

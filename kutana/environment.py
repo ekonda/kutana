@@ -9,7 +9,7 @@ class Environment:
 
     __slots__ = (
         "manager", "parent", "peer_id", "exception",
-        "_has_message", "_message",
+        "_has_message", "_message", "_replaced_methods",
         "__dict__"
     )
 
@@ -21,6 +21,7 @@ class Environment:
 
         self.exception = None
 
+        self._replaced_methods = {}
         self._has_message = None
         self._message = None
 
@@ -48,6 +49,8 @@ class Environment:
         :param method: method to replace with
         """
 
+        self._replaced_methods[method_name] = method
+
         self.__setattr__(method_name, types.MethodType(method, self))
 
     @property
@@ -61,11 +64,16 @@ class Environment:
         Create partial copy of environment with this environment as parent.
         """
 
-        return self.__class__(
+        new_env = self.__class__(
             manager=self.manager,
             parent_environment=self,
             peer_id=self.peer_id
         )
+
+        for k, v in self._replaced_methods.items():
+            new_env.replace_method(k, v)
+
+        return new_env
 
     def has_message(self):
         """

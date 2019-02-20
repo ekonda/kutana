@@ -16,7 +16,7 @@ try:
     import uvloop
 
     uvloop.install()
-except ImportError:
+except ImportError:  # pragma: no cover
     pass
 
 

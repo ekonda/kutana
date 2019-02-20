@@ -64,6 +64,21 @@ class TestEnvironments(KutanaTest):
         self.assertEqual(env.parent, None)
         self.assertEqual(inner_env.parent, env)
 
+    def test_failed_method_replace(self):
+        env = Environment("manager")
+
+        with self.assertRaises(ValueError):
+            env.replace_method("no_method_with_that_name", lambda: 1)
+
+    def test_failed_setattr(self):
+        env = Environment("manager")
+
+        with self.assertRaises(AttributeError):
+            env.reply = 1
+
+        with self.assertRaises(AttributeError):
+            setattr(env, "reply", 1)
+
     def test_concrete_environment(self):
         env1 = VKEnvironment("vk")
         env2 = TGEnvironment("tg")

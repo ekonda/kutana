@@ -541,7 +541,7 @@ class TestManagerVk(unittest.TestCase):
         async def _upload_file_to_vk(self, url, data):
             return {"doc": "upload"}
 
-        env._upload_file_to_vk = types.MethodType(_upload_file_to_vk, env)
+        env.replace_method("_upload_file_to_vk", _upload_file_to_vk)
 
         attachment = self.loop.run_until_complete(
             env.upload_doc(b"file")
@@ -571,7 +571,7 @@ class TestManagerVk(unittest.TestCase):
         async def _upload_file_to_vk(self, url, data):
             return {"doc": "upload"}
 
-        env._upload_file_to_vk = types.MethodType(_upload_file_to_vk, env)
+        env.replace_method("_upload_file_to_vk", _upload_file_to_vk)
 
         attachment = self.loop.run_until_complete(
             env.upload_doc(b"file", peer_id=2)
@@ -602,7 +602,7 @@ class TestManagerVk(unittest.TestCase):
         async def _upload_file_to_vk(self, url, data):
             return {"doc": "upload"}
 
-        env._upload_file_to_vk = types.MethodType(_upload_file_to_vk, env)
+        env.replace_method("_upload_file_to_vk", _upload_file_to_vk)
 
         attachment = self.loop.run_until_complete(
             env.upload_photo(b"file")
@@ -632,7 +632,7 @@ class TestManagerVk(unittest.TestCase):
         async def _upload_file_to_vk(self, url, data):
             return {"doc": "upload"}
 
-        env._upload_file_to_vk = types.MethodType(_upload_file_to_vk, env)
+        env.replace_method("_upload_file_to_vk", _upload_file_to_vk)
 
         attachment = self.loop.run_until_complete(
             env.upload_photo(b"file", peer_id=2)

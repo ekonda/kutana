@@ -1,6 +1,6 @@
 """Base environment for manager."""
 
-import types
+import functools
 
 
 class Environment:
@@ -8,9 +8,9 @@ class Environment:
     """Base environment for manager."""
 
     __slots__ = (
-        "manager", "parent", "peer_id", "exception",
-        "_has_message", "_message", "_replaced_methods",
-        "__dict__"
+        "manager", "parent", "peer_id",
+        "_has_message", "_message",
+        "_replaced_methods", "_storage"
     )
 
     def __init__(self, manager, parent_environment=None, peer_id=None):
@@ -19,11 +19,33 @@ class Environment:
 
         self.peer_id = peer_id
 
-        self.exception = None
-
         self._replaced_methods = {}
         self._has_message = None
         self._message = None
+        self._storage = {}
+
+    def __setattr__(self, name, value):
+        if name in object.__getattribute__(self, "__slots__"):
+            object.__setattr__(self, name, value)
+
+        elif name in dir(self):
+            raise AttributeError
+
+        else:
+            self._storage[name] = value
+
+    def __getattribute__(self, name):
+        replaced_methods = object.__getattribute__(self, "_replaced_methods")
+
+        if name in replaced_methods:
+            return functools.partial(replaced_methods[name], self)
+
+        storage = object.__getattribute__(self, "_storage")
+
+        if name in storage:
+            return storage[name]
+
+        return object.__getattribute__(self, name)
 
     def replace_method(self, method_name, method):
         """
@@ -49,9 +71,12 @@ class Environment:
         :param method: method to replace with
         """
 
-        self._replaced_methods[method_name] = method
+        if method_name not in dir(self) \
+                or not callable(getattr(self, method_name)):
 
-        self.__setattr__(method_name, types.MethodType(method, self))
+            raise ValueError("No method with name '{}'".format(method_name))
+
+        self._replaced_methods[method_name] = method
 
     @property
     def manager_type(self):
@@ -69,6 +94,9 @@ class Environment:
             parent_environment=self,
             peer_id=self.peer_id
         )
+
+        for k, v in self._storage.items():
+            setattr(new_env, k, v)
 
         for k, v in self._replaced_methods.items():
             new_env.replace_method(k, v)

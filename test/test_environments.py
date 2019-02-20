@@ -1,6 +1,6 @@
 import asyncio
 
-from kutana import Environment
+from kutana import Environment, VKEnvironment, TGEnvironment
 
 from test_framework import KutanaTest
 
@@ -63,3 +63,32 @@ class TestEnvironments(KutanaTest):
         self.assertEqual(env.manager, inner_env.manager)
         self.assertEqual(env.parent, None)
         self.assertEqual(inner_env.parent, env)
+
+    def test_concrete_environment(self):
+        env1 = VKEnvironment("vk")
+        env2 = TGEnvironment("tg")
+
+        env1.replace_method("reply", print)
+        env1.a = 10
+
+        child1 = env1.spawn()
+
+        self.assertEqual(child1.a, 10)
+        self.assertEqual(child1.reply.func, print)
+
+        env2.replace_method("reply", print)
+        env2.a = 10
+
+        child2 = env2.spawn()
+
+        self.assertEqual(child2.a, 10)
+        self.assertEqual(child2.reply.func, print)
+
+        child2.a = 20
+
+        child_child2 = child2.spawn()
+
+        self.assertEqual(child_child2.a, 20)
+        self.assertEqual(env2.a, 10)
+
+

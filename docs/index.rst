@@ -48,6 +48,20 @@ callbacks in executor, and executor register callbacks in kutana. Plugins'
 callbacks can return None (implicitly or explicitly) or `"DONE"` to mark
 update as processed.
 
+Environments
+------------
+Environments is objects with information and methods for interacting with
+data and user. It has methods for replying, performing requests to API,
+stores message that will be passed to next callback etc.
+
+You can replace existing methods in environment with
+:func:`kutana.environment.Environment.replace_method` and set your
+fields to environment with dot notation `env.foo = "bar"`.
+
+Every plugin works with copy of update's environment. That means, if you
+want to pass anything to other plugins you need to use `env.parent.`
+instead of `env.`.
+
 Callbacks
 ---------
 
@@ -64,9 +78,7 @@ plugin looks like that:
 
 
 Callback receives three arguments - :class:`.Message`, list of
-:class:`.Attachment` and :class:`.Environment`. Environment
-contains basic functions for interacting with data and user. It has methods
-for replying, stores message that will be passed to next callback etc.
+:class:`.Attachment` and :class:`.Environment`.
 
 Raw updates processing
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -81,8 +93,8 @@ Callback function for processing raw update from service looks like that:
 
 Callback receives two arguments - raw update's data as dict and
 :class:`.Environment`. It's pretty straight forward and these callbacks
-is used when you need to add something special to workflow often connected with
-concrete service.
+is used when you need to add something special to workflow often
+connected with concrete service.
 
 Plugins
 -------

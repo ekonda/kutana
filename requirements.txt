@@ -1,4 +1,5 @@
 requests
 aiohttp
 
+uvloop  # optional
 psutil  # for example/

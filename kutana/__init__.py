@@ -12,4 +12,12 @@ from kutana.manager.tg import TGEnvironment, TGManager, TGResponse
 from kutana.manager.vk import VKEnvironment, VKManager, VKRequest, VKResponse
 from kutana.plugin import Attachment, Message, Plugin
 
+try:
+    import uvloop
+
+    uvloop.install()
+except ImportError:
+    pass
+
+
 NAME = "kutana"

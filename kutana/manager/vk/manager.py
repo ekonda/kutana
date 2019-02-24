@@ -205,18 +205,19 @@ class VKManager(BasicManager):
             attachment = new_attachment
 
         result = []
-
+        
+        if "random_id" not in kwargs:
+            kwargs["random_id"] = int(random() * 4294967296) - 2147483648
+            
         for part in message_parts[:-1]:
             result.append(
                 await self.request(
                     "messages.send",
                     message=part,
-                    peer_id=peer_id
+                    peer_id=peer_id,
+                    **kwargs
                 )
             )
-
-        if "random_id" not in kwargs:
-            kwargs["random_id"] = int(random() * 4294967296) - 2147483648
 
         result.append(
             await self.request(

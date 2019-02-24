@@ -114,6 +114,31 @@ class TestManagerVk(unittest.TestCase):
             "peer_id": 0, "random_id": 0
         })
 
+    def test_vk_manager_send_message_long(self):
+        mngr = VKManager("token")
+
+        responses = self.loop.run_until_complete(
+            mngr.send_message(
+                "a" * 6000, 0, random_id=0, _timeout=0
+            )
+        )
+
+        self.assertEqual(len(responses), 2)
+
+        self.assertTrue(responses[0].error)
+        self.assertTrue(responses[1].error)
+
+        self.assertEqual(len(mngr.requests_queue), 2)
+
+        self.assertEqual(mngr.requests_queue[0].method, "messages.send")
+        self.assertEqual(mngr.requests_queue[0].kwargs["message"], "a" * 4096)
+        self.assertTrue(mngr.requests_queue[0].kwargs["random_id"])
+
+        self.assertEqual(mngr.requests_queue[1].method, "messages.send")
+        self.assertEqual(mngr.requests_queue[1].kwargs["message"],
+                         "a" * (6000 - 4096))
+        self.assertEqual(mngr.requests_queue[1].kwargs["random_id"], 0)
+
     def test_vk_manager_send_message_attachment(self):
         mngr = VKManager("token")
 

@@ -3,8 +3,8 @@
 import asyncio
 import json
 import re
-from random import random
 from collections import namedtuple
+from random import random
 
 import aiohttp
 from kutana.logger import logger
@@ -146,7 +146,7 @@ class VKManager(BasicManager):
         :rtype: :class:`.VKResponse`
         """
 
-        timeout = kwargs.pop("_timeout", 30)
+        timeout = kwargs.pop("_timeout", 180)
 
         req = VKRequest(
             method,
@@ -207,11 +207,19 @@ class VKManager(BasicManager):
         result = []
 
         for part in message_parts[:-1]:
+            temp_kwargs = {
+                "random_id": int(random() * 4294967296) - 2147483648
+            }
+
+            if kwargs.get("_timeout") is not None:
+                temp_kwargs["_timeout"] = kwargs["_timeout"]
+
             result.append(
                 await self.request(
                     "messages.send",
                     message=part,
-                    peer_id=peer_id
+                    peer_id=peer_id,
+                    **temp_kwargs
                 )
             )
 

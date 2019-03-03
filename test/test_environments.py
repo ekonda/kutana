@@ -121,5 +121,3 @@ class TestEnvironments(KutanaTest):
 
         self.assertEqual(child_child2.a, 20)
         self.assertEqual(env2.a, 10)
-
-

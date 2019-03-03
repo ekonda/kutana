@@ -418,7 +418,7 @@ class Plugin:
         Returns decorator for adding callback which is triggered
         when the message or update has been processed. If environment contains
         attribute "exception", that means exception was raised while
-        other callbacks was processed. This callback has priority 1_000_000
+        other callbacks was processed. This callback has priority 1000000
 
         Callbacks, registered with `on_after_processed` should not raise
         any exceptions.
@@ -441,10 +441,10 @@ class Plugin:
                 return "GOON"
 
             if messages:
-                self.register(wrapper, priority=1_000_000)
+                self.register(wrapper, priority=1000000)
 
             if updates:
-                self.register_raw(wrapper, priority=1_000_000)
+                self.register_raw(wrapper, priority=1000000)
 
             return coro
 

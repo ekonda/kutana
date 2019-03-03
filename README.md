@@ -1,3 +1,5 @@
+# Kutana
+
 ![Kutana logo](docs/_static/kutana-logo-512.png)
 
 [![Documentation Status](https://readthedocs.org/projects/kutana/badge/?version=latest)](https://kutana.readthedocs.io/en/latest/?badge=latest)
@@ -10,31 +12,33 @@
 
 English | [Русский](README.ru.md)
 
-# Kutana
 The engine for developing bots for social networks, instant messengers and other systems.
 
 Nice foundation for bot using kutana engine - [kubot](https://github.com/ekonda/kubot).
 
 ## Installation
+
 - Download and install python (3.5.3+)
 
-```
+```url
 https://www.python.org/downloads/
 ```
 
 - Install `kutana` module (use python3 if needed)
 
-```
+```bash
 python -m pip install kutana
 ```
 
 ## Usage
+
 - Create `Kutana` engine and add managers.
 - Register your plugins in the executor. You can import plugin from folders with function `load_plugins`. Files should be a valid python modules with available `plugin` field with your plugin (`Plugin`).
 - Start engine.
 
 Example `run.py` (token for VKManager is loaded from the file
 "configuration.json" and plugins are loaded from folder "plugins/")
+
 ```py
 from kutana import *
 
@@ -60,8 +64,8 @@ kutana.executor.register_plugins(
 kutana.run()
 ```
 
-
 Example `plugins/echo.py`
+
 ```py
 from kutana import Plugin
 
@@ -73,14 +77,16 @@ async def on_echo(message, env, body):
 ```
 
 ## Available managers
+
 - VKManager (for vk.com groups)
 - TGManager (for telegram.org)
-    - `document`'s type is named `doc` inside of engine.
-    - `TGAttachmentTemp` is used for storing attachments before sending them
-    with `send_message` or `reply`. Attachments can't be uploaded other way.
-    - If you want to download file (attachment) from telegram, you have to use
-    `TGEnvironment.get_file_from_attachment`.
+  - `document`'s type is named `doc` inside of engine.
+  - `TGAttachmentTemp` is used for storing attachments before sending them
+  with `send_message` or `reply`. Attachments can't be uploaded other way.
+  - If you want to download file (attachment) from telegram, you have to use
+  `TGEnvironment.get_file_from_attachment`.
 
 ## Authors
+
 - **Michael Krukov** - [@michaelkrukov](https://github.com/michaelkrukov)
 - [Other contributors](CONTRIBUTORS.md)

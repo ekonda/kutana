@@ -8,27 +8,9 @@ import os
 import sys
 
 import setuptools
-from setuptools.command.install import install
 
 
-VERSION = "2.3.3"
-
-
-class VerifyVersionCommand(install):
-
-    """Custom command to verify that the git tag matches our version."""
-
-    description = 'verify that the git tag matches our version'
-
-    def run(self):
-        tag = os.getenv('TRAVIS_TAG')
-
-        if tag != "v" + VERSION:
-            info = "Git tag: {0} does not match the version of this app: {1}".format(
-                tag, VERSION
-            )
-
-            sys.exit(info)
+VERSION = "3.0.0"
 
 
 with open("README.md", "r") as fh:

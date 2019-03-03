@@ -39,7 +39,7 @@ class TestPlugins(KutanaTest):
 
         self.assertEqual(self.called, 1)
 
-    def test_plugin_register_special(self):
+    def test_plugin_register(self):
         self.answers = []
 
         with self.debug_manager(["message"]) as plugin:
@@ -53,18 +53,18 @@ class TestPlugins(KutanaTest):
             async def cb_3(update, env):
                 self.answers.append(3)
 
-            plugin.register_special()(cb_1)
-            plugin.register_special(cb_2, early=True)
-            plugin.register_special(cb_3)
+            plugin.register(cb_1)
+            plugin.register(cb_2, priority=1)
+            plugin.register(cb_3)
 
         self.assertEqual(self.answers, [2, 1, 3])
 
-    def test_plugin_register_special_two_plugins(self):
+    def test_plugin_register_two_plugins(self):
         self.answers = []
 
         with self.debug_manager(["message"]) as plugin1:
 
-            plugin2 = Plugin(priority=500)
+            plugin2 = Plugin(priority=1)
 
             self.plugins.append(plugin2)
 
@@ -77,11 +77,11 @@ class TestPlugins(KutanaTest):
             async def cb_3(update, env):
                 self.answers.append(3)
 
-            plugin1.register_special()(cb_1)
-            plugin1.register_special(cb_2, early=True)
-            plugin2.register_special(cb_3)
+            plugin1.register(cb_1)
+            plugin2.register(cb_3)
+            plugin1.register(cb_2, priority=1)
 
-        self.assertEqual(self.answers, [2, 3, 1])
+        self.assertEqual(self.answers, [3, 2, 1])
 
     def test_args_on_startswith_text(self):
         queue = ["pr a b c", "pr a \"b c\"", "pr ab c"]
@@ -181,8 +181,6 @@ class TestPlugins(KutanaTest):
 
         with self.debug_manager(["message"]):
 
-            self.plugins.append(Plugin())
-
             async def on_has_text_early(message, env):
                 self.answers.append("early")
 
@@ -191,18 +189,15 @@ class TestPlugins(KutanaTest):
             async def on_has_text(message, env):
                 self.answers.append("late")
 
-            for pl in self.plugins:
-                pl.on_has_text()(on_has_text)
-                pl.on_has_text(early=True)(on_has_text_early)
+            self.plugin.on_has_text()(on_has_text)
+            self.plugin.on_has_text(priority=1)(on_has_text_early)
 
-        self.assertEqual(self.answers, ["early", "early", "late"])
+        self.assertEqual(self.answers, ["early", "late"])
 
     def test_early_callbacks_raw(self):
         self.answers = []
 
         with self.debug_manager([None]):
-
-            self.plugins.append(Plugin())
 
             async def on_raw_early(update, env):
                 self.answers.append("early")
@@ -212,11 +207,10 @@ class TestPlugins(KutanaTest):
             async def on_raw(update, env):
                 self.answers.append("late")
 
-            for pl in self.plugins:
-                pl.on_raw()(on_raw)
-                pl.on_raw(early=True)(on_raw_early)
+            self.plugin.on_raw()(on_raw)
+            self.plugin.on_raw(priority=1)(on_raw_early)
 
-        self.assertEqual(self.answers, ["early", "early", "late"])
+        self.assertEqual(self.answers, ["early", "late"])
 
     def test_plugin_callbacks(self):
         self.disposed = 0
@@ -264,14 +258,12 @@ class TestPlugins(KutanaTest):
     def test_plugin_no_attachments_type(self):
         plugin = Plugin()
 
-        decorator = plugin.on_attachment("photo")
-
         async def on_attachment(message, env):
             return "DONE"
 
-        decorator(on_attachment)
+        plugin.on_attachment("photo")(on_attachment)
 
-        wrapper = plugin._callbacks[0]
+        wrapper = plugin._callbacks[0][1]
 
         attachments = [
             Attachment("audio", 0, 0, 0, 0, {}),
@@ -290,14 +282,12 @@ class TestPlugins(KutanaTest):
     def test_plugin_attachments(self):
         plugin = Plugin()
 
-        decorator = plugin.on_attachment()
-
         async def on_attachment(message, env):
             return "DONE"
 
-        decorator(on_attachment)
+        plugin.on_attachment()(on_attachment)
 
-        wrapper = plugin._callbacks[0]
+        wrapper = plugin._callbacks[0][1]
 
         res = asyncio.get_event_loop().run_until_complete(
             wrapper(
@@ -311,14 +301,12 @@ class TestPlugins(KutanaTest):
     def test_plugin_attachments_type(self):
         plugin = Plugin()
 
-        decorator = plugin.on_attachment("photo")
-
         async def on_attachment(message, env):
             return "DONE"
 
-        decorator(on_attachment)
+        plugin.on_attachment("photo")(on_attachment)
 
-        wrapper = plugin._callbacks[0]
+        wrapper = plugin._callbacks[0][1]
 
         res = asyncio.get_event_loop().run_until_complete(
             wrapper(
@@ -339,7 +327,7 @@ class TestPlugins(KutanaTest):
 
         plugin.on_has_text()(on_has_text)
 
-        wrapper = plugin._callbacks[0]
+        wrapper = plugin._callbacks[0][1]
 
         res = asyncio.get_event_loop().run_until_complete(
             wrapper(

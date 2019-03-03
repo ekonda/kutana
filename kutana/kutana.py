@@ -27,7 +27,7 @@ class Kutana:
 
         self.managers.append(manager)
 
-    async def process_update(self, mngr, update):
+    async def process(self, mngr, update):
         """Create environment and process update from manager."""
 
         await self.executor.process(update, await mngr.get_environment(update))
@@ -55,7 +55,7 @@ class Kutana:
         while self.running:
             for update in await receiver():
                 self.ensure_future(
-                    self.process_update(
+                    self.process(
                         mngr, update
                     )
                 )

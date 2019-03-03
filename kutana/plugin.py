@@ -4,6 +4,8 @@ import inspect
 import re
 from collections import namedtuple
 
+from .utils import sort_callbacks
+
 
 Message = namedtuple(
     "Message",
@@ -59,61 +61,47 @@ class Plugin:
         self._callbacks = []
         self._callbacks_raw = []
 
-        self._callbacks_early = []
-        self._callbacks_early_raw = []
+        self._callback_dispose = None
+        self._callback_startup = None
 
-        self._callbacks_special = []
-
-        self._callbacks_dispose = []
-        self._callbacks_startup = []
-
-        self.priority = 400
+        self.priority = 0
 
         for k, v in kwargs.items():
             setattr(self, k, v)
 
-    def _prepare_callbacks(self):
+    def get_callbacks(self):
         """
-        Prepare and return callbacks for registration in engine.
+        Return callbacks for registration in engine.
 
         :rtype: list of callbacks to register in engine
         """
 
-        callbacks = []
+        return (self._proc_update,)
 
-        if self._callbacks_early or self._callbacks_early_raw:
+    def get_callbacks_for_dispose(self):
+        """
+        Return dispose callbacks for registration in engine .
 
-            async def wrapper_for_early(update, env):
-                return await self._proc_update(
-                    update, env, early=True
-                )
+        :rtype: list of callbacks to register in engine
+        """
 
-            wrapper_for_early.priority = self.priority + 200
+        return (self._callback_dispose,) if self._callback_dispose else ()
 
-            callbacks.append(wrapper_for_early)
+    def get_callbacks_for_startup(self):
+        """
+        Return startup callbacks for registration in engine .
 
-        if self._callbacks or self._callbacks_raw:
+        :rtype: list of callbacks to register in engine
+        """
 
-            async def wrapper(update, env):
-                return await self._proc_update(
-                    update, env, early=False
-                )
+        return (self._callback_startup,) if self._callback_startup else ()
 
-            wrapper.priority = self.priority
-
-            callbacks.append(wrapper)
-
-        callbacks.extend(self._callbacks_special)
-
-        return callbacks
-
-    async def _proc_update(self, update, env, early):
+    async def _proc_update(self, update, env):
         """
         Process update with env and target callbacks.
 
         :param update: update to process
         :param env: :class:`.Environment` to process update with
-        :param early: process with early callbacks or normal
         :rtype: "DONE" if update is considired updated, None otherwise
         """
 
@@ -125,11 +113,7 @@ class Plugin:
 
             env.set_message(message)
 
-        if early:
-            callbacks = [self._callbacks_early, self._callbacks_early_raw]
-
-        else:
-            callbacks = [self._callbacks, self._callbacks_raw]
+        callbacks = [self._callbacks, self._callbacks_raw]
 
         if message:
             callbacks_type = 0  # callbacks for messages
@@ -139,62 +123,50 @@ class Plugin:
 
         inner_env = env.spawn()
 
-        for callback in callbacks[callbacks_type]:
-            if callbacks_type == 1:
-                res = await callback(update, inner_env)
-
-            else:
-                res = await callback(message, inner_env)
+        for _, callback in callbacks[callbacks_type]:
+            res = await callback(message if message else update, inner_env)
 
             if res == "DONE":
                 return "DONE"
 
-    def register(self, *callbacks, early=False):
+    def register(self, *callbacks, priority=0):
         """
         Register for processing updates in this plugin.
 
         :param callbacks: callbacks for registration in this plugin
-        :param early: should callbacks be executed before callbacks (from
-            other plugins too) registered with "early=False"
+        :param priority: priority of callbacks **inside** of this plugin
         """
-
-        if early:
-            self._callbacks_early.extend(callbacks)
-
-        else:
-            self._callbacks.extend(callbacks)
-
-    def register_special(self, *callbacks, early=False):
-        """
-        Register callback for processing updates in engine directly. Arguments
-        raw update and env is passed to callback.
-
-        :param callbacks: callbacks for registration in this plugin
-        :param early: should callbacks be executed before callbacks (from
-            other plugins too) registered with "early=False"
-        :rtype: decorator for registering callback
-        """
-
-        def _register_special(callback):
-            callback.priority = self.priority + 200 * early
-
-            self._callbacks_special.append(callback)
 
         for callback in callbacks:
-            _register_special(callback)
+            self._callbacks.append((priority, callback))
 
-        return _register_special
+        sort_callbacks(self._callbacks)
+
+    def register_raw(self, *callbacks, priority=0):
+        """
+        Register for processing raw updates in this plugin. These callbacks
+        will be used if update can't be converted to :class:`.Message`
+
+        :param callbacks: callbacks for registration in this plugin
+        :param priority: priority of callbacks **inside** of this plugin
+        """
+
+        for callback in callbacks:
+            self._callbacks_raw.append((priority, callback))
+
+        sort_callbacks(self._callbacks_raw)
 
     def on_dispose(self):
         """
         Return decorator for adding callbacks which will be triggered when
-        everything is going to shutdown.
+        everything is going to shutdown. Only last registered callback will be
+        used.
 
         :rtype: decorator for adding callbacks
         """
 
         def decorator(coro):
-            self._callbacks_dispose.append(coro)
+            self._callback_dispose = coro
 
             return coro
 
@@ -204,27 +176,27 @@ class Plugin:
         """
         Return decorator for adding callbacks which will be triggered
         at the startup of kutana. Decorated coroutine receives update and
-        plugin environment.
+        plugin environment. Only last registered callback will be
+        used.
 
         :rtype: decorator for adding callbacks
         """
 
         def decorator(coro):
-            self._callbacks_startup.append(coro)
+            self._callback_startup = coro
 
             return coro
 
         return decorator
 
-    def on_raw(self, early=False):
+    def on_raw(self, priority=0):
         """
         Return decorator for adding callback which is triggered
         every time when update can't be turned into :class:`.Message` or
         :class:`.Attachment` object. Arguments raw update and
         :class:`.Environment` is passed to callback.
 
-        :param early: should callbacks be executed before callbacks (from
-            other plugins too) registered with "early=False"
+        :param priority: priority of callbacks **inside** of this plugin
         :rtype: decorator for adding callback
         """
 
@@ -233,24 +205,19 @@ class Plugin:
                 if is_done(await coro(update, env)):
                     return "DONE"
 
-            if early:
-                self._callbacks_early_raw.append(wrapper)
-
-            else:
-                self._callbacks_raw.append(wrapper)
+            self.register_raw(wrapper, priority=priority)
 
             return coro
 
         return decorator
 
-    def on_text(self, *texts, early=False):
+    def on_text(self, *texts, priority=0):
         """
         Return decorator for adding callback which is triggered
         when the message and any of the specified text are fully matched.
 
         :param texts: texts to match messages' texts against
-        :param early: should callbacks be executed before callbacks (from
-            other plugins too) registered with "early=False"
+        :param priority: priority of callbacks **inside** of this plugin
         :rtype: decorator for adding callback
         """
 
@@ -265,13 +232,13 @@ class Plugin:
                     if is_done(await coro(message, env)):
                         return "DONE"
 
-            self.register(wrapper, early=early)
+            self.register(wrapper, priority=priority)
 
             return coro
 
         return decorator
 
-    def on_has_text(self, *texts, early=False):
+    def on_has_text(self, *texts, priority=0):
         """
         Return decorator for adding callback which is triggered
         when the message contains any of the specified texts.
@@ -280,8 +247,7 @@ class Plugin:
         found in message.
 
         :param texts: texts to search in messages' texts
-        :param early: should callbacks be executed before callbacks (from
-            other plugins too) registered with "early=False"
+        :param priority: priority of callbacks **inside** of this plugin
         :rtype: decorator for adding callback
         """
 
@@ -308,13 +274,13 @@ class Plugin:
                     if is_done(await coro(msg, env, **kwargs)):
                         return "DONE"
 
-            self.register(wrapper, early=early)
+            self.register(wrapper, priority=priority)
 
             return coro
 
         return decorator
 
-    def on_startswith_text(self, *texts, early=False):
+    def on_startswith_text(self, *texts, priority=0):
         """
         Return decorator for adding callbacks which is triggered
         when the message starts with any of the specified texts.
@@ -324,8 +290,7 @@ class Plugin:
         be passed to callback.
 
         :param texts: texts to search in messages' texts begginngs
-        :param early: should callbacks be executed before callbacks (from
-            other plugins too) registered with "early=False"
+        :param priority: priority of callbacks **inside** of this plugin
         :rtype: decorator for adding callback
         """
 
@@ -365,13 +330,13 @@ class Plugin:
                 if is_done(await coro(msg, env, **kwargs)):
                     return "DONE"
 
-            self.register(wrapper, early=early)
+            self.register(wrapper, priority=priority)
 
             return coro
 
         return decorator
 
-    def on_regexp_text(self, regexp, flags=0, early=False):
+    def on_regexp_text(self, regexp, flags=0, priority=0):
         """
         Returns decorator for adding callback which is triggered
         when the message matches the specified regular expression.
@@ -381,9 +346,8 @@ class Plugin:
 
         :param regexp: regular expression to match messages' texts with
         :param flags: flags for :func:`re.compile`
-        :param early: should callbacks be executed before callbacks (from
-            other plugins too) registered with "early=False"
-        :rtype: decorator for adding callback
+        :param priority: priority of callbacks **inside** of this plugin
+        :returns: decorator for adding callback
         """
 
         if isinstance(regexp, str):
@@ -409,22 +373,21 @@ class Plugin:
                 if is_done(await coro(message, env, **kwargs)):
                     return "DONE"
 
-            self.register(wrapper, early=early)
+            self.register(wrapper, priority=priority)
 
             return coro
 
         return decorator
 
-    def on_attachment(self, *types, early=False):
+    def on_attachment(self, *types, priority=0):
         """
         Returns decorator for adding callback which is triggered
         when the message has attachments of the specified type
         (if no types specified, then any attachments).
 
         :param types: attachments' types to look for in message
-        :param early: should callbacks be executed before callbacks (from
-            other plugins too) registered with "early=False"
-        :rtype: decorator for adding callback
+        :param priority: priority of callbacks **inside** of this plugin
+        :returns: decorator for adding callback
         """
 
         def decorator(coro):
@@ -444,7 +407,44 @@ class Plugin:
                 if is_done(await coro(message, env)):
                     return "DONE"
 
-            self.register(wrapper, early=early)
+            self.register(wrapper, priority=priority)
+
+            return coro
+
+        return decorator
+
+    def on_after_processed(self, messages=True, updates=False):
+        """
+        Returns decorator for adding callback which is triggered
+        when the message or update has been processed. If environment contains
+        attribute "exception", that means exception was raised while
+        other callbacks was processed. This callback has priority 1_000_000
+
+        Callbacks, registered with `on_after_processed` should not raise
+        any exceptions.
+
+        :param messages: call callback for messages
+        :param updates: call callback for updates
+
+        :rtype: decorator for adding callback
+        """
+
+        if not messages and not updates:
+            raise ValueError(
+                "`messages` or `updates` must be True for `on_after_processed`"
+            )
+
+        def decorator(coro):
+            async def wrapper(_, env):
+                env.parent.register_after_processed(coro)
+
+                return "GOON"
+
+            if messages:
+                self.register(wrapper, priority=1_000_000)
+
+            if updates:
+                self.register_raw(wrapper, priority=1_000_000)
 
             return coro
 

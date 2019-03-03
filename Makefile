@@ -15,6 +15,9 @@ docs:
 test:
 	$(python) -m unittest discover -s test
 
+test-fast:
+	$(python) -m unittest discover -s test -f
+
 cov:
 	coverage run --source=kutana/ -m unittest discover -s test
 	coverage report --include=kutana/*

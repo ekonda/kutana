@@ -64,6 +64,12 @@ class TestEnvironments(KutanaTest):
         self.assertEqual(env.parent, None)
         self.assertEqual(inner_env.parent, env)
 
+    def test_failed_register_after_processed(self):
+        env = Environment("manager")
+
+        with self.assertRaises(ValueError):
+            env.register_after_processed()
+
     def test_failed_method_replace(self):
         env = Environment("manager")
 
@@ -78,6 +84,16 @@ class TestEnvironments(KutanaTest):
 
         with self.assertRaises(AttributeError):
             setattr(env, "reply", 1)
+
+    def test_get(self):
+        env = Environment("manager")
+
+        self.assertEqual(env.get("attr"), None)
+        self.assertEqual(env.get("attr", "default"), "default")
+
+        env.attr = "value"
+
+        self.assertEqual(env.get("attr"), "value")
 
     def test_concrete_environment(self):
         env1 = VKEnvironment("vk")

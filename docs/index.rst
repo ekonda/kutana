@@ -37,16 +37,17 @@ Callbacks process updates one by one while callbacks returns anything but
 dropped.
 
 Callbacks has priorities. It's just a number, but to not get lost in
-priorities it is highly recommended to use default priority - 400. It you
-need to run your callback earlier, you can register your callback with
-`early=True` argument. This will increase priority by 200, so it will be called
-before most of usual callbacks.
+priorities it is highly recommended to use default priority - 0.
 
 Executers can use plugins. Plugins contains logically grouped callbacks with
 arbitrary data like plugins's name, description etc. Plugins register their
 callbacks in executor, and executor register callbacks in kutana. Plugins'
 callbacks can return None (implicitly or explicitly) or `"DONE"` to mark
 update as processed.
+
+Priority of plugins' callbacks works only in that plugin. If your want to
+make plugin that does something before other plugins - you should split
+your plugin into two parts: one with high priority, other with normal.
 
 Environments
 ------------
@@ -60,7 +61,7 @@ fields to environment with dot notation `env.foo = "bar"`.
 
 Every plugin works with copy of update's environment. That means, if you
 want to pass anything to other plugins you need to use `env.parent.`
-instead of `env.`.
+instead of just `env.`.
 
 Callbacks
 ---------
@@ -77,12 +78,12 @@ plugin looks like that:
         await env.reply("{}".format(body))
 
 
-Callback receives three arguments - :class:`.Message`, list of
-:class:`.Attachment` and :class:`.Environment`.
+Callback receives three arguments - :class:`.Message` and
+:class:`.Environment`.
 
 Raw updates processing
 ~~~~~~~~~~~~~~~~~~~~~~
-Callback function for processing raw update from service looks like that:
+Callback function for processing only raw update from service looks like that:
 
 .. code-block:: python
 
@@ -111,18 +112,17 @@ of simple plugin:
     async def on_echo(message, env, body):
         await env.reply("{}".format(body))
 
-Callback `on_echo` can have (or can not have) keyword arguments `body`,
+Callback `on_echo` can have (or not have) keyword arguments `body`,
 `args`, `prefix`. Kutana will pass corresponding values to keywords. You
 should use :func:`functools.wraps` decorator to save signatures of your
 coroutines to allow kutana to find keyword arguments in decorated callbacks.
 This plugin can be registered in :class:`.Executor`.
 
-
 .. note::
 
-    Plugins uses callback's signature to decide if it needs to pass some
-    arguments. It means that you have to use `functools.wraps` to properly
-    wrap callback.
+    Plugins use callback's signature to decide if it needs to pass some
+    arguments. It means that you have to use :func:`functools.wraps` to
+    properly wrap callback.
 
 Example of working engine with :class:`.VKManager`:
 

@@ -12,10 +12,11 @@ class TestMiscellaneous(unittest.TestCase):
         loaded_plugins = load_plugins("test/test_plugins/")
         loaded_plugins.sort(key=lambda plugin: plugin.name)
 
-        self.assertEqual(len(loaded_plugins), 2)
+        self.assertEqual(len(loaded_plugins), 3)
 
         self.assertEqual(loaded_plugins[0].name, "Memory")
         self.assertEqual(loaded_plugins[1].name, "My file")
+        self.assertEqual(loaded_plugins[2].name, "My file twice")
 
         executor = Executor()
         executor.register_plugins(loaded_plugins)
@@ -32,6 +33,7 @@ class TestMiscellaneous(unittest.TestCase):
 
         self.assertEqual(loaded_plugins[0].memory, "message")
         self.assertEqual(loaded_plugins[1].my_file, ":)")
+        self.assertEqual(loaded_plugins[2].my_file, ":):)")
 
     def test_load_value(self):
         value = load_value("key", "test/test_assets/sample.json")
@@ -55,18 +57,16 @@ class TestMiscellaneous(unittest.TestCase):
     def test_plugin_with_exception_callback(self):
         plugin = Plugin(exceptions=0)
 
+        async def on_processed(message, env):
+            if env.exception:
+                plugin.exceptions += 1
+
+        plugin.on_after_processed()(on_processed)
+
         async def on_text(message, env):
             raise Exception
 
         plugin.on_has_text()(on_text)
-
-        def _prepare_callbacks_error():
-            async def callback(update, env):
-                plugin.exceptions += 1  # pylint: disable=E1101
-
-            return (callback,)
-
-        plugin._prepare_callbacks_error = _prepare_callbacks_error
 
         executor = Executor()
 
@@ -84,7 +84,7 @@ class TestMiscellaneous(unittest.TestCase):
 
         set_logger_level(logging.ERROR)
 
-        self.assertEqual(plugin.exceptions, 1)  # pylint: disable=E1101
+        self.assertEqual(plugin.exceptions, 1)
 
     def test_vk_conversation(self):
         class FakeManager(VKManager):

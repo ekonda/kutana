@@ -59,33 +59,28 @@ class TestExecutors(KutanaTest):
     def test_exception(self):
         self.called = 0
 
+        self.target = ["Произошла крайне критическая ошибка. "
+                       "Сообщите об этом администратору."]
+
         with self.debug_manager(["message"]):
 
             async def new_update(update, env):
-                if env.manager_type == "debug":
+                async def just_raise(update, env):
+                    self.called += 1
                     raise Exception
 
+                env._istorage["cbs_a_p"] = [just_raise]
+
+                raise Exception
+
             self.kutana.executor.register(new_update)
-
-            async def new_error(update, env):
-                self.assertTrue(env.exception)
-
-                self.called += 1
-
-                return "DONE"
-
-            async def new_error_no(update, env):
-                self.assertTrue(False)
-
-            self.kutana.executor.register(new_error, error=True)
-            self.kutana.executor.register(new_error_no, error=True)
 
             set_logger_level(logging.CRITICAL)
 
         self.assertEqual(self.called, 1)
 
-    def test_default_exception_handle(self):
-        self.target = ["Произошла ошибка! Приносим свои извинения."]
+    def test_no_default_exception_handle(self):
+        self.target = []
 
         with self.debug_manager(["message"]):
 
@@ -95,16 +90,3 @@ class TestExecutors(KutanaTest):
             self.kutana.executor.register(new_update)
 
             set_logger_level(logging.CRITICAL)
-
-    def test_decorate_or_call(self):
-        self.target = ["message"]
-
-        with self.debug_manager(self.target):
-
-            self.target *= 2
-
-            @self.kutana.executor.register()
-            async def new_update(update, env):
-                await env.reply(update)
-
-            self.kutana.executor.register(new_update)

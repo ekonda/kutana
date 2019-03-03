@@ -1,16 +1,17 @@
 """Kutana - engine for developing bots."""
 
-from kutana.environment import Environment
-from kutana.exceptions import ExitException
-from kutana.executor import Executor
-from kutana.functions import get_path, import_module, load_plugins, load_value
-from kutana.kutana import Kutana
-from kutana.logger import logger, set_logger_level
-from kutana.manager.basic import BasicManager
-from kutana.manager.debug import DebugEnvironment, DebugManager
-from kutana.manager.tg import TGEnvironment, TGManager, TGResponse
-from kutana.manager.vk import VKEnvironment, VKManager, VKRequest, VKResponse
-from kutana.plugin import Attachment, Message, Plugin
+from .environment import Environment
+from .exceptions import ExitException
+from .executor import Executor
+from .loaders import import_module, load_plugins, load_plugins_from_file
+from .utils import get_path, load_value, is_list_or_tuple, sort_callbacks
+from .kutana import Kutana
+from .logger import logger, set_logger_level
+from .manager.basic import BasicManager
+from .manager.debug import DebugEnvironment, DebugManager
+from .manager.tg import TGEnvironment, TGManager, TGResponse
+from .manager.vk import VKEnvironment, VKManager, VKRequest, VKResponse
+from .plugin import Attachment, Message, Plugin
 
 try:
     import uvloop

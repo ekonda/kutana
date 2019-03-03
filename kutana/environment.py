@@ -1,6 +1,9 @@
 """Base environment for manager."""
 
 import functools
+import sys
+
+from .logger import logger
 
 
 class Environment:
@@ -10,7 +13,8 @@ class Environment:
     __slots__ = (
         "manager", "parent", "peer_id",
         "_has_message", "_message",
-        "_replaced_methods", "_storage"
+        "_replaced_methods", "_storage",
+        "_istorage"
     )
 
     def __init__(self, manager, parent_environment=None, peer_id=None):
@@ -20,9 +24,13 @@ class Environment:
         self.peer_id = peer_id
 
         self._replaced_methods = {}
+        self._storage = {}
+        self._istorage = {
+            "cbs_a_p": [],  # callbacks for event "after processed"
+        }
+
         self._has_message = None
         self._message = None
-        self._storage = {}
 
     def __setattr__(self, name, value):
         if name in object.__getattribute__(self, "__slots__"):
@@ -46,6 +54,22 @@ class Environment:
             return storage[name]
 
         return object.__getattribute__(self, name)
+
+    def get(self, name, default=None):
+        """
+        Get attribute of environment of default value if attribute is not
+        found.
+
+        :param name: name of the attribute
+        :param default: default value
+        :returns: value if attribute or default value
+        """
+
+        try:
+            return self.__getattribute__(name)
+
+        except AttributeError:
+            return default
 
     def replace_method(self, method_name, method):
         """
@@ -189,3 +213,39 @@ class Environment:
         """
 
         raise NotImplementedError
+
+    def register_after_processed(self, *callbacks):
+        """
+        Add coroutine for calling after update was processed. Coroutines are
+        called in order they was added.
+        """
+
+        if not callbacks:
+            raise ValueError("No callbacks passed")
+
+        self._istorage["cbs_a_p"].extend(callbacks)
+
+    async def process(self, update, callbacks):
+        """
+        Process update in this environment with passed callbacks.
+
+        :param update: update to process
+        :param callbacks: callbacks to process with
+        """
+
+        try:
+            for _, callback in callbacks:
+                if await callback(update, self) == "DONE":
+                    break
+
+        except Exception as e:  # pylint: disable=W0703
+            logger.exception(
+                "\"%s::%s\" on update %s from %s",
+                sys.exc_info()[0].__name__, e, update, self.manager_type
+            )
+
+            self._storage["exception"] = e
+
+        # Calling callbacks for event "after processed"
+        for callback in self._istorage["cbs_a_p"]:
+            await callback(update, self)

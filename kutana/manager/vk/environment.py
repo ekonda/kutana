@@ -10,14 +10,11 @@ class VKEnvironment(Environment):
     """Environment for :class:`.VKManager`"""
 
     async def _upload_file_to_vk(self, upload_url, data):
+        upload_result_text = None
+
         async with self.manager.session.post(upload_url, data=data) as resp:
-            if resp.status != 200:
-                return None
-
-            upload_result_text = await resp.text()
-
-        if not upload_result_text:
-            return None
+            if resp.status == 200:
+                upload_result_text = await resp.text()
 
         try:
             upload_result = json.loads(upload_result_text)
@@ -26,7 +23,7 @@ class VKEnvironment(Environment):
                 raise RuntimeError
 
         except RuntimeError:
-            return None
+            upload_result = None
 
         return upload_result
 

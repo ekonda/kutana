@@ -11,7 +11,7 @@
 English | [Русский](README.ru.md)
 
 # Kutana
-The engine for developing bots for soc. networks, instant messengers and other systems.
+The engine for developing bots for social networks, instant messengers and other systems.
 
 Nice foundation for bot using kutana engine - [kubot](https://github.com/ekonda/kubot).
 

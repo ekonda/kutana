@@ -22,7 +22,7 @@ setuptools.setup(
     author="Michael Krukov",
     author_email="krukov.michael@ya.ru",
     keywords="engine social-networks messengers bots asyncio",
-    description="The engine for developing bots for soc. networks, instant messengers and other systems.",
+    description="The engine for developing bots for social networks, instant messengers and other systems.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/ekonda/kutana",

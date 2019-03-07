@@ -46,7 +46,7 @@ def is_done(value):
     update's procession.
 
     :param value: value to interpret
-    :rtype: True if value is None or equals to "DONE" otherwise False
+    :returns: True if value is None or equals to "DONE" otherwise False
     """
 
     return value is None or value == "DONE"
@@ -54,7 +54,7 @@ def is_done(value):
 
 class Plugin:
 
-    """Class for creating extensions for kutana engine."""
+    """Class for creating extensions for kutana application."""
 
     def __init__(self, **kwargs):
         self._callbacks = []
@@ -70,27 +70,27 @@ class Plugin:
 
     def get_callbacks(self):
         """
-        Return callbacks for registration in engine.
+        Return callbacks for registration in application.
 
-        :rtype: list of callbacks to register in engine
+        :returns: list of callbacks to register in application
         """
 
         return (self._proc_update,)
 
     def get_callbacks_for_dispose(self):
         """
-        Return dispose callbacks for registration in engine .
+        Return dispose callbacks for registration in application.
 
-        :rtype: list of callbacks to register in engine
+        :returns: list of callbacks to register in application
         """
 
         return (self._callback_dispose,) if self._callback_dispose else ()
 
     def get_callbacks_for_startup(self):
         """
-        Return startup callbacks for registration in engine .
+        Return startup callbacks for registration in application.
 
-        :rtype: list of callbacks to register in engine
+        :returns: list of callbacks to register in application
         """
 
         return (self._callback_startup,) if self._callback_startup else ()
@@ -101,7 +101,7 @@ class Plugin:
 
         :param update: update to process
         :param env: :class:`.Environment` to process update with
-        :rtype: "DONE" if update is considired updated, None otherwise
+        :returns: "DONE" if update is considired updated, None otherwise
         """
 
         if env.has_message():
@@ -161,7 +161,7 @@ class Plugin:
         everything is going to shutdown. Only last registered callback will be
         used.
 
-        :rtype: decorator for adding callbacks
+        :returns: decorator for adding callbacks
         """
 
         def decorator(coro):
@@ -178,7 +178,7 @@ class Plugin:
         :class:`.Kutana` application as first argument.
         Only last registered callback will be used.
 
-        :rtype: decorator for adding callbacks
+        :returns: decorator for adding callbacks
         """
 
         def decorator(coro):
@@ -196,7 +196,7 @@ class Plugin:
         :class:`.Environment` is passed to callback.
 
         :param priority: priority of callbacks **inside** of this plugin
-        :rtype: decorator for adding callback
+        :returns: decorator for adding callback
         """
 
         def decorator(coro):
@@ -217,7 +217,7 @@ class Plugin:
 
         :param texts: texts to match messages' texts against
         :param priority: priority of callbacks **inside** of this plugin
-        :rtype: decorator for adding callback
+        :returns: decorator for adding callback
         """
 
         if not texts:
@@ -248,7 +248,7 @@ class Plugin:
 
         :param texts: texts to search in messages' texts
         :param priority: priority of callbacks **inside** of this plugin
-        :rtype: decorator for adding callback
+        :returns: decorator for adding callback
         """
 
         check_texts = tuple(text.strip().lower() for text in texts) or ("",)
@@ -290,7 +290,7 @@ class Plugin:
 
         :param texts: texts to search in messages' texts begginngs
         :param priority: priority of callbacks **inside** of this plugin
-        :rtype: decorator for adding callback
+        :returns: decorator for adding callback
         """
 
         check_texts = tuple(text.lstrip().lower() for text in texts)
@@ -408,7 +408,7 @@ class Plugin:
         :param messages: call callback for messages
         :param updates: call callback for updates
 
-        :rtype: decorator for adding callback
+        :returns: decorator for adding callback
         """
 
         if not messages and not updates:

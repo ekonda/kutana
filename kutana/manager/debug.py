@@ -74,7 +74,7 @@ class DebugManager(BasicManager):
         :param attachment: optional attachment or list of attachments to
             reply with
         :param kwargs: optional parameters (means nothing)
-        :rtype: None
+        :returns: None
         """
 
         peer_id = 1 if peer_id is None else peer_id

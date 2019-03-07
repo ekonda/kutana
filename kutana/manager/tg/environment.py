@@ -34,7 +34,7 @@ class TGEnvironment(Environment):
             reply with
         :param kwargs: arguments for telegrams's "sendMessage",
             "sendPhoto" etc.
-        :rtype: list with results of sending messages
+        :returns: list with results of sending messages
         """
 
         return await self.manager.send_message(
@@ -48,7 +48,7 @@ class TGEnvironment(Environment):
 
         :param file: document as file or bytes
         :param kwargs: arguments for telegram's "sendFile"
-        :rtype: :class:`.TGAttachmentTemp`
+        :returns: :class:`.TGAttachmentTemp`
         """
 
         return TGAttachmentTemp("doc", file, kwargs)
@@ -60,7 +60,7 @@ class TGEnvironment(Environment):
 
         :param file: photo as file or bytes
         :param kwargs: arguments for telegram's "sendPhoto"
-        :rtype: :class:`.TGAttachmentTemp`
+        :returns: :class:`.TGAttachmentTemp`
         """
 
         return TGAttachmentTemp("photo", file, kwargs)

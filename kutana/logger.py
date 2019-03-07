@@ -1,4 +1,4 @@
-"""Module with logger that is used in this engine."""
+"""Module with logger that is used in this application."""
 
 
 import logging

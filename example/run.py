@@ -3,6 +3,7 @@ import json
 from kutana import Kutana, VKManager, load_plugins
 
 
+# Load configuration
 with open("configuration.json") as fh:
     config = json.load(fh)
 

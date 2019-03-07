@@ -75,7 +75,7 @@ class TGManager(BasicManager):
         Download file with specified path and return it as bytes.
 
         :param path: Telegram's file's path for downloading
-        :rtype: bytes or None
+        :returns: bytes or None
         """
 
         if not self.session:
@@ -96,7 +96,7 @@ class TGManager(BasicManager):
 
         :param method: method to call
         :param kwargs: parameters for method
-        :rtype: :class:`.TGResponse`
+        :returns: :class:`.TGResponse`
         """
 
         if not self.session:
@@ -147,7 +147,7 @@ class TGManager(BasicManager):
         :param attachment: list of instances of :class:`.Attachment` or
             :class:`.TGAttachmentTemp`
         :parma kwargs: arguments to send to telegram's `sendMessage`
-        :rtype: list of responses from telegram
+        :returns: list of responses from telegram
         """
 
         await self.send_messages_lock.acquire()
@@ -172,7 +172,7 @@ class TGManager(BasicManager):
         :param attachment: list of instances of :class:`.Attachment` or
             :class:`.TGAttachmentTemp`
         :parma kwargs: arguments to send to telegram's `sendMessage`
-        :rtype: list of responses from telegram
+        :returns: list of responses from telegram
         """
 
         if peer_id is None:

@@ -13,7 +13,7 @@ Example of initializating TGManager:
     )
 
 .. note::
-    - Attachmnet type "document" is replaced with "doc" inside of engine.
+    - Attachmnet type "document" is replaced with "doc" inside of application.
     - Files and photos can't be uploaded without "send_message" or "replay".
 
 """

@@ -10,7 +10,7 @@ from .utils import sort_callbacks
 class Kutana:
 
     """
-    Main class for constructing engine.
+    Main class for constructing application.
 
     :param loop: loop for working
     """
@@ -118,7 +118,7 @@ class Kutana:
         Add task to list of running tasks.
 
         :param awaitable: awaitable for scheduling
-        :rtype: scheduled task
+        :returns: scheduled task
         """
 
         task = asyncio.ensure_future(awaitable, loop=self._loop)
@@ -139,7 +139,7 @@ class Kutana:
             await asyncio.sleep(0)
 
     def run(self):
-        """Start engine."""
+        """Start application."""
 
         asyncio.set_event_loop(self._loop)
 

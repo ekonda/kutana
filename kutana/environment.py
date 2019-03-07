@@ -170,7 +170,7 @@ class Environment:
         :param message: message to reply with
         :param attachment: optional attachment or list of attachments
         :param kwargs: arguments for request to service
-        :rtype: list with results of sending messages
+        :returns: list with results of sending messages
         """
 
         return await self.manager.send_message(
@@ -185,7 +185,7 @@ class Environment:
 
         :param file: document as file or bytes
         :param kwargs: arguments for manager's method
-        :rtype: :class:`.Attachment` or None
+        :returns: :class:`.Attachment` or None
         """
 
         raise NotImplementedError
@@ -198,7 +198,7 @@ class Environment:
 
         :param file: photo as file or bytes
         :param kwargs: arguments for manager's method
-        :rtype: :class:`.Attachment` or None
+        :returns: :class:`.Attachment` or None
         """
 
         raise NotImplementedError
@@ -209,7 +209,7 @@ class Environment:
         if error occured.
 
         :param attachment: :class:`.Attachment`
-        :rtype: bytes or None
+        :returns: bytes or None
         """
 
         raise NotImplementedError

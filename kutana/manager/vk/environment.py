@@ -35,7 +35,7 @@ class VKEnvironment(Environment):
         :param attachment: optional attachment or list of attachments to
             reply with
         :param kwargs: arguments for vkontakte's "messages.send"
-        :rtype: list with results of sending messages
+        :returns: list with results of sending messages
         """
 
         return await self.manager.send_message(
@@ -51,7 +51,7 @@ class VKEnvironment(Environment):
         :param file: document as file or bytes
         :param kwargs: arguments for vkontakte's methods and optional
             "filename"
-        :rtype: :class:`.Attachment` or None
+        :returns: :class:`.Attachment` or None
         """
 
         if kwargs.get("peer_id") is None:
@@ -105,7 +105,7 @@ class VKEnvironment(Environment):
 
         :param file: photo as file or bytes
         :param kwargs: arguments for vkontakte's methods
-        :rtype: :class:`.Attachment` or None
+        :returns: :class:`.Attachment` or None
         """
 
         if kwargs.get("peer_id") is None:

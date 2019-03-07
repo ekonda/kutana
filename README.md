@@ -24,9 +24,12 @@ python -m pip install kutana
 
 ## Usage
 
-- Create `Kutana` engine and add managers.
-- Register your plugins in the executor. You can import plugin from folders with function `load_plugins`. Files should be a valid python modules with available `plugin` field with your plugin (`Plugin`).
-- Start engine.
+- Create `Kutana` application and add managers.
+- Register your plugins in the executor. You can import plugin from folders
+    with function `load_plugins`. Files should be a valid python modules with
+    available `plugin` field with your plugin (`Plugin`) or field `plugins`
+    with list of instances of `Plugin` class.
+- Start application.
 
 Example `run.py` (token for VKManager is loaded from the file
 "configuration.json" and plugins are loaded from folder "plugins/")
@@ -41,7 +44,7 @@ with open("configuration.json") as fh:
 # Create application
 app = Kutana()
 
-# Add VKManager to engine
+# Create and add VKManager to application
 app.add_manager(
     VKManager(config["vk_token"])
 )
@@ -55,7 +58,7 @@ app.register_plugins(
 app.run()
 ```
 
-Example `plugins/echo.py`
+Example plugin `plugins/echo.py`
 
 ```py
 from kutana import Plugin
@@ -71,11 +74,11 @@ async def on_echo(message, env):
 
 - VKManager (for vk.com groups)
 - TGManager (for telegram.org)
-  - `document`'s type is named `doc` inside of engine.
+  - `document`'s type is named `doc` inside of Kutana.
   - `TGAttachmentTemp` is used for storing attachments before sending them
-  with `send_message` or `reply`. Attachments can't be uploaded other way.
+    with `send_message` or `reply`. Attachments can't be uploaded other way.
   - If you want to download file (attachment) from telegram, you have to use
-  `TGEnvironment.get_file_from_attachment`.
+    `TGEnvironment.get_file_from_attachment`.
 
 ## Authors
 

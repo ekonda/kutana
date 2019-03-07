@@ -143,7 +143,7 @@ class VKManager(BasicManager):
         :param method: method to call
         :param timeout: timeout for gettings response from vkontakte
         :param kwargs: parameters for method
-        :rtype: :class:`.VKResponse`
+        :returns: :class:`.VKResponse`
         """
 
         timeout = kwargs.pop("_timeout", 180)
@@ -176,7 +176,7 @@ class VKManager(BasicManager):
         :param attachment: list of :class:`.Attachment` or attachments
             as string
         :parma kwargs: arguments to send to vkontakte's `messages.send`
-        :rtype: list of responses from telegram
+        :returns: list of responses from telegram
         """
 
         if peer_id is None:
@@ -336,7 +336,7 @@ class VKManager(BasicManager):
         Returns environment for update.
 
         :param update: update from vkontakte
-        :rtype: :class:`.VKEnvironment`
+        :returns: :class:`.VKEnvironment`
         """
 
         return VKEnvironment(self, peer_id=update["object"].get("peer_id"))

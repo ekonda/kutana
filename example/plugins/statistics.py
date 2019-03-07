@@ -6,7 +6,7 @@ statistics = {}
 
 
 # Sub-plugin to collect statistics
-p1 = Plugin(name="_Statistics collector", priority=1)
+p1 = Plugin(name="_Statistics collector", priority=10)
 
 
 @p1.on_has_text()

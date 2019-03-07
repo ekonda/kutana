@@ -112,21 +112,6 @@ class Kutana:
 
             logger.exception(e)
 
-    def ensure_future(self, awaitable):
-        """
-        Schedule awaitable with asyncio.ensure_loop in current loop.
-        Add task to list of running tasks.
-
-        :param awaitable: awaitable for scheduling
-        :returns: scheduled task
-        """
-
-        task = asyncio.ensure_future(awaitable, loop=self._loop)
-
-        self._tasks.append(task)
-
-        return task
-
     async def loop_for_manager(self, mngr):
         """Receive and process updates from target manager forever."""
 
@@ -134,7 +119,11 @@ class Kutana:
 
         while self.running:
             for update in await receiver():
-                self.ensure_future(self.process(mngr, update))
+                task = asyncio.ensure_future(
+                    self.process(mngr, update), loop=self._loop
+                )
+
+                self._tasks.append(task)
 
             await asyncio.sleep(0)
 
@@ -146,12 +135,16 @@ class Kutana:
         for manager in self._managers:
             self._tasks_loops.append(self.loop_for_manager(manager))
 
-            awaitables = self._loop.run_until_complete(
-                manager.get_background_coroutines(self.ensure_future)
+            self._loop.run_until_complete(
+                manager.startup(self)
             )
 
-            for awaitable in awaitables:
-                self._tasks_loops.append(awaitable)
+            # awaitables = self._loop.run_until_complete(
+            #     manager.startup(self.ensure_future)
+            # )
+
+            # for awaitable in awaitables:
+            #     self._tasks_loops.append(awaitable)
 
         self._loop.run_until_complete(self.startup())
 

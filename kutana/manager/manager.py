@@ -1,11 +1,16 @@
 """Base for managers."""
 
 
-class BasicManager:
+class Manager():
 
     """Base for manager."""
 
-    type = "basic"
+    _type = ""
+
+    def get_type(self):
+        """Return this manager's type."""
+
+        return self._type
 
     @staticmethod
     def split_large_text(text):
@@ -66,21 +71,21 @@ class BasicManager:
 
         raise NotImplementedError
 
-    async def get_background_coroutines(self, ensure_future):
-        """
-        Collect background coroutines for Kutana to run.
-
-        :param ensure_future: kutana's wrapper for asyncio.ensure_future
-        :returns: list of tasks to be executed in background in Kutana
-        """
-
-        raise NotImplementedError
-
     async def get_receiver_coroutine_function(self):
         """
         Collect coroutine for receiving updated from service.
 
         :returns: coroutine for receiving updated from service
+        """
+
+        raise NotImplementedError
+
+    async def startup(self, application):
+        """
+        Start coroutines and prepare everything else needed for
+        manager to work.
+
+        :param app: application
         """
 
         raise NotImplementedError

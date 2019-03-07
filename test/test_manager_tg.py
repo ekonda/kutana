@@ -22,14 +22,11 @@ class TestManagerVk(unittest.TestCase):
         with self.assertRaises(ValueError):
             TGManager("")
 
-    def test_tg_get_background_coroutines(self):
+    def test_tg_startup(self):
         mngr = TGManager("token")
 
         self.assertEqual(
-            self.loop.run_until_complete(
-                mngr.get_background_coroutines(None)
-            ),
-            ()
+            self.loop.run_until_complete(mngr.startup(None)), None
         )
 
     def test_tg_environmnet(self):

@@ -2,7 +2,7 @@ import asyncio
 import logging
 import unittest
 
-from kutana import (Kutana, BasicManager, DebugEnvironment, DebugManager,
+from kutana import (Kutana, Manager, DebugEnvironment, DebugManager,
                     Plugin, VKEnvironment, VKManager, VKResponse, load_plugins,
                     set_logger_level)
 
@@ -36,7 +36,7 @@ class TestMiscellaneous(unittest.TestCase):
         self.assertEqual(loaded_plugins[2].my_file, ":):)")
 
     def test_split_large_text(self):
-        split = BasicManager.split_large_text
+        split = Manager.split_large_text
 
         self.assertEqual(split("abc"), ("abc",))
 

@@ -14,8 +14,8 @@ Submodules
 
 .. toctree::
 
-   kutana.manager.basic
    kutana.manager.debug
+   kutana.manager.manager
 
 Module contents
 ---------------

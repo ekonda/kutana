@@ -5,11 +5,11 @@ import json
 from collections import namedtuple
 
 import aiohttp
-
 from kutana.logger import logger
-from kutana.manager.basic import BasicManager
+from kutana.manager.manager import Manager
 from kutana.manager.tg.environment import TGAttachmentTemp, TGEnvironment
 from kutana.plugin import Attachment, Message
+
 
 TGResponse = namedtuple(
     "TGResponse",
@@ -25,7 +25,7 @@ Response from telegram.
 """
 
 
-class TGManager(BasicManager):
+class TGManager(Manager):
 
     """
     Class for receiving updates from telegram.
@@ -36,7 +36,7 @@ class TGManager(BasicManager):
     """
 
 
-    type = "telegram"
+    _type = "telegram"
 
 
     def __init__(self, token, messages_per_second=29, proxy=None):
@@ -66,9 +66,6 @@ class TGManager(BasicManager):
             peer_id = None
 
         return TGEnvironment(self, peer_id=peer_id)
-
-    async def get_background_coroutines(self, ensure_future):
-        return ()
 
     async def request_file(self, path):
         """
@@ -309,6 +306,9 @@ class TGManager(BasicManager):
         )
 
         return self.receiver
+
+    async def startup(self, application):
+        pass
 
     async def dispose(self):
         if self.session:

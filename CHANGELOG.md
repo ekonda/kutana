@@ -22,6 +22,9 @@
   - ^ Renamed Kutana's `storage` to `config`
   - ^ Executors removed entirely, it's functions moved to `Kutana` class.
   - ^ Removed `load_value` method.
+  - ^ Renamed manager's `type` to `_type`.
+  - ^ Renamed manager's `get_background_coroutines` to `startup`
+  - Startup now accepts application.
   - Now kutana objects are referred as `app`.
   - Renamed Kutana's "process_update" to "process".
   - Processing is now done inside on Environment.

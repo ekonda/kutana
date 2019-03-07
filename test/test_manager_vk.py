@@ -241,12 +241,27 @@ class TestManagerVk(unittest.TestCase):
         self.assertEqual(attachment.link, None)
         self.assertEqual(attachment.raw_attachment, test_attachment_raw)
 
-    def test_vk_get_background_coroutines(self):
+    def test_vk_startup(self):
         mngr = VKManager("token")
 
-        bg_coroutines = self.loop.run_until_complete(
-            mngr.get_background_coroutines(asyncio.ensure_future)
+        bg_coroutines = []
+
+        asyncio_ensure_future = asyncio.ensure_future
+
+        def ensure(task):
+            _task = asyncio_ensure_future(task)
+
+            bg_coroutines.append(_task)
+
+            return _task
+
+        asyncio.ensure_future = ensure
+
+        self.loop.run_until_complete(
+            mngr.startup(None)
         )
+
+        asyncio.ensure_future = asyncio_ensure_future
 
         mngr.running = False
 
@@ -427,6 +442,8 @@ class TestManagerVk(unittest.TestCase):
     def test_vk_exec_loop(self):
         mngr = VKManager("token")
 
+        mngr.running = True
+
         async def raw_request(_, method, **kwargs):
             self.assertEqual(method, "execute")
             self.assertEqual(kwargs["code"], "return [API.fake.method({}),];")
@@ -448,7 +465,7 @@ class TestManagerVk(unittest.TestCase):
             return _task
 
         self.loop.run_until_complete(
-            mngr._exec_loop(ensure)
+            mngr._exec_loop()
         )
 
         self.loop.run_until_complete(asyncio.gather(*tasks))
@@ -460,6 +477,8 @@ class TestManagerVk(unittest.TestCase):
 
     def test_vk_exec_loop_error(self):
         mngr = VKManager("token")
+
+        mngr.running = True
 
         async def raw_request(_, method, **kwargs):
             self.assertEqual(method, "execute")
@@ -509,7 +528,7 @@ class TestManagerVk(unittest.TestCase):
             return _task
 
         self.loop.run_until_complete(
-            mngr._exec_loop(ensure)
+            mngr._exec_loop()
         )
 
         self.loop.run_until_complete(asyncio.gather(*tasks))

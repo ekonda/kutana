@@ -8,7 +8,7 @@ from random import random
 
 import aiohttp
 from kutana.logger import logger
-from kutana.manager.basic import BasicManager
+from kutana.manager.manager import Manager
 from kutana.manager.vk.environment import VKEnvironment
 from kutana.plugin import Attachment, Message
 
@@ -41,7 +41,7 @@ class VKRequest(asyncio.Future):
         self.kwargs = kwargs
 
 
-class VKManager(BasicManager):
+class VKManager(Manager):
 
     """
     Class for receiving updates from vkontakte.
@@ -56,7 +56,7 @@ class VKManager(BasicManager):
     """
 
 
-    type = "vkontakte"
+    _type = "vkontakte"
 
 
     def __init__(self, token, executes_per_second=19, longpoll_settings=None,
@@ -72,7 +72,7 @@ class VKManager(BasicManager):
         self.group_id = None
         self.longpoll = None
 
-        self.running = True
+        self.running = False
         self.requests_queue = []
 
         self.version = api_version
@@ -381,7 +381,7 @@ class VKManager(BasicManager):
             except asyncio.InvalidStateError:
                 pass
 
-    async def _exec_loop(self, ensure_future):
+    async def _exec_loop(self):
         while self.running:
             await asyncio.sleep(self.execute_pause)
 
@@ -405,10 +405,7 @@ class VKManager(BasicManager):
 
             code += "];"
 
-            ensure_future(self._exec_perform(code, requests))
-
-    async def get_background_coroutines(self, ensure_future):
-        return (self._exec_loop(ensure_future),)
+            asyncio.ensure_future(self._exec_perform(code, requests))
 
     async def update_longpoll_data(self):
         """Update manager's longpoll data"""
@@ -514,6 +511,14 @@ class VKManager(BasicManager):
         )
 
         return self.receiver
+
+    async def startup(self, application):
+        if self.running:
+            return
+
+        self.running = True
+
+        asyncio.ensure_future(self._exec_loop())
 
     async def dispose(self):
         self.running = False

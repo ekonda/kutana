@@ -1,10 +1,11 @@
 """Manager and environment for debug purposes."""
 
 import time
-from kutana.manager.basic import BasicManager
-from kutana.plugin import Message
-from kutana.exceptions import ExitException
+
 from kutana.environment import Environment
+from kutana.exceptions import ExitException
+from kutana.manager.manager import Manager
+from kutana.plugin import Message
 
 
 class DebugEnvironment(Environment):
@@ -27,11 +28,11 @@ class DebugEnvironment(Environment):
         return attachment
 
 
-class DebugManager(BasicManager):
+class DebugManager(Manager):
 
     """Shoots target texts once and contains replied data."""
 
-    type = "debug"
+    _type = "debug"
 
     def __init__(self, *texts):
         self.replies = []
@@ -39,8 +40,6 @@ class DebugManager(BasicManager):
 
         self.queue = list(texts)
         self.dead = False
-
-        self.counter = 0
 
     async def request(self, method, **kwargs):  # pylint: disable=W0613
         """Placeholder for debug's "request" method."""
@@ -104,12 +103,6 @@ class DebugManager(BasicManager):
 
         return DebugEnvironment(self, peer_id=peer_id)
 
-    async def get_background_coroutines(self, ensure_future):
-        async def count():
-            self.counter += 1
-
-        return [count()]
-
     async def get_receiver_coroutine_function(self):
         async def rec():
             if self.dead:
@@ -120,6 +113,9 @@ class DebugManager(BasicManager):
             return self.queue
 
         return rec
+
+    async def startup(self, application):
+        pass
 
     async def dispose(self):
         pass

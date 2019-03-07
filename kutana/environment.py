@@ -106,7 +106,7 @@ class Environment:
     def manager_type(self):
         """Return currently processed message's manager type."""
 
-        return self.manager.type
+        return self.manager.get_type()
 
     def spawn(self):
         """

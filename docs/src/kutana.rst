@@ -15,11 +15,11 @@ Submodules
 
    kutana.environment
    kutana.exceptions
-   kutana.executor
-   kutana.functions
    kutana.kutana
+   kutana.loaders
    kutana.logger
    kutana.plugin
+   kutana.utils
 
 Module contents
 ---------------

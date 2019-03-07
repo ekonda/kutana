@@ -1,22 +1,15 @@
 """
 Manager, environment and utils for interacting with Telegram.
 
-Example "configuration.json" for TGManager ("tg_proxy" is optional):
-
-.. code-block:: json
-
-    {
-        "tg_token": "API TOKEN",
-        "tg_proxy": "http://address_of_prox:port"
-    }
+Proxy should be in format "http://address_of_prox:port".
 
 Example of initializating TGManager:
 
 .. code-block:: python
 
     manager2 = TGManager(
-        load_value("tg_token", "configuration.json"),
-        load_value("tg_proxy", "configuration.json"),
+        tg_token,
+        proxy=tg_proxy,
     )
 
 .. note::

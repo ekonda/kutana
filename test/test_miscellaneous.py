@@ -4,7 +4,7 @@ import unittest
 
 from kutana import (Kutana, BasicManager, DebugEnvironment, DebugManager,
                     Plugin, VKEnvironment, VKManager, VKResponse, load_plugins,
-                    load_value, set_logger_level)
+                    set_logger_level)
 
 
 class TestMiscellaneous(unittest.TestCase):
@@ -34,15 +34,6 @@ class TestMiscellaneous(unittest.TestCase):
         self.assertEqual(loaded_plugins[0].memory, "message")
         self.assertEqual(loaded_plugins[1].my_file, ":)")
         self.assertEqual(loaded_plugins[2].my_file, ":):)")
-
-    def test_load_value(self):
-        value = load_value("key", "test/test_assets/sample.json")
-
-        self.assertEqual(value, "value")
-
-        value = load_value("key2", "test/test_assets/sample.json")
-
-        self.assertEqual(value, {"keynkey": "hvalue"})
 
     def test_split_large_text(self):
         split = BasicManager.split_large_text

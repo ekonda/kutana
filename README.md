@@ -34,17 +34,16 @@ Example `run.py` (token for VKManager is loaded from the file
 ```py
 from kutana import *
 
+# Load configuration
+with open("configuration.json") as fh:
+    config = json.load(fh)
+
 # Create application
 app = Kutana()
 
 # Add VKManager to engine
 app.add_manager(
-    VKManager(
-        load_value(
-            "vk_token",
-            "configuration.json"
-        )
-    )
+    VKManager(config["vk_token"])
 )
 
 # Load and register plugins

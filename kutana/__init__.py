@@ -3,7 +3,7 @@
 from .environment import Environment
 from .exceptions import ExitException
 from .loaders import import_module, load_plugins, load_plugins_from_file
-from .utils import get_path, load_value, is_list_or_tuple, sort_callbacks
+from .utils import get_path, is_list_or_tuple, sort_callbacks
 from .kutana import Kutana
 from .logger import logger, set_logger_level
 from .manager.basic import BasicManager
@@ -14,7 +14,6 @@ from .plugin import Attachment, Message, Plugin
 
 try:
     import uvloop
-
     uvloop.install()
 except ImportError:  # pragma: no cover
     pass

@@ -36,17 +36,16 @@ python -m pip install kutana
 ```py
 from kutana import *
 
+# Загрузка настроек
+with open("configuration.json") as fh:
+    config = json.load(fh)
+
 # Создание приложения
 app = Kutana()
 
-# Добавление VKManager в движок
+# Добавление VKManager в приложение
 app.add_manager(
-    VKManager(
-        load_value(
-            "vk_token",
-            "configuration.json"
-        )
-    )
+    VKManager(config["vk_token"])
 )
 
 # Загрузить и зарегистрировать плагины

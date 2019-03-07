@@ -119,8 +119,7 @@ Example of working engine with :class:`.VKManager`:
 
 .. code-block:: python
 
-    from kutana import Kutana, VKManager, \
-        load_plugins, load_value
+    from kutana import Kutana, VKManager, load_plugins
 
     kutana = Kutana()
 
@@ -138,15 +137,15 @@ Example of working engine with :class:`.VKManager`:
 
 .. toctree::
     :maxdepth: 1
-    :caption: Managers
+    :caption: Managers and environments
 
-    VKManager <src/kutana.manager.vk>
-    TGManager <src/kutana.manager.tg>
-    DebugManager <src/kutana.manager.debug>
+    VKontakte <src/kutana.manager.vk>
+    Telegram <src/kutana.manager.tg>
 
 .. toctree::
     :maxdepth: 1
     :caption: API Reference
 
     Plugin <src/kutana.plugin>
-    src/modules
+    Kutana <src/kutana.kutana>
+    Full API <src/modules>

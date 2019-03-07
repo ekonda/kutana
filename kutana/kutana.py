@@ -92,7 +92,7 @@ class Kutana:
             self.registered_plugins.append(plugin)
 
     def add_manager(self, manager):
-        """Add manager to engine."""
+        """Add manager to application."""
 
         self._managers.append(manager)
 

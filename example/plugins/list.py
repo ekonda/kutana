@@ -9,8 +9,6 @@ plugins = []
 
 @plugin.on_startup()
 async def startup(app):
-    plugins = []
-
     for pl in app.registered_plugins:
         if isinstance(pl, Plugin) and pl.name[:1] != "_":
             plugins.append(pl.name)

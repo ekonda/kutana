@@ -1,6 +1,5 @@
 """Utility functions for different purposes."""
 
-import json
 from os.path import dirname, join
 
 
@@ -36,18 +35,3 @@ def get_path(root, path):
     """
 
     return join(dirname(root), path)
-
-
-def load_value(key, path):
-    """
-    Load value for key from json object in file in specified path.
-
-    :param key: key
-    :param path: path to json file
-    :returns: value for key from json object
-    """
-
-    with open(path, "r") as fh:
-        config = json.load(fh)
-
-    return config.get(key)

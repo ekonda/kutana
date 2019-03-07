@@ -2,7 +2,7 @@ import asyncio
 import logging
 import unittest
 
-from kutana import (BasicManager, DebugEnvironment, DebugManager, Executor,
+from kutana import (Kutana, BasicManager, DebugEnvironment, DebugManager,
                     Plugin, VKEnvironment, VKManager, VKResponse, load_plugins,
                     load_value, set_logger_level)
 
@@ -18,16 +18,16 @@ class TestMiscellaneous(unittest.TestCase):
         self.assertEqual(loaded_plugins[1].name, "My file")
         self.assertEqual(loaded_plugins[2].name, "My file twice")
 
-        executor = Executor()
-        executor.register_plugins(loaded_plugins)
+        app = Kutana()
+        app.register_plugins(loaded_plugins)
 
         loop = asyncio.get_event_loop()
 
-        loop.run_until_complete(executor.startup(None))
+        loop.run_until_complete(app.startup())
 
         loop.run_until_complete(
-            executor.process(
-                "message", DebugEnvironment(DebugManager(), peer_id=0)
+            app.process(
+                DebugManager(), "message"
             )
         )
 
@@ -68,17 +68,17 @@ class TestMiscellaneous(unittest.TestCase):
 
         plugin.on_has_text()(on_text)
 
-        executor = Executor()
+        app = Kutana()
 
-        executor.register_plugins([plugin])
+        app.register_plugins([plugin])
 
         loop = asyncio.get_event_loop()
 
         set_logger_level(logging.CRITICAL)
 
         loop.run_until_complete(
-            executor.process(
-                "message", DebugEnvironment(DebugManager(), peer_id=0)
+            app.process(
+                DebugManager(), "message"
             )
         )
 

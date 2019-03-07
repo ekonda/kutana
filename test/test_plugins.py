@@ -32,10 +32,10 @@ class TestPlugins(KutanaTest):
 
         with self.debug_manager(["message"]) as plugin:
 
-            async def on_startup(update, env):
+            async def startup(app):
                 self.called += 1
 
-            plugin.on_startup()(on_startup)
+            plugin.on_startup()(startup)
 
         self.assertEqual(self.called, 1)
 

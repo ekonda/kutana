@@ -2,7 +2,6 @@
 
 from .environment import Environment
 from .exceptions import ExitException
-from .executor import Executor
 from .loaders import import_module, load_plugins, load_plugins_from_file
 from .utils import get_path, load_value, is_list_or_tuple, sort_callbacks
 from .kutana import Kutana

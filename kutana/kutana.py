@@ -2,35 +2,115 @@
 
 import asyncio
 
-from kutana.exceptions import ExitException
-from kutana.executor import Executor
+from .exceptions import ExitException
+from .logger import logger
+from .utils import sort_callbacks
 
 
 class Kutana:
 
-    """Main class for constructing engine."""
+    """
+    Main class for constructing engine.
 
-    def __init__(self, executor=None, loop=None):
-        self.managers = []
-        self.executor = executor or Executor()
+    :param loop: loop for working
+    """
 
-        self.loop = loop or asyncio.get_event_loop()
+    def __init__(self, loop=None):
+        self.running = True  #: True if application is running
+        self.config = {}  #: user's configuration
 
-        self.storage = {}
+        self.registered_plugins = []  #: plugins registered in application
 
-        self.running = True
-        self.loops = []
-        self.tasks = []
+        self._callbacks = []
+        self._startup_callbacks = []
+        self._dispose_callbacks = []
+
+        self._managers = []
+        self._loop = loop or asyncio.get_event_loop()
+        self._tasks = []
+        self._tasks_loops = []
+
+    def register_startup(self, *callbacks, priority=0):
+        """
+        Register callbacks for startup.
+
+        :param callbacks: callbacks for registration
+        :param priority: priority of callbacks
+        """
+
+        for callback in callbacks:
+            self._startup_callbacks.append((priority, callback))
+
+        sort_callbacks(self._startup_callbacks)
+
+    def register_dispose(self, *callbacks, priority=0):
+        """
+        Register callbacks for disposing resourses before shutting down.
+
+        :param callbacks: callbacks for registration
+        :param priority: priority of callbacks
+        """
+
+        for callback in callbacks:
+            self._dispose_callbacks.append((priority, callback))
+
+        sort_callbacks(self._dispose_callbacks)
+
+    def register(self, *callbacks, priority=400):
+        """
+        Register callbacks for processing updates with specified priority.
+
+        :param callbacks: callbacks for registration
+        :param priority: priority of callbacks
+        """
+
+        for callback in callbacks:
+            self._callbacks.append((priority, callback))
+
+        sort_callbacks(self._callbacks)
+
+    def register_plugins(self, plugins):
+        """
+        Register plugins in application.
+
+        :param plguins: plugins for registration
+        """
+
+        for plugin in plugins:
+            self.register(
+                *plugin.get_callbacks(), priority=plugin.priority
+            )
+
+            self.register_startup(
+                *plugin.get_callbacks_for_startup(), priority=plugin.priority
+            )
+
+            self.register_dispose(
+                *plugin.get_callbacks_for_dispose(), priority=plugin.priority
+            )
+
+            self.registered_plugins.append(plugin)
 
     def add_manager(self, manager):
         """Add manager to engine."""
 
-        self.managers.append(manager)
+        self._managers.append(manager)
 
     async def process(self, mngr, update):
         """Create environment and process update from manager."""
 
-        await self.executor.process(update, await mngr.get_environment(update))
+        env = await mngr.get_environment(update)
+
+        try:
+            await env.process(update, self._callbacks)
+
+        except Exception as e:  # pylint: disable=W0703
+            await env.reply(
+                "Произошла крайне критическая ошибка. Сообщите об этом "
+                "администратору."
+            )
+
+            logger.exception(e)
 
     def ensure_future(self, awaitable):
         """
@@ -41,50 +121,42 @@ class Kutana:
         :rtype: scheduled task
         """
 
-        task = asyncio.ensure_future(awaitable, loop=self.loop)
+        task = asyncio.ensure_future(awaitable, loop=self._loop)
 
-        self.tasks.append(task)
+        self._tasks.append(task)
 
         return task
 
     async def loop_for_manager(self, mngr):
-        """Receive and process updates from target manager."""
+        """Receive and process updates from target manager forever."""
 
         receiver = await mngr.get_receiver_coroutine_function()
 
         while self.running:
             for update in await receiver():
-                self.ensure_future(
-                    self.process(
-                        mngr, update
-                    )
-                )
+                self.ensure_future(self.process(mngr, update))
 
             await asyncio.sleep(0)
 
     def run(self):
         """Start engine."""
 
-        asyncio.set_event_loop(self.loop)
+        asyncio.set_event_loop(self._loop)
 
-        self.loops = []
+        for manager in self._managers:
+            self._tasks_loops.append(self.loop_for_manager(manager))
 
-        for manager in self.managers:
-            self.loops.append(self.loop_for_manager(manager))
-
-            awaitables = self.loop.run_until_complete(
+            awaitables = self._loop.run_until_complete(
                 manager.get_background_coroutines(self.ensure_future)
             )
 
             for awaitable in awaitables:
-                self.loops.append(awaitable)
+                self._tasks_loops.append(awaitable)
 
-        self.loop.run_until_complete(self.executor.startup(self))
+        self._loop.run_until_complete(self.startup())
 
         try:
-            self.loop.run_until_complete(
-                asyncio.gather(*self.loops)
-            )
+            self._loop.run_until_complete(asyncio.gather(*self._tasks_loops))
 
         except (KeyboardInterrupt, ExitException):
             pass
@@ -92,14 +164,22 @@ class Kutana:
         finally:
             self.running = False
 
-        self.loop.run_until_complete(self.dispose())
+        self._loop.run_until_complete(self.dispose())
+
+    async def startup(self):
+        """Prepare plugins for work."""
+
+        for _, callback in self._startup_callbacks:
+            await callback(self)
+
 
     async def dispose(self):
         """Free resources and prepare for shutdown."""
 
-        await asyncio.gather(*self.tasks)
+        await asyncio.gather(*self._tasks)
 
-        await self.executor.dispose()
+        for _, callback in self._dispose_callbacks:
+            await callback()
 
-        for manager in self.managers:
+        for manager in self._managers:
             await manager.dispose()

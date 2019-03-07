@@ -30,30 +30,33 @@ Workflow
 Managers is responsible for receiving and sending data. While data is prepared
 (turned into :class:`.Message` for example) and sent (answer to user's
 message for example) by managers, actual :class:`.Message` or raw updates
-from services is processed by :class:`.Executor`. They register callbacks
-which receives updates (:class:`.Message` or raw updates from services).
-Callbacks process updates one by one while callbacks returns anything but
+from services is processed callbacks. They be registered in :class:`.Kutana`.
+These callbacks receive updates (:class:`.Message` or raw updates
+from services).
+
+Callbacks process updates one by one while callbacks return anything but
 `"DONE"`. If callback returns `"DONE"`, update is considered processed and is
 dropped.
 
 Callbacks has priorities. It's just a number, but to not get lost in
 priorities it is highly recommended to use default priority - 0.
 
-Executers can use plugins. Plugins contains logically grouped callbacks with
-arbitrary data like plugins's name, description etc. Plugins register their
-callbacks in executor, and executor register callbacks in kutana. Plugins'
-callbacks can return None (implicitly or explicitly) or `"DONE"` to mark
-update as processed.
+Application can contain Plugins. Plugins contains logically grouped
+callbacks with arbitrary data like plugins's name, description etc.
+Plugins register their callbacks in executor, and executor register
+callbacks in kutana. Plugins' callbacks can return None
+(implicitly or explicitly) or `"DONE"` to mark update as processed.
 
 Priority of plugins' callbacks works only in that plugin. If your want to
-make plugin that does something before other plugins - you should split
-your plugin into two parts: one with high priority, other with normal.
+make plugin that does something before (or after) other plugins - you
+should split your plugin into two parts: one with high priority, other
+with normal (0).
 
 Environments
 ------------
 Environments is objects with information and methods for interacting with
 data and user. It has methods for replying, performing requests to API,
-stores message that will be passed to next callback etc.
+stores message that will be passed to next callback e.t.c.
 
 You can replace existing methods in environment with
 :func:`kutana.environment.Environment.replace_method` and set your

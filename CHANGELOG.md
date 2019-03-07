@@ -19,6 +19,9 @@
   - ^ Only one dispose or startup callback can be present on one plugin.
   - ^ Executor's `register*` methods no longer returns decorators.
   - ^ Plugin's arguments like "body", "args" e.t.c. now stored in environment.
+  - ^ Renamed Kutana's `storage` to `config`
+  - ^ Executors removed entirely, it's functions moved to `Kutana` class
+  - Now kutana objects are referred as `app`
   - Renamed Kutana's "process_update" to "process"
   - Processing is now done inside on Environment
   - Callbacks storing changed

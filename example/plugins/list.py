@@ -4,17 +4,20 @@ from kutana import Plugin
 plugin = Plugin(name="Plugins")
 
 
-@plugin.on_startup()
-async def on_startup(kutana, registered_plugins):
-    plugin.plugins = []
+plugins = []
 
-    for pl in registered_plugins:
+
+@plugin.on_startup()
+async def startup(app):
+    plugins = []
+
+    for pl in app.registered_plugins:
         if isinstance(pl, Plugin) and pl.name[:1] != "_":
-            plugin.plugins.append(pl.name)
+            plugins.append(pl.name)
 
 
 @plugin.on_text("list")
 async def on_list(message, env):
     await env.reply(
-        "Plugins:\n" + "; ".join(plugin.plugins)
+        "Plugins:\n" + "; ".join(plugins)
     )

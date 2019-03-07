@@ -6,17 +6,17 @@ from kutana import DebugManager, Kutana, Plugin
 
 class KutanaTest(unittest.TestCase):
     def setUp(self):
-        self.kutana = None
+        self.app = None
         self.target = []
 
     @contextmanager
     def debug_manager(self, queue):
-        if self.kutana is None:
-            self.kutana = Kutana()
+        if self.app is None:
+            self.app = Kutana()
 
         self.manager = DebugManager(*queue)
 
-        self.kutana.add_manager(self.manager)
+        self.app.add_manager(self.manager)
 
         self.plugin = Plugin()
 
@@ -26,8 +26,8 @@ class KutanaTest(unittest.TestCase):
             yield self.plugin
         finally:
             for plugin in self.plugins:
-                self.kutana.executor.register_plugins([plugin])
+                self.app.register_plugins([plugin])
 
-            self.kutana.run()
+            self.app.run()
 
         self.assertEqual(self.target, self.manager.replies)

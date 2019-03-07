@@ -8,7 +8,7 @@ from test_framework import KutanaTest
 logging.disable(logging.INFO)
 
 
-class TestExecutors(KutanaTest):
+class TestKutana(KutanaTest):
     def tearDown(self):
         set_logger_level(logging.ERROR)
 
@@ -20,7 +20,7 @@ class TestExecutors(KutanaTest):
             async def new_update(update, env):
                 await env.reply(update)
 
-            self.kutana.executor.register(new_update)
+            self.app.register(new_update)
 
     def test_debug_upload(self):
         self.target = ["file"]
@@ -32,7 +32,7 @@ class TestExecutors(KutanaTest):
 
                 await env.reply("", attachment=attachment)
 
-            self.kutana.executor.register(new_update)
+            self.app.register(new_update)
 
     def test_priority(self):
         self.called_1 = 0
@@ -50,8 +50,8 @@ class TestExecutors(KutanaTest):
                 self.called_2 += 1
                 return "DONE"
 
-            self.kutana.executor.register(prc1)
-            self.kutana.executor.register(prc2, priority=1000)  # very high
+            self.app.register(prc1)
+            self.app.register(prc2, priority=1000)  # very high
 
         self.assertEqual(self.called_1, 0)
         self.assertEqual(self.called_2, 1)
@@ -73,7 +73,7 @@ class TestExecutors(KutanaTest):
 
                 raise Exception
 
-            self.kutana.executor.register(new_update)
+            self.app.register(new_update)
 
             set_logger_level(logging.CRITICAL)
 
@@ -87,6 +87,6 @@ class TestExecutors(KutanaTest):
             async def new_update(update, env):
                 raise Exception
 
-            self.kutana.executor.register(new_update)
+            self.app.register(new_update)
 
             set_logger_level(logging.CRITICAL)

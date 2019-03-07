@@ -34,11 +34,11 @@ Example `run.py` (token for VKManager is loaded from the file
 ```py
 from kutana import *
 
-# Create engine
-kutana = Kutana()
+# Create application
+app = Kutana()
 
 # Add VKManager to engine
-kutana.add_manager(
+app.add_manager(
     VKManager(
         load_value(
             "vk_token",
@@ -48,12 +48,12 @@ kutana.add_manager(
 )
 
 # Load and register plugins
-kutana.executor.register_plugins(
+app.register_plugins(
     load_plugins("plugins/")
 )
 
-# Run engine
-kutana.run()
+# Run application
+app.run()
 ```
 
 Example `plugins/echo.py`

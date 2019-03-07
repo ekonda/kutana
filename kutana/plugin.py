@@ -1,6 +1,5 @@
 """Structures and classes for plugins."""
 
-import inspect
 import re
 from collections import namedtuple
 
@@ -175,9 +174,9 @@ class Plugin:
     def on_startup(self):
         """
         Return decorator for adding callbacks which will be triggered
-        at the startup of kutana. Decorated coroutine receives update and
-        plugin environment. Only last registered callback will be
-        used.
+        at the startup of kutana. Decorated coroutine receives
+        :class:`.Kutana` application as first argument.
+        Only last registered callback will be used.
 
         :rtype: decorator for adding callbacks
         """

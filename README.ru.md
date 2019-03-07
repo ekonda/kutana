@@ -32,14 +32,15 @@ python -m pip install kutana
 
 Пример `run.py` (Токен для VKManager будет загружен из файла
 "configuration.json" и плагины будут загружены из папки "plugins/")
+
 ```py
 from kutana import *
 
-# Создание движка
-kutana = Kutana()
+# Создание приложения
+app = Kutana()
 
 # Добавление VKManager в движок
-kutana.add_manager(
+app.add_manager(
     VKManager(
         load_value(
             "vk_token",
@@ -49,12 +50,12 @@ kutana.add_manager(
 )
 
 # Загрузить и зарегистрировать плагины
-kutana.executor.register_plugins(
+app.register_plugins(
     load_plugins("plugins/")
 )
 
-# Запустить движок
-kutana.run()
+# Запустить приложение
+app.run()
 ```
 
 Пример `plugins/echo.py`

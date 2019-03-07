@@ -2,8 +2,8 @@ from kutana import Kutana, VKManager, load_plugins, load_value
 
 
 if __name__ == "__main__":
-    # Create engine
-    kutana = Kutana()
+    # Create application
+    app = Kutana()
 
     # Create VKManager
     manager = VKManager(
@@ -14,14 +14,14 @@ if __name__ == "__main__":
     )
 
     # Add manager to engine
-    kutana.add_manager(
+    app.add_manager(
         manager
     )
 
     # Load and register plugins
-    kutana.executor.register_plugins(
+    app.register_plugins(
         load_plugins("plugins/")
     )
 
-    # Run engine
-    kutana.run()
+    # Run application
+    app.run()

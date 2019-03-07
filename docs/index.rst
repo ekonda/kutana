@@ -74,11 +74,11 @@ plugin looks like that:
 .. code-block:: python
 
     @plugin.on_startswith_text("echo")
-    async def on_echo_callback(message, env, body):
-        await env.reply("{}".format(body))
+    async def on_echo_callback(message, env):
+        await env.reply("{}".format(env.body))
 
 
-Callback receives three arguments - :class:`.Message` and
+Callback receives two arguments - :class:`.Message` and
 :class:`.Environment`.
 
 Raw updates processing
@@ -109,20 +109,8 @@ of simple plugin:
     plugin = Plugin(name="Echo")
 
     @plugin.on_startswith_text("echo")
-    async def on_echo(message, env, body):
-        await env.reply("{}".format(body))
-
-Callback `on_echo` can have (or not have) keyword arguments `body`,
-`args`, `prefix`. Kutana will pass corresponding values to keywords. You
-should use :func:`functools.wraps` decorator to save signatures of your
-coroutines to allow kutana to find keyword arguments in decorated callbacks.
-This plugin can be registered in :class:`.Executor`.
-
-.. note::
-
-    Plugins use callback's signature to decide if it needs to pass some
-    arguments. It means that you have to use :func:`functools.wraps` to
-    properly wrap callback.
+    async def on_echo(message, env):
+        await env.reply("{}".format(env.body))
 
 Example of working engine with :class:`.VKManager`:
 

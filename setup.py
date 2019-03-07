@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-:copyright: (c) 2018 by Michael Krukov
+:copyright: (c) 2019 by Michael Krukov
 :license: MIT, see LICENSE for more details.
 """
 
-import os
 import sys
 
 import setuptools

@@ -22,8 +22,8 @@ class TestPlugins(KutanaTest):
 
         with self.debug_manager(queue) as plugin:
 
-            async def on_echo(message, env, body):
-                await env.reply(body)
+            async def on_echo(message, env):
+                await env.reply(env.body)
 
             plugin.on_startswith_text("echo ", "echo\n")(on_echo)
 
@@ -92,8 +92,8 @@ class TestPlugins(KutanaTest):
 
         with self.debug_manager(queue) as plugin:
 
-            async def on_startswith_text(message, env, args):
-                self.assertEqual(args, queue_answer.pop(0))
+            async def on_startswith_text(message, env):
+                self.assertEqual(env.args, queue_answer.pop(0))
 
             plugin.on_startswith_text("pr")(on_startswith_text)
 
@@ -104,18 +104,18 @@ class TestPlugins(KutanaTest):
 
         with self.debug_manager(["123", ".hi arg1 arg2"]) as plugin:
 
-            async def on_has_text(msg, env, found_text):
-                self.assertEqual(found_text, "12")
+            async def on_has_text(msg, env):
+                self.assertEqual(env.found_text, "12")
 
                 await env.reply("1")
 
             plugin.on_has_text("12")(on_has_text)
 
 
-            async def on_startswith_text(msg, env, args, body, prefix):
-                self.assertEqual(args, ["hi", "arg1", "arg2"])
-                self.assertEqual(body, "hi arg1 arg2")
-                self.assertEqual(prefix, ".")
+            async def on_startswith_text(msg, env):
+                self.assertEqual(env.args, ["hi", "arg1", "arg2"])
+                self.assertEqual(env.body, "hi arg1 arg2")
+                self.assertEqual(env.prefix, ".")
 
                 await env.reply("2")
 
@@ -356,8 +356,8 @@ class TestPlugins(KutanaTest):
             plugin.on_has_text("привет")(zero_trigger)
 
 
-            async def one_trigger(message, env, match):
-                self.assertTrue(match.group(0), "ab")
+            async def one_trigger(message, env):
+                self.assertTrue(env.match.group(0), "ab")
 
                 self.result |= 1 << 1
 

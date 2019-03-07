@@ -11,16 +11,12 @@
 [English](README.md) | Русский
 
 # Kutana
+
 Движок разработки ботов для соц. сетей, мессенджеров и других систем.
 
 Хорошая основа для создания бота с помощью kutana - [kubot](https://github.com/ekonda/kubot).
 
 ## Установка
-- Загрузить и установить Рython (3.5.3+)
-
-```
-https://www.python.org/downloads/
-```
 
 - Установить модуль `kutana` (используйте python3, если нужно)
 
@@ -29,6 +25,7 @@ python -m pip install kutana
 ```
 
 ## Использование
+
 - Создать основной объект движка Kutana и добавить менеджеры.
 - Зарегистрировать плагины в "исполнителе" и импортировать плагины с помощью функциии `load_plugins`. Файлы c плагинами должны быть python модулями с доступным `plugin` полем, в котором должен находиться экземпляр класса `Plugin`.
 - Запустить движок.
@@ -60,27 +57,29 @@ kutana.executor.register_plugins(
 kutana.run()
 ```
 
-
 Пример `plugins/echo.py`
+
 ```py
 from kutana import Plugin
 
 plugin = Plugin(name="Echo")
 
 @plugin.on_startswith_text("echo")
-async def on_echo(message, env, body):
-    await env.reply("{}".format(body))
+async def on_echo(message, env):
+    await env.reply("{}".format(env,body))
 ```
 
 ## Доступные менеджеры
+
 - VKManager (для vk.com группы)
 - TGManager (для telegram.org)
-    - Тип `document` назван `doc` внутри движка.
-    - `TGAttachmentTemp` используется для хранения вложений до отправки с
-    помощью `send_message` или `reply`. Вложения не могут быть загружены иначе.
-    - Если вам нужно скачать файл (вложение) из телеграмма, вы должны
-    использовать `TGEnvironment.get_file_from_attachment`.
+  - Тип `document` назван `doc` внутри движка.
+  - `TGAttachmentTemp` используется для хранения вложений до отправки с
+  помощью `send_message` или `reply`. Вложения не могут быть загружены иначе.
+  - Если вам нужно скачать файл (вложение) из телеграмма, вы должны
+  использовать `TGEnvironment.get_file_from_attachment`.
 
 ## Авторы
+
 - **Michael Krukov** - [@michaelkrukov](https://github.com/michaelkrukov)
 - [Другие участники](CONTRIBUTORS.md)

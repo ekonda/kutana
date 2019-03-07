@@ -243,8 +243,9 @@ class Plugin:
         Return decorator for adding callback which is triggered
         when the message contains any of the specified texts.
 
-        Keyword argument "found_text" can be passed to callback with the text
-        found in message.
+        Environment's additional fields:
+
+        - `found_text` - text found in message.
 
         :param texts: texts to search in messages' texts
         :param priority: priority of callbacks **inside** of this plugin
@@ -254,8 +255,6 @@ class Plugin:
         check_texts = tuple(text.strip().lower() for text in texts) or ("",)
 
         def decorator(coro):
-            signature = inspect.signature(coro)
-
             async def wrapper(msg, env):
                 check_text = msg.text.strip().lower()
 
@@ -266,13 +265,12 @@ class Plugin:
                     if text not in check_text:
                         continue
 
-                    kwargs = {}
+                    env.found_text = text
 
-                    if "found_text" in signature.parameters:
-                        kwargs["found_text"] = text
-
-                    if is_done(await coro(msg, env, **kwargs)):
+                    if is_done(await coro(msg, env)):
                         return "DONE"
+
+                    break
 
             self.register(wrapper, priority=priority)
 
@@ -285,9 +283,11 @@ class Plugin:
         Return decorator for adding callbacks which is triggered
         when the message starts with any of the specified texts.
 
-        Keyword arguments "body" (text after prefix), "args" (text after
-        prefix splitted by spaces) and "prefix" (text before body) can
-        be passed to callback.
+        Environment's additional fields:
+
+        - `body` - text after prefix.
+        - `args` - text after prefix splitted by spaces.
+        - `prefix` - text before body.
 
         :param texts: texts to search in messages' texts begginngs
         :param priority: priority of callbacks **inside** of this plugin
@@ -297,8 +297,6 @@ class Plugin:
         check_texts = tuple(text.lstrip().lower() for text in texts)
 
         def decorator(coro):
-            signature = inspect.signature(coro)
-
             def search_prefix(message):
                 for text in check_texts:
                     if message.startswith(text):
@@ -312,22 +310,11 @@ class Plugin:
                 if search_result is None:
                     return
 
-                kwargs = {}
+                env.body = msg.text[len(search_result):].strip()
+                env.args = env.body.split()
+                env.prefix = msg.text[:len(search_result)].strip()
 
-                if "body" in signature.parameters:
-                    kwargs["body"] = msg.text[len(search_result):].strip()
-
-                if "args" in signature.parameters:
-                    if "body" in kwargs:
-                        kwargs["args"] = kwargs["body"].split()
-
-                    else:
-                        kwargs["args"] = msg.text[len(search_result):].split()
-
-                if "prefix" in signature.parameters:
-                    kwargs["prefix"] = msg.text[:len(search_result)].strip()
-
-                if is_done(await coro(msg, env, **kwargs)):
+                if is_done(await coro(msg, env)):
                     return "DONE"
 
             self.register(wrapper, priority=priority)
@@ -341,8 +328,9 @@ class Plugin:
         Returns decorator for adding callback which is triggered
         when the message matches the specified regular expression.
 
-        Keyword argument "match" can be passed to callback with
-        :class:`re.Match` object for message.
+        Environment's additional fields:
+
+        - `match` - :class:`re.Match` object for message.
 
         :param regexp: regular expression to match messages' texts with
         :param flags: flags for :func:`re.compile`
@@ -357,20 +345,15 @@ class Plugin:
             compiled = regexp
 
         def decorator(coro):
-            signature = inspect.signature(coro)
-
             async def wrapper(message, env):
                 match = compiled.match(message.text)
 
                 if not match:
                     return
 
-                kwargs = {}
+                env.match = match
 
-                if "match" in signature.parameters:
-                    kwargs["match"] = match
-
-                if is_done(await coro(message, env, **kwargs)):
+                if is_done(await coro(message, env)):
                     return "DONE"
 
             self.register(wrapper, priority=priority)

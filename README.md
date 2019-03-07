@@ -18,14 +18,6 @@ Nice foundation for bot using kutana engine - [kubot](https://github.com/ekonda/
 
 ## Installation
 
-- Download and install python (3.5.3+)
-
-```url
-https://www.python.org/downloads/
-```
-
-- Install `kutana` module (use python3 if needed)
-
 ```bash
 python -m pip install kutana
 ```
@@ -72,8 +64,8 @@ from kutana import Plugin
 plugin = Plugin(name="Echo")
 
 @plugin.on_startswith_text("echo")
-async def on_echo(message, env, body):
-    await env.reply("{}".format(body))
+async def on_echo(message, env):
+    await env.reply("{}".format(env.body))
 ```
 
 ## Available managers

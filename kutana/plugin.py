@@ -246,7 +246,8 @@ class Plugin:
 
         - `found_text` - text found in message.
 
-        :param texts: texts to search in messages' texts
+        :param texts: texts to search in messages' texts or nothing if you
+            want callback to be called on any text
         :param priority: priority of callbacks **inside** of this plugin
         :returns: decorator for adding callback
         """
@@ -270,6 +271,26 @@ class Plugin:
                         return "DONE"
 
                     break
+
+            self.register(wrapper, priority=priority)
+
+            return coro
+
+        return decorator
+
+    def on_message(self, priority=0):
+        """
+        Return decorator for adding callback which is triggered
+        when the message exists.
+
+        :param priority: priority of callbacks **inside** of this plugin
+        :returns: decorator for adding callback
+        """
+
+        def decorator(coro):
+            async def wrapper(msg, env):
+                if is_done(await coro(msg, env)):
+                    return "DONE"
 
             self.register(wrapper, priority=priority)
 

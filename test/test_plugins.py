@@ -99,7 +99,7 @@ class TestPlugins(KutanaTest):
 
         self.assertFalse(queue_answer)
 
-    def test_kwords_arguments(self):
+    def test_environments(self):
         self.target = ["1", "2"]
 
         with self.debug_manager(["123", ".hi arg1 arg2"]) as plugin:
@@ -337,6 +337,25 @@ class TestPlugins(KutanaTest):
         )
 
         self.assertNotEqual(res, "DONE")
+
+    def test_on_message(self):
+        plugin = Plugin()
+
+        async def on_message(message, env):
+            return "DONE"
+
+        plugin.on_message()(on_message)
+
+        wrapper = plugin._callbacks[0][1]
+
+        res = asyncio.get_event_loop().run_until_complete(
+            wrapper(
+                Message("", ("attachment"), 0, 0, 0, {}),
+                DebugEnvironment(None, 0)
+            )
+        )
+
+        self.assertEqual(res, "DONE")
 
     def test_plugin_onstar(self):
         queue = ["привет", "отлично привет", "ecHo", "ab", "ae", "hello"]

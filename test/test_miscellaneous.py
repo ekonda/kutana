@@ -54,10 +54,10 @@ class TestMiscellaneous(unittest.TestCase):
 
         plugin.on_after_processed()(on_processed)
 
-        async def on_text(message, env):
+        async def on_has_text(message, env):
             raise Exception
 
-        plugin.on_has_text()(on_text)
+        plugin.on_has_text()(on_has_text)
 
         app = Kutana()
 

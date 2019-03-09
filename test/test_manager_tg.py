@@ -44,7 +44,7 @@ class TestManagerVk(unittest.TestCase):
 
         self.assertEqual(env.peer_id, None)
 
-    def test_tg_upload_methods(self):
+    def test_tg_upload_photo(self):
         mngr = TGManager("token")
 
         env = self.loop.run_until_complete(
@@ -58,6 +58,13 @@ class TestManagerVk(unittest.TestCase):
         self.assertEqual(photo_a.type, "photo")
         self.assertEqual(photo_a.content, "photo")
         self.assertEqual(photo_a.kwargs, {})
+
+    def test_tg_upload_doc(self):
+        mngr = TGManager("token")
+
+        env = self.loop.run_until_complete(
+            mngr.get_environment({"message": {"chat": {"id": 1}}})
+        )
 
         document_a = self.loop.run_until_complete(
             env.upload_doc("document")

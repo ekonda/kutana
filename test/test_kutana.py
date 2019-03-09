@@ -2,17 +2,14 @@ import logging
 
 from kutana import set_logger_level
 
-from test_framework import KutanaTest
+from testing_tools import KutanaTest
 
 
 logging.disable(logging.INFO)
 
 
 class TestKutana(KutanaTest):
-    def tearDown(self):
-        set_logger_level(logging.ERROR)
-
-    def test_just_debug(self):
+    def test_debug(self):
         self.target = ["message"]
 
         with self.debug_manager(self.target):
@@ -44,14 +41,12 @@ class TestKutana(KutanaTest):
                 self.called_1 += 1
                 return "DONE"
 
-            prc1.priority = 0  # very low
-
             async def prc2(update, env):
                 self.called_2 += 1
                 return "DONE"
 
             self.app.register(prc1)
-            self.app.register(prc2, priority=1000)  # very high
+            self.app.register(prc2, priority=10)
 
         self.assertEqual(self.called_1, 0)
         self.assertEqual(self.called_2, 1)
@@ -69,13 +64,15 @@ class TestKutana(KutanaTest):
                     self.called += 1
                     raise Exception
 
-                env._istorage["cbs_a_p"] = [just_raise]
+                env.register_after_processed(just_raise)
 
                 raise Exception
 
             self.app.register(new_update)
 
             set_logger_level(logging.CRITICAL)
+
+        set_logger_level(logging.ERROR)
 
         self.assertEqual(self.called, 1)
 
@@ -90,3 +87,5 @@ class TestKutana(KutanaTest):
             self.app.register(new_update)
 
             set_logger_level(logging.CRITICAL)
+
+        set_logger_level(logging.ERROR)

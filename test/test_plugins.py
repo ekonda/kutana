@@ -3,7 +3,7 @@ import re
 
 from kutana import Attachment, DebugEnvironment, Message, Plugin
 
-from test_framework import KutanaTest
+from testing_tools import KutanaTest
 
 
 class TestPlugins(KutanaTest):

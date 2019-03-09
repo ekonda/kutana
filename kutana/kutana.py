@@ -56,7 +56,7 @@ class Kutana:
 
         sort_callbacks(self._dispose_callbacks)
 
-    def register(self, *callbacks, priority=400):
+    def register(self, *callbacks, priority=0):
         """
         Register callbacks for processing updates with specified priority.
 

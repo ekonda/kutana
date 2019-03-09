@@ -1,4 +1,4 @@
-from test_framework import KutanaTest
+from testing_tools import KutanaTest
 
 
 class TestManagerDebug(KutanaTest):
@@ -8,12 +8,20 @@ class TestManagerDebug(KutanaTest):
         with self.debug_manager(["echo message"]) as plugin:
 
             async def on_echo(message, env):
-                self.assertIsNone(await env.request("users.get"))
                 await env.reply(env.body)
 
             plugin.on_startswith_text("echo")(on_echo)
 
         self.assertEqual(self.manager.replies_all, {1: ["message"]})
+
+    def test_request(self):
+        with self.debug_manager(["echo message"]) as plugin:
+
+            async def on_echo(message, env):
+                self.assertEqual(await env.request("method"), None)
+
+            plugin.on_startswith_text("echo")(on_echo)
+
 
     def test_upload_photo(self):
         with self.debug_manager(["132"]) as plugin:
@@ -41,10 +49,10 @@ class TestManagerDebug(KutanaTest):
         self.target = ["message1"]
 
         with self.debug_manager([
-                (1, "echo message1"),
-                (2, "echo message2"),
-                (2, "echo message3"),
-                (3, "echo message4")
+            (1, "echo message1"),
+            (2, "echo message2"),
+            (2, "echo message3"),
+            (3, "echo message4")
         ]) as plugin:
 
             async def on_echo(message, env):

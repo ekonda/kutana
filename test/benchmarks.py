@@ -9,7 +9,7 @@ if __name__ == '__main__':
 import time
 import unittest
 
-from test_framework import KutanaTest
+from testing_tools import KutanaTest
 
 
 class TestTiming(KutanaTest):

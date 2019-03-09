@@ -1,6 +1,6 @@
 from kutana import Plugin
 
-from test_framework import KutanaTest
+from testing_tools import KutanaTest
 
 
 class TestPlugins(KutanaTest):

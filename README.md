@@ -31,8 +31,10 @@ python -m pip install kutana
     with list of instances of `Plugin` class.
 - Start application.
 
-Example `run.py` (token for VKManager is loaded from the file
-"configuration.json" and plugins are loaded from folder "plugins/")
+## Example `run.py`
+
+> Token for VKManager is loaded from the file "configuration.json"
+> and plugins are loaded from folder "plugins/"
 
 ```py
 from kutana import *
@@ -45,20 +47,16 @@ with open("configuration.json") as fh:
 app = Kutana()
 
 # Create and add VKManager to application
-app.add_manager(
-    VKManager(config["vk_token"])
-)
+app.add_manager(VKManager(config["vk_token"]))
 
 # Load and register plugins
-app.register_plugins(
-    load_plugins("plugins/")
-)
+app.register_plugins(load_plugins("plugins/"))
 
 # Run application
 app.run()
 ```
 
-Example plugin `plugins/echo.py`
+## Example plugin (`plugins/echo.py`)
 
 ```py
 from kutana import Plugin

@@ -33,8 +33,10 @@ python -m pip install kutana
     класса `Plugin` или поле `plugins` со список из экземпляров `Plugin`.
 - Запустить приложение.
 
-Пример `run.py` (Токен для VKManager будет загружен из файла
-"configuration.json", а плагины будут загружены из папки "plugins/")
+## Пример `run.py`
+
+> Токен для VKManager будет загружен из файла "configuration.json",
+> а плагины будут загружены из папки "plugins/"
 
 ```py
 from kutana import *
@@ -47,20 +49,16 @@ with open("configuration.json") as fh:
 app = Kutana()
 
 # Добавление VKManager в приложение
-app.add_manager(
-    VKManager(config["vk_token"])
-)
+app.add_manager(VKManager(config["vk_token"]))
 
 # Загрузить и зарегистрировать плагины
-app.register_plugins(
-    load_plugins("plugins/")
-)
+app.register_plugins(load_plugins("plugins/"))
 
 # Запустить приложение
 app.run()
 ```
 
-Пример плагина `plugins/echo.py`
+## Пример плагина (`plugins/echo.py`)
 
 ```py
 from kutana import Plugin

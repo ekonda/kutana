@@ -7,8 +7,8 @@ python:
   - "3.8-dev"
 cache:
   directories:
-    - $PIP_CACHE_DIR
-    - $PIPENV_CACHE_DIR
+    - "$PIP_CACHE_DIR"
+    - "$PIPENV_CACHE_DIR"
 install:
   - python -m pip install -r requirements.txt
   - python -m pip install --upgrade coveralls coverage
@@ -18,12 +18,13 @@ after_success:
   - coveralls
 deploy:
   provider: pypi
-  user: michaelkrukov
+  user: "michaelkrukov"
   password:
-    secure: y7hkEIXb0W1iz5AWUX70yN89PwdYmFlFOSP6MUqElUXMO1QoXK+OLBeupnBwkjwn7ffPlekdVmnopT9xLp2Gr4z32GOsfhbbuP/5Uq/ZZ2Pydb2FLlMgD7tZ0mcVysma04eD2ApmM+njcCJaplVyHAPdImO1BuD0mbVAoNL8WoQKFtE/2W/tCaFVADFbeBAyOAdEHZiOKTxU1Plv5P+nK6wxacCfIz0x4BWlprMkD714S73Mz+sWy9t2Ma8sgqukAA4zcEaWRGgCBeNXuw7LA9vlHvl3qdH7DuuzYAyecUa5Tugp7WVew1ycRU4T1cd8KgXDO7vmVl4IbfBvI0BAicecOqDGEossBIQg6XK8oUzTrdtgiqGvtHxYVkFPiJ2PxtBNZU755jHCxvQaTJQjYdJl5H7dFDrWIKC16h8qNKXzpuTgnM7oRo51smX0s05JXpu1VIQI80G2IMmuHo+ia4lfQuyhxbTWiHKfD07epdmRjRFRHSAGzB4ESrpa2EoR79PtOlwFQvJhLsZ50cSmIydcDnaQv23tGT/9Cl19DAuJrhaPlu3s2G8NTUSas2O16z/0Rw5flGbe6chO9xqk7SrZsaCBgDI/TyOwr7/MD8la7anDDVtW89qzPjFKc7oGfxYs7Y/yshf7pfhHQK0aGbSVELjQe5wR/y/e6/yEi+o=
+    secure: SmWmi3Y/EIxMTpQhMSDoamIq5cmh6RN21bzeRJz3W+GE/3Sbrwv9Q/DKGeihOBmZIelvbOMZ01V7/pbZqdAmtOzM3dQD/29zVDeyYq+RoefYaDziw+tyMMwRSsg+FfKEwlpnOa8WVU8SvNoP5D099WWFywFBk/xQ6chYGdsUEy0RHLrTfMxcii9Ae+isdyqkL0JDKziG2Pad0dRkMg3E10tTvCl7UTQDSzvRwH+9OVCgMT/U72AL9GQ1KEzoNFk7jCgC/1vp15mpQEsKkq5pCag4iWMVPw5kbZb1hSxrVh+uXGPAphuXAMvnetbmxDopaE2AVzV9cwjXc850Ch+rHCQFobkCKQR4/iTEqVwYYXKfUr9gNoy3VcfNfJuKqaifT9Gz62jMFMoui4SIb0yWEf/RImROAGpu+3/ghYUzWVSGj/URZeqL/PwICHrdNnRZCaW6FV55m2Vo4qhHP3DKgEQ2A6AyU8SEQrPAV1/xS4RE7PdMkJT3PK/uZL0W7mMq8tkLh6yjsHm4h7qudwRwAYnTPF34glfItuFa+L/5rpW3JnDxllprr5GtXVe6tyfthaZYdNJc9nqK7aYqln5S2etcJPkABWL7pmEpSuaV9Jv0fqonXquTTXOYN06QhP794bhy5ihYx5WHEzBOCvvnrp8X1xbiBDAcJvZET5AAQCg=
+  skip_existing: true
   on:
     tags: true
-    branch: stable
+    branch: master
 env:
   global:
     - PIP_CACHE_DIR=$HOME/.cache/pip

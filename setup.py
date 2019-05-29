@@ -9,7 +9,7 @@ import sys
 import setuptools
 
 
-VERSION = "3.1.0"
+VERSION = "3.1.1"
 
 
 with open("README.md", "r") as fh:
@@ -22,7 +22,7 @@ setuptools.setup(
     author="Michael Krukov",
     author_email="krukov.michael@ya.ru",
     keywords=["library", "social-networks", "messengers", "bots", "asyncio"],
-    description="The library for developing systems for messangers and social networks",
+    description="The library for developing systems for messengers and social networks",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/ekonda/kutana",

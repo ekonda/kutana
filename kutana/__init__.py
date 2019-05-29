@@ -1,5 +1,5 @@
 """
-Kutana - library for developing systems for messangers and social networks.
+Kutana - library for developing systems for messengers and social networks.
 """
 
 from .environment import Environment

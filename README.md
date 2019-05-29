@@ -12,7 +12,7 @@
 
 English | [Русский](README.ru.md)
 
-The library for developing systems for messangers and social networks. Great
+The library for developing systems for messengers and social networks. Great
 for developing bots. Refer to [example](https://github.com/ekonda/kutana/tree/master/example)
 for the showcase of the library abilities.
 

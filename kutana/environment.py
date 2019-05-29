@@ -177,13 +177,14 @@ class Environment:
             message, self.peer_id, attachment, **kwargs
         )
 
-    async def upload_doc(self, file, **kwargs):
+    async def upload_doc(self, file, filename, **kwargs):
         """
-        Upload of prepare file to be sent with :func:`.send_message`
+        Upload or prepare file to be sent with :func:`.send_message`
         (or :func:`.reply`) as document. This can vary in managers'
         implementations.
 
         :param file: document as file or bytes
+        :param filename: name of provided file
         :param kwargs: arguments for manager's method
         :returns: :class:`.Attachment` or None
         """

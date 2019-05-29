@@ -2,6 +2,12 @@
 
 > Changes to public API is marked as `^`
 
+- v3.1.0
+  - ^ `.upload_doc()` now requires filename.
+  - Added examples to `example/plugins`.
+  - Updated CI configurations.
+  - Rebranded engine to library.
+
 - v3.0.0
   - ^ All errors callbacks removed. Now Environment's method "after_process"
     is used. Now when error is happened, bot will **not** write anything to

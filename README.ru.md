@@ -12,15 +12,18 @@
 
 # Kutana
 
-Движок разработки ботов для соц. сетей, мессенджеров и других систем.
+Библиотека для разработки систем для мессенджеров и социальных сетей. Хорошо
+подходит для разработки ботов. Демонстрацию возможностей библиотеки вы
+можете найти в папке [example](https://github.com/ekonda/kutana/tree/master/example).
 
-Хорошая основа для создания бота с помощью kutana - [kubot](https://github.com/ekonda/kubot).
+> Хорошая основа для создания бота с помощью kutana -
+> [kubot](https://github.com/ekonda/kubot).
 
 ## Установка
 
 - Установить модуль `kutana` (используйте python3, если нужно)
 
-```
+```bash
 python -m pip install kutana
 ```
 
@@ -66,19 +69,24 @@ from kutana import Plugin
 plugin = Plugin(name="Echo")
 
 @plugin.on_startswith_text("echo")
-async def on_echo(message, env):
+async def _(message, env):
     await env.reply("{}".format(env,body))
 ```
 
+> Если ваша функция существует только для декаратора, вы можете
+> использовать `_`, чтобы избежать ненужных имён
+
 ## Доступные менеджеры
 
-- VKManager (для vk.com группы)
-- TGManager (для telegram.org)
-  - Тип `document` назван `doc` внутри движка.
+- VKManager (для [vk.com](https://vk.com) групп)
+- TGManager (для [telegram.org](https://telegram.org) ботов)
+  - Тип `document` назван `doc` внутри библиотека.
+
   - `TGAttachmentTemp` используется для хранения вложений до отправки с
-  помощью `send_message` или `reply`. Вложения не могут быть загружены иначе.
+    помощью `send_message` или `reply`. Вложения не могут быть загружены иначе.
+
   - Если вам нужно скачать файл (вложение) из телеграмма, вы должны
-  использовать `TGEnvironment.get_file_from_attachment`.
+    использовать `TGEnvironment.get_file_from_attachment`.
 
 ## Авторы
 

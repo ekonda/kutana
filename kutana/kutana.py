@@ -1,4 +1,4 @@
-"""Core class for engine."""
+"""Module with core class for using the library."""
 
 import asyncio
 
@@ -10,7 +10,7 @@ from .utils import sort_callbacks
 class Kutana:
 
     """
-    Main class for constructing application.
+    Main class for constructing and using application.
 
     :param loop: loop for working
     """

@@ -588,7 +588,7 @@ class TestManagerVk(unittest.TestCase):
         env.replace_method("_upload_file_to_vk", _upload_file_to_vk)
 
         attachment = self.loop.run_until_complete(
-            env.upload_doc(b"file")
+            env.upload_doc(b"file", "filename")
         )
 
         self.assertEqual(attachment, "file")
@@ -618,7 +618,7 @@ class TestManagerVk(unittest.TestCase):
         env.replace_method("_upload_file_to_vk", _upload_file_to_vk)
 
         attachment = self.loop.run_until_complete(
-            env.upload_doc(b"file", peer_id=2)
+            env.upload_doc(b"file", "filename", peer_id=2)
         )
 
         self.assertEqual(attachment, "file")

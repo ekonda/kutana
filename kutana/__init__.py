@@ -1,4 +1,6 @@
-"""Kutana - engine for developing bots."""
+"""
+Kutana - library for developing systems for messangers and social networks.
+"""
 
 from .environment import Environment
 from .exceptions import ExitException

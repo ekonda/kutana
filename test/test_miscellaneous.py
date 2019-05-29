@@ -48,16 +48,14 @@ class TestMiscellaneous(unittest.TestCase):
     def test_plugin_with_exception_callback(self):
         plugin = Plugin(exceptions=0)
 
-        async def on_processed(message, env):
+        @plugin.on_after_processed()
+        async def _(message, env):
             if env.exception:
                 plugin.exceptions += 1
 
-        plugin.on_after_processed()(on_processed)
-
-        async def on_has_text(message, env):
+        @plugin.on_has_text()
+        async def _(message, env):
             raise Exception
-
-        plugin.on_has_text()(on_has_text)
 
         app = Kutana()
 

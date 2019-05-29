@@ -7,8 +7,10 @@ plugin = Plugin(name="Prefix", priority=5)  # default priority is 0
 PREFIXES = (".", "/")
 
 
+# This plugin strips prefix and passes "GOON" to let other plugins
+# process this event.
 @plugin.on_has_text()
-async def on_has_text(message, env):
+async def _(message, env):
     for prefix in PREFIXES:
         if message.text[:len(prefix)] == prefix:
             break

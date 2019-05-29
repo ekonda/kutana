@@ -1,26 +1,30 @@
+dist: xenial
 language: python
 python:
+  - "3.7"
   - "3.6"
-  - "3.5"
   - "3.7-dev"
+  - "3.8-dev"
+cache:
+  directories:
+    - $PIP_CACHE_DIR
+    - $PIPENV_CACHE_DIR
 install:
-  - python3 -m pip install -r requirements.txt
+  - python -m pip install -r requirements.txt
+  - python -m pip install --upgrade coveralls coverage
 script:
-  - python3 -m unittest discover -s test
-jobs:
-  include:
-    - stage: deploy
-      script:
-        - coverage run --source kutana -m unittest discover -s test
-        - coveralls
-      install:
-        - python3 -m pip install -r requirements.txt
-        - python3 -m pip install --upgrade setuptools twine wheel coveralls coverage
-      deploy: &pypi
-        provider: pypi
-        user: "michaelkrukov"
-        password: $PYPI_PASSWORD
-        distributions: "sdist bdist_wheel"
-        on:
-          tags: true
-          branch: stable
+  - coverage run --source kutana -m unittest discover -s test/
+after_success:
+  - coveralls
+deploy:
+  provider: pypi
+  user: michaelkrukov
+  password:
+    secure: y7hkEIXb0W1iz5AWUX70yN89PwdYmFlFOSP6MUqElUXMO1QoXK+OLBeupnBwkjwn7ffPlekdVmnopT9xLp2Gr4z32GOsfhbbuP/5Uq/ZZ2Pydb2FLlMgD7tZ0mcVysma04eD2ApmM+njcCJaplVyHAPdImO1BuD0mbVAoNL8WoQKFtE/2W/tCaFVADFbeBAyOAdEHZiOKTxU1Plv5P+nK6wxacCfIz0x4BWlprMkD714S73Mz+sWy9t2Ma8sgqukAA4zcEaWRGgCBeNXuw7LA9vlHvl3qdH7DuuzYAyecUa5Tugp7WVew1ycRU4T1cd8KgXDO7vmVl4IbfBvI0BAicecOqDGEossBIQg6XK8oUzTrdtgiqGvtHxYVkFPiJ2PxtBNZU755jHCxvQaTJQjYdJl5H7dFDrWIKC16h8qNKXzpuTgnM7oRo51smX0s05JXpu1VIQI80G2IMmuHo+ia4lfQuyhxbTWiHKfD07epdmRjRFRHSAGzB4ESrpa2EoR79PtOlwFQvJhLsZ50cSmIydcDnaQv23tGT/9Cl19DAuJrhaPlu3s2G8NTUSas2O16z/0Rw5flGbe6chO9xqk7SrZsaCBgDI/TyOwr7/MD8la7anDDVtW89qzPjFKc7oGfxYs7Y/yshf7pfhHQK0aGbSVELjQe5wR/y/e6/yEi+o=
+  on:
+    tags: true
+    branch: stable
+env:
+  global:
+    - PIP_CACHE_DIR=$HOME/.cache/pip
+    - PIPENV_CACHE_DIR=$HOME/.cache/pipenv

@@ -12,9 +12,12 @@
 
 English | [Русский](README.ru.md)
 
-The engine for developing bots for social networks, instant messengers and other systems.
+The library for developing systems for messangers and social networks. Great
+for developing bots. Refer to [example](https://github.com/ekonda/kutana/tree/master/example)
+for the showcase of the library abilities.
 
-Nice foundation for bot using kutana engine - [kubot](https://github.com/ekonda/kubot).
+> Nice foundation for bot using kutana library -
+> [kubot](https://github.com/ekonda/kubot).
 
 ## Installation
 
@@ -64,19 +67,24 @@ from kutana import Plugin
 plugin = Plugin(name="Echo")
 
 @plugin.on_startswith_text("echo")
-async def on_echo(message, env):
+async def _(message, env):
     await env.reply("{}".format(env.body))
 ```
 
+> If your function exists only to be decorated, you can use `_` to avoid
+> unnecessary names
+
 ## Available managers
 
-- VKManager (for vk.com groups)
-- TGManager (for telegram.org)
+- VKManager (for [vk.com](https://vk.com) groups)
+- TGManager (for [telegram.org](https://telegram.org) bots)
   - `document`'s type is named `doc` inside of Kutana.
+
   - `TGAttachmentTemp` is used for storing attachments before sending them
-    with `send_message` or `reply`. Attachments can't be uploaded other way.
+    with `send_message` or `reply`. Attachments can't be uploaded other way
+
   - If you want to download file (attachment) from telegram, you have to use
-    `TGEnvironment.get_file_from_attachment`.
+    `TGEnvironment.get_file_from_attachment`
 
 ## Authors
 

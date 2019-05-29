@@ -35,7 +35,7 @@ class TestEnvironments(KutanaTest):
         def method_1(self, message):
             return 1
 
-        def method_2(self, file):
+        def method_2(self, file, filename):
             return 2
 
         def method_3(self, message):
@@ -45,24 +45,24 @@ class TestEnvironments(KutanaTest):
         env.replace_method("upload_doc", method_2)
 
         self.assertEqual(env.reply("_"), 1)
-        self.assertEqual(env.upload_doc(b"_"), 2)
+        self.assertEqual(env.upload_doc(b"_", "_"), 2)
 
         child_env = env.spawn()
 
         child_env.replace_method("reply", method_3)
 
         self.assertEqual(child_env.reply("_"), 3)
-        self.assertEqual(child_env.upload_doc(b"_"), 2)
+        self.assertEqual(child_env.upload_doc(b"_", "_"), 2)
 
         child_child_env = child_env.spawn()
 
         self.assertEqual(child_child_env.reply("_"), 3)
-        self.assertEqual(child_child_env.upload_doc(b"_"), 2)
+        self.assertEqual(child_child_env.upload_doc(b"_", "_"), 2)
 
         other_child_env = env.spawn()
 
         self.assertEqual(other_child_env.reply("_"), 1)
-        self.assertEqual(other_child_env.upload_doc(b"_"), 2)
+        self.assertEqual(other_child_env.upload_doc(b"_", "_"), 2)
 
     def test_failed_register_after_processed(self):
         env = Environment("manager")

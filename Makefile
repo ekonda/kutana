@@ -2,11 +2,10 @@
 
 python=python3
 
-all:
-	export PYTHONPATH=$(PWD); cd example; $(python) run.py
+all: test
 
-alt:
-	export PYTHONPATH=$(PWD); cd example; $(python) .run.py
+run:
+	export PYTHONPATH=$(PWD); cd example; $(python) run.py
 
 docs:
 	sphinx-apidoc --separate -o docs/src/ . $(PWD)/setup.py; cd docs; \

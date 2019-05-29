@@ -42,15 +42,15 @@ class VKEnvironment(Environment):
             message, self.peer_id, attachment, **kwargs
         )
 
-    async def upload_doc(self, file, **kwargs):
+    async def upload_doc(self, file, filename, **kwargs):
         """
         Upload file to be sent with :func:`.send_message`
         (or :func:`.reply`) as document. If you passed "peer_id", vkontakte's
         method "docs.getWallUploadServer" will be used.
 
         :param file: document as file or bytes
-        :param kwargs: arguments for vkontakte's methods and optional
-            "filename"
+        :param filename: name of provided file
+        :param kwargs: arguments for vkontakte's methods
         :returns: :class:`.Attachment` or None
         """
 
@@ -79,7 +79,7 @@ class VKEnvironment(Environment):
         upload_url = upload_data.response["upload_url"]
 
         data = aiohttp.FormData()
-        data.add_field("file", file, filename=kwargs.get("filename"))
+        data.add_field("file", file, filename=filename)
 
         upload_result = await self._upload_file_to_vk(upload_url, data)
 

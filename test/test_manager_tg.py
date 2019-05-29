@@ -67,7 +67,7 @@ class TestManagerVk(unittest.TestCase):
         )
 
         document_a = self.loop.run_until_complete(
-            env.upload_doc("document")
+            env.upload_doc("document", "filename")
         )
 
         self.assertEqual(document_a.type, "doc")

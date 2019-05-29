@@ -41,12 +41,13 @@ class TGEnvironment(Environment):
             message, self.peer_id, attachment, **kwargs
         )
 
-    async def upload_doc(self, file, **kwargs):
+    async def upload_doc(self, file, filename, **kwargs):
         """
         Pack file to be sent with :func:`.send_message`
         (or :func:`.reply`) as document.
 
         :param file: document as file or bytes
+        :param filename: name of provided file
         :param kwargs: arguments for telegram's "sendFile"
         :returns: :class:`.TGAttachmentTemp`
         """

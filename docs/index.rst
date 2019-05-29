@@ -25,36 +25,44 @@ other services. Kutana heavily uses asyncio and coroutines. It supports
 different backends (like vk.com, telegram.org etc.) through different
 managers.
 
+Refer to `example<https://github.com/ekonda/kutana/tree/master/example>`_ for
+the showcase of the engine abilities.
+
 Workflow
 --------
-Managers is responsible for receiving and sending data. While data is prepared
+Managers are responsible for receiving and sending data. While data is prepared
 (turned into :class:`.Message` for example) and sent (answer to user's
 message for example) by managers, actual :class:`.Message` or raw updates
-from services is processed callbacks. They be registered in :class:`.Kutana`.
+from services is processed callbacks. They registered in :class:`.Kutana`.
 These callbacks receive updates (:class:`.Message` or raw updates
 from services).
 
 Callbacks process updates one by one while callbacks return anything but
-`"DONE"`. If callback returns `"DONE"`, update is considered processed and is
-dropped.
+`"DONE"`. If callback returns `"DONE"`, the update is considered processed
+and is dropped.
 
-Callbacks has priorities. It's just a number, but to not get lost in
+Callbacks have priorities. It's just a number, but to not get lost in
 priorities it is highly recommended to use default priority - 0.
 
-Application can contain Plugins. Plugins contains logically grouped
-callbacks with arbitrary data like plugins's name, description etc.
-Plugins register their callbacks in executor, and executor register
-callbacks in kutana. Plugins' callbacks can return None
-(implicitly or explicitly) or `"DONE"` to mark update as processed.
+The application can contain Plugins. Plugins contain logically grouped
+callbacks with arbitrary data like plugin's name, description, etc.
+Plugins register their callbacks in the executor, and executor register
+callbacks in kutana. Plugins' callbacks can return None (implicitly or
+explicitly) or `"DONE"` to mark an update as processed.
 
-Priority of plugins' callbacks works only in that plugin. If your want to
-make plugin that does something before (or after) other plugins - you
+The priority of plugins' callbacks works only in that plugin. If you want to
+make a plugin that does something before (or after) other plugins - you
 should split your plugin into two parts: one with high priority, other
 with normal (0).
 
+`kutana.load_plugins` recursively check all python modules files from
+the specified directory. When it finds a global variable `plugin`, it will be
+added to the loaded plugins' list. When it finds a global variable `plugins`,
+every plugin inside of it will be added to the loaded plugins' list.
+
 Environments
 ------------
-Environments is objects with information and methods for interacting with
+Environments are objects with information and methods for interacting with
 data and user. It has methods for replying, performing requests to API,
 stores message that will be passed to next callback e.t.c.
 
@@ -62,7 +70,7 @@ You can replace existing methods in environment with
 :func:`kutana.environment.Environment.replace_method` and set your
 fields to environment with dot notation `env.foo = "bar"`.
 
-Every plugin works with copy of update's environment. That means, if you
+Every plugin works with a copy of the update's environment. That means if you
 want to pass anything to other plugins you need to use `env.parent.`
 instead of just `env.`.
 
@@ -71,8 +79,8 @@ Callbacks
 
 Message processing
 ~~~~~~~~~~~~~~~~~~
-Typical callback function (coroutine, actually) for message processing from
-plugin looks like that:
+The typical callback coroutine for message processing from the plugin
+looks like that:
 
 .. code-block:: python
 
@@ -81,12 +89,13 @@ plugin looks like that:
         await env.reply("{}".format(env.body))
 
 
-Callback receives two arguments - :class:`.Message` and
+THe callback receives two arguments - :class:`.Message` and
 :class:`.Environment`.
 
 Raw updates processing
 ~~~~~~~~~~~~~~~~~~~~~~
-Callback function for processing only raw update from service looks like that:
+The callback function for processing only raw update from service
+looks like that:
 
 .. code-block:: python
 
@@ -95,15 +104,15 @@ Callback function for processing only raw update from service looks like that:
         pass
 
 
-Callback receives two arguments - raw update's data as dict and
+The callback receives two arguments - raw update's data as dict and
 :class:`.Environment`. It's pretty straight forward and these callbacks
-is used when you need to add something special to workflow often
+are used when you need to add something special to workflow often
 connected with concrete service.
 
 Plugins
 -------
 See :class:`.Plugin` for list of available callback registrators. Example
-of simple plugin:
+of the simple plugin:
 
 .. code-block:: python
 

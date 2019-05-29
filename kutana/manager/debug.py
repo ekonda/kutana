@@ -12,7 +12,7 @@ class DebugEnvironment(Environment):
 
     """Environment for :class:`.DebugManager`."""
 
-    async def upload_doc(self, file, **kwargs):
+    async def upload_doc(self, file, filename, **kwargs):
         """Return first argument."""
 
         return file

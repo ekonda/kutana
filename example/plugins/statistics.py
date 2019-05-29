@@ -10,7 +10,7 @@ p1 = Plugin(name="_Statistics collector", priority=10)
 
 
 @p1.on_has_text()
-async def on_any_message(message, env):
+async def _(message, env):
     words_count = statistics.get(message.from_id, 0)
 
     new_words_count = words_count + len(message.text.split())
@@ -21,11 +21,11 @@ async def on_any_message(message, env):
 
 
 # Sub-plugin to show statistics
-p2 = Plugin(name="Statistics")
+p2 = Plugin(name="Statistics", description="Show word count in current dialog")
 
 
 @p2.on_text("statistics")
-async def on_show_statistics(message, env):
+async def _(message, env):
     await env.reply(
         "You wrote: {} words.".format(statistics.get(message.from_id, 0))
     )

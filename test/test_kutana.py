@@ -25,7 +25,7 @@ class TestKutana(KutanaTest):
         with self.debug_manager(self.target):
 
             async def new_update(update, env):
-                attachment = await env.upload_doc("file")
+                attachment = await env.upload_doc("file", filename="file")
 
                 await env.reply("", attachment=attachment)
 

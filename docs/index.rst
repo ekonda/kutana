@@ -25,7 +25,8 @@ other services. Kutana heavily uses asyncio and coroutines. It supports
 different backends (like vk.com, telegram.org etc.) through different
 managers.
 
-Refer to `example<https://github.com/ekonda/kutana/tree/master/example>`_ for
+Refer to `example
+<https://github.com/ekonda/kutana/tree/master/example/>`_ for
 the showcase of the engine abilities.
 
 Workflow

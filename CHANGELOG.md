@@ -2,6 +2,12 @@
 
 > Changes to public API is marked as `^`
 
+- v3.2.0
+  - ^ Method `upload_doc` for Vkontakte now accepts `type` as
+    well as `doctype` keywords.
+  - Now graffiti uploads correctly.
+  - Updated example "document" and renamed it to "documents".
+
 - v3.1.0
   - ^ `.upload_doc()` now requires filename.
   - Added examples to `example/plugins`.

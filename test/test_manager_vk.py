@@ -596,7 +596,7 @@ class TestManagerVk(unittest.TestCase):
         self.assertEqual(len(actions), 3)
 
         self.assertEqual(
-            actions[0], ('docs.getWallUploadServer', {'group_id': 10})
+            actions[0], ('docs.getWallUploadServer', {'group_id': 10, 'type': 'doc'})
         )
 
         self.assertEqual(

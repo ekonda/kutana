@@ -48,6 +48,10 @@ class VKEnvironment(Environment):
         (or :func:`.reply`) as document. If you passed "peer_id", vkontakte's
         method "docs.getWallUploadServer" will be used.
 
+        You can specify document's type with keyword argument "type" or
+        "doctype". If you passed "graffiti" as type - method
+        "docs.getWallUploadServer" will be used. Default type is "doc".
+
         :param file: document as file or bytes
         :param filename: name of provided file
         :param kwargs: arguments for vkontakte's methods
@@ -60,17 +64,20 @@ class VKEnvironment(Environment):
         else:
             peer_id = kwargs["peer_id"]
 
-        if peer_id:
+        doctype = kwargs.get("type", "") or kwargs.get("doctype", "doc")
+
+        if peer_id and doctype != "graffiti":
             upload_data = await self.manager.request(
                 "docs.getMessagesUploadServer",
                 peer_id=peer_id,
-                type=kwargs.get("doctype", "doc")
+                type=doctype,
             )
 
         else:
             upload_data = await self.manager.request(
                 "docs.getWallUploadServer",
-                group_id=kwargs.get("group_id") or self.manager.group_id
+                group_id=kwargs.get("group_id") or self.manager.group_id,
+                type=doctype,
             )
 
         if upload_data.error:

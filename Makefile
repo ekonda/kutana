@@ -19,7 +19,7 @@ test-fast:
 
 cov:
 	coverage run --source=kutana/ -m unittest discover -s test
-	coverage report --include=kutana/*
+	coverage report --include=kutana/* -m
 	coverage html
 
 lint:

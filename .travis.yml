@@ -5,10 +5,6 @@ python:
   - "3.6"
   - "3.7-dev"
   - "3.8-dev"
-cache:
-  directories:
-    - "$PIP_CACHE_DIR"
-    - "$PIPENV_CACHE_DIR"
 install:
   - python -m pip install -r requirements.txt
   - python -m pip install --upgrade coveralls coverage
@@ -25,7 +21,3 @@ deploy:
   on:
     tags: true
     branch: master
-env:
-  global:
-    - PIP_CACHE_DIR=$HOME/.cache/pip
-    - PIPENV_CACHE_DIR=$HOME/.cache/pipenv

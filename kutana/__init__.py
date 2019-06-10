@@ -14,11 +14,5 @@ from .manager.tg import TGEnvironment, TGManager, TGResponse
 from .manager.vk import VKEnvironment, VKManager, VKRequest, VKResponse
 from .plugin import Attachment, Message, Plugin
 
-try:
-    import uvloop
-    uvloop.install()
-except ImportError:  # pragma: no cover
-    pass
-
 
 NAME = "kutana"

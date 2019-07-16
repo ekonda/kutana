@@ -48,6 +48,9 @@ class VKManager(Manager):
     Controller requires group's token. You can specify settings for
     groups.setLongPollSettings with argument "longpoll_settings".
 
+    Parameter "longpoll_settings" should be map with settings - 0 means
+    off and 1 means on. By default *only* "message_new" is turned on.
+
     :param token: bot's token
     :param executes_per_second: how many "execute" requests per second bot
         can send

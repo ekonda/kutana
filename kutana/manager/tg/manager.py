@@ -196,13 +196,13 @@ class TGManager(Manager):
             new_attachment = []
 
             for a in attachment:
-                if isinstance(a, Attachment):
-                    attachment_type = "document" if a.type == "doc" else a.type
+                attach_type = "document" if a.type == "doc" else a.type
 
-                    new_attachment.append((attachment_type, str(a.id), {}))
+                if isinstance(a, Attachment):
+                    new_attachment.append((attach_type, str(a.id), {}))
 
                 elif isinstance(a, TGAttachmentTemp):
-                    new_attachment.append((a.type, a.content, a.kwargs))
+                    new_attachment.append((attach_type, a.content, a.kwargs))
 
             attachment = new_attachment
 

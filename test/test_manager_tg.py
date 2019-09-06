@@ -62,17 +62,33 @@ class TestManagerVk(unittest.TestCase):
     def test_tg_upload_doc(self):
         mngr = TGManager("token")
 
+        async def request(self, method, **kwargs):
+            return TGResponse(False, (), [method, kwargs])
+        mngr.request = types.MethodType(request, mngr)
+
         env = self.loop.run_until_complete(
             mngr.get_environment({"message": {"chat": {"id": 1}}})
         )
 
         document_a = self.loop.run_until_complete(
-            env.upload_doc("document", "filename")
+            env.upload_doc("document_content", "filename")
         )
 
         self.assertEqual(document_a.type, "doc")
-        self.assertEqual(document_a.content, "document")
+        self.assertEqual(document_a.content, "document_content")
         self.assertEqual(document_a.kwargs, {})
+
+        res = self.loop.run_until_complete(
+            mngr.send_message("hi", 1, document_a)
+        )
+
+        self.assertEqual(len(res), 2)
+        self.assertEqual(
+            res[0].response, ["sendMessage", {"chat_id": '1', "text": "hi"}]
+        )
+        self.assertEqual(
+            res[1].response, ["sendDocument", {"chat_id": '1', "document": "document_content"}]
+        )
 
     def test_tg_replay(self):
         mngr = TGManager("token")
@@ -165,7 +181,9 @@ class TestManagerVk(unittest.TestCase):
         mngr = TGManager("token")
 
         attachment1 = Attachment("photo", 13, None, None, None, None)
-        attachment2 = TGAttachmentTemp("bad_type", "strange_content", {})
+        attachment2 = Attachment("doc", 14, None, None, None, None)
+        attachment3 = Attachment("document", 15, None, None, None, None)
+        attachment4 = TGAttachmentTemp("bad_type", "strange_content", {})
 
         async def request(self, method, **kwargs):
             return TGResponse(
@@ -181,7 +199,7 @@ class TestManagerVk(unittest.TestCase):
         self.assertEqual(len(res0), 0)
 
         res1 = self.loop.run_until_complete(
-            mngr.send_message("hi", 1, [attachment1, attachment2])
+            mngr.send_message("hi", 1, [attachment1, attachment4])
         )
 
         self.assertEqual(len(res1), 2)
@@ -195,13 +213,23 @@ class TestManagerVk(unittest.TestCase):
         )
 
         res2 = self.loop.run_until_complete(
-            mngr.send_message("", 1, attachment1)
+            mngr.send_message("", 1, attachment2)
         )
 
         self.assertEqual(len(res2), 1)
 
         self.assertEqual(
-            res2[0].response, ["sendPhoto", {"chat_id": '1', "photo": "13"}]
+            res2[0].response, ["sendDocument", {"chat_id": '1', "document": "14"}]
+        )
+
+        res3 = self.loop.run_until_complete(
+            mngr.send_message("", 1, attachment3)
+        )
+
+        self.assertEqual(len(res3), 1)
+
+        self.assertEqual(
+            res3[0].response, ["sendDocument", {"chat_id": '1', "document": "15"}]
         )
 
         self.loop.run_until_complete(
@@ -228,7 +256,6 @@ class TestManagerVk(unittest.TestCase):
         attachment = TGManager.create_attachment(None, "video")
 
         self.assertEqual(attachment, None)
-
 
     def test_tg_create_message(self):
         mngr = TGManager("token")

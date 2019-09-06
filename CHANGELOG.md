@@ -2,6 +2,9 @@
 
 > Changes to public API is marked as `^`
 
+- v3.2.1
+  - Fixed issue with uploading documents to telegram
+
 - v3.2.0
   - ^ Method `upload_doc` for Vkontakte now accepts `type` as
     well as `doctype` keywords.

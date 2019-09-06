@@ -9,7 +9,7 @@ import sys
 import setuptools
 
 
-VERSION = "3.2.0"
+VERSION = "3.2.1"
 
 
 with open("README.md", "r") as fh:

@@ -10,7 +10,7 @@ from kutana import (Attachment, ExitException, Kutana, Plugin, TGManager,
 from kutana.manager.tg.environment import TGAttachmentTemp
 
 
-class TestManagerVk(unittest.TestCase):
+class TestManagerTg(unittest.TestCase):
     def setUp(self):
         self.loop = asyncio.get_event_loop()
         logging.disable(logging.INFO)

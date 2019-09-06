@@ -180,9 +180,7 @@ class TGManager(Manager):
         result = []
 
         if message:
-            message_parts = self.split_large_text(message)
-
-            for part in message_parts:
+            for part in self.split_large_text(message):
                 result.append(
                     await self.request(
                         "sendMessage", chat_id=peer_id_str, text=part, **kwargs

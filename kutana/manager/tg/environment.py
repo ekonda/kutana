@@ -46,6 +46,9 @@ class TGEnvironment(Environment):
         Pack file to be sent with :func:`.send_message`
         (or :func:`.reply`) as document.
 
+        You can use this method to send already uploaded document. Just
+        pass document's ID in "file".
+
         :param file: document as file or bytes
         :param filename: name of provided file
         :param kwargs: arguments for telegram's "sendFile"
@@ -58,6 +61,9 @@ class TGEnvironment(Environment):
         """
         Pack file to be sent with :func:`.send_message`
         (or :func:`.reply`) as photo.
+
+        You can use this method to send already uploaded photo. Just
+        pass photos's ID in "file".
 
         :param file: photo as file or bytes
         :param kwargs: arguments for telegram's "sendPhoto"

@@ -1,7 +1,6 @@
 # Kutana
 
 ![Kutana logo](docs/_static/kutana-logo-512.png)
-[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fekonda%2Fkutana.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fekonda%2Fkutana?ref=badge_shield)
 
 [![Documentation Status](https://readthedocs.org/projects/kutana/badge/?version=latest)](https://kutana.readthedocs.io/en/latest/?badge=latest)
 [![Build Status](https://travis-ci.com/ekonda/kutana.svg?branch=master)](https://travis-ci.com/ekonda/kutana)
@@ -10,6 +9,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/ekonda/kutana/badge.svg?branch=master)](https://coveralls.io/github/ekonda/kutana?branch=master)
 [![Codebeat Badge](https://codebeat.co/badges/fd698be3-d0f9-4e3c-b235-1c3a3cdb98a9)](https://codebeat.co/projects/github-com-ekonda-kutana-master)
 [![PyPI version](https://badge.fury.io/py/kutana.svg)](https://badge.fury.io/py/kutana)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fekonda%2Fkutana.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fekonda%2Fkutana?ref=badge_shield)
 
 English | [Русский](README.ru.md)
 

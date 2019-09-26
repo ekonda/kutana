@@ -1,6 +1,7 @@
 # Kutana
 
 ![Kutana logo](docs/_static/kutana-logo-512.png)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fekonda%2Fkutana.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fekonda%2Fkutana?ref=badge_shield)
 
 [![Documentation Status](https://readthedocs.org/projects/kutana/badge/?version=latest)](https://kutana.readthedocs.io/en/latest/?badge=latest)
 [![Build Status](https://travis-ci.com/ekonda/kutana.svg?branch=master)](https://travis-ci.com/ekonda/kutana)
@@ -90,3 +91,7 @@ async def _(message, env):
 
 - **Michael Krukov** - [@michaelkrukov](https://github.com/michaelkrukov)
 - [Other contributors](CONTRIBUTORS.md)
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fekonda%2Fkutana.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fekonda%2Fkutana?ref=badge_large)

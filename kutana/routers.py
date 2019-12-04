@@ -1,0 +1,73 @@
+import re
+from .router import MapRouter, ListRouter
+from .update import UpdateType
+
+
+class CommandsRouter(MapRouter):
+    __slots__ = ("_cache",)
+
+    def __init__(self, priority=6):
+        """Base priority is 6."""
+        super().__init__(priority=priority)
+        self._cache = None
+
+    def _get_keys(self, update, ctx):
+        if update.type != UpdateType.MSG:
+            return ()
+
+        if self._cache is None:
+            commands = list(self._handlers.keys())
+            prefixes = ctx.config["prefixes"]
+
+            self._cache = re.compile(
+                pattern=r"({prefix})({command})($|\s.*)".format(
+                    prefix="|".join(re.escape(p) for p in prefixes),
+                    command="|".join(re.escape(c) for c in commands),
+                ),
+                flags=re.I,
+            )
+
+        match = self._cache.match(update.text)
+
+        if match is None:
+            return ()
+
+        ctx.prefix = match.group(1)
+        ctx.command = match.group(2)
+        ctx.body = (match.group(3) or "").strip()
+        ctx.match = match
+
+        return (ctx.command,)
+
+
+class AttachmentsRouter(MapRouter):
+    __slots__ = ()
+
+    def __init__(self, priority=3):
+        """Base priority is 3."""
+        super().__init__(priority=priority)
+
+    def _get_keys(self, update, ctx):
+        if update.type != UpdateType.MSG:
+            return ()
+
+        return tuple(a.type for a in update.attachments)
+
+
+class AnyMessageRouter(ListRouter):
+    __slots__ = ()
+
+    def __init__(self, priority=9):
+        """Base priority is 9."""
+        super().__init__(priority=priority)
+
+    def _check_update(self, update, ctx):
+        return update.type == UpdateType.MSG and update.text.strip()
+
+
+class AnyUnprocessedMessageRouter(AnyMessageRouter):
+    __slots__ = ()
+
+    def __init__(self, priority=-3):
+        """Base priority is -3."""
+        super().__init__(priority=priority)

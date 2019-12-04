@@ -1,25 +1,25 @@
-from kutana import Plugin, get_path
+from kutana import Plugin, Attachment, get_path
 
 
 plugin = Plugin(name="Documents", description="Send documents")
 
 
-@plugin.on_text("documents")
-async def _(message, env):
+@plugin.on_commands(["documents"])
+async def _(msg, ctx):
     # Document
-    with open(get_path(__file__, "document_assets/pizza.png"), "rb") as fh:
-        doc = await env.upload_doc(fh.read(), filename="pizza.png")
+    with open(get_path(__file__, "assets/pizza.png"), "rb") as fh:
+        doc = Attachment.new(fh.read(), "pizza.png")
 
-    await env.reply("Document", attachment=doc)
+    await ctx.reply("Document", attachments=doc)
 
-    # Graffiti
-    with open(get_path(__file__, "document_assets/pizza.png"), "rb") as fh:
-        graffiti = await env.upload_doc(fh.read(), type="graffiti", filename="pizza.png")
+    # Graffiti (special for vk)
+    with open(get_path(__file__, "assets/pizza.png"), "rb") as fh:
+        graffiti = Attachment.new(fh.read(), "pizza.png", type="graffiti")
 
-    await env.reply("Graffiti", attachment=graffiti)
+    await ctx.reply("Graffiti", attachments=graffiti)
 
     # Audio message
-    with open(get_path(__file__, "document_assets/audio.mp3"), "rb") as fh:
-        audio_message = await env.upload_doc(fh.read(), type="audio_message", filename="audio.mp3")
+    with open(get_path(__file__, "assets/audio.ogg"), "rb") as fh:
+        audio_message = Attachment.new(fh.read(), "audio.ogg", "voice")
 
-    await env.reply("Audio message", attachment=audio_message)
+    await ctx.reply("Audio message", attachments=audio_message)

@@ -6,25 +6,32 @@ Subpackages
 
 .. toctree::
 
-    kutana.manager
+   kutana.backends
+   kutana.storages
 
 Submodules
 ----------
 
 .. toctree::
 
-   kutana.environment
+   kutana.backend
+   kutana.context
    kutana.exceptions
+   kutana.handler
+   kutana.helpers
    kutana.kutana
    kutana.loaders
    kutana.logger
    kutana.plugin
-   kutana.utils
+   kutana.router
+   kutana.routers
+   kutana.storage
+   kutana.update
 
 Module contents
 ---------------
 
 .. automodule:: kutana
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

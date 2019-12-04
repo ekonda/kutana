@@ -1,4 +1,18 @@
-requests
+# Required requirements
+sortedcontainers
 aiohttp
 
-psutil  # for example
+# Optional requirements
+psutil      # metrics plugin
+
+uvloop      # optional speedup
+cchardet    # optional speedup
+aiodns      # optional speedup
+
+# Development requirements
+recommonmark
+flake8
+flake8-quotes
+pytest
+asynctest
+coverage

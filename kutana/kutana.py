@@ -1,178 +1,211 @@
-"""Module with core class for using the library."""
-
+from sortedcontainers import SortedList
+import signal
 import asyncio
-
-from .exceptions import ExitException
+from .handler import HandlerResponse as hr
+from .storages import NaiveMemory
+from .context import Context
 from .logger import logger
-from .utils import sort_callbacks
 
 
 class Kutana:
-
     """
-    Main class for constructing and using application.
+    Main class for kutana application
 
-    :param loop: loop for working
+    :ivar storage: Storage for things like states, e.t.c.
+    :ivar config: Application's configuration
     """
 
-    def __init__(self, loop=None):
-        self.running = True  #: True if application is running
-        self.config = {}  #: user's configuration
+    def __init__(
+        self,
+        concurrent_handlers_count=3_000,
+        loop=None,
+        raise_exceptions=False
+    ):
+        self._plugins = []
+        self._backends = []
 
-        self.registered_plugins = []  #: plugins registered in application
+        self._loop = loop or asyncio.new_event_loop()
 
-        self._callbacks = []
-        self._startup_callbacks = []
-        self._dispose_callbacks = []
+        self._sem = asyncio.Semaphore(
+            value=concurrent_handlers_count, loop=self._loop
+        )
 
-        self._managers = []
-        self._loop = loop or asyncio.get_event_loop()
-        self._tasks = []
-        self._tasks_loops = []
+        self._routers = None
+        self._raise_exceptions = raise_exceptions
 
-    def register_startup(self, *callbacks, priority=0):
-        """
-        Register callbacks for startup.
+        self.storage = None
 
-        :param callbacks: callbacks for registration
-        :param priority: priority of callbacks
-        """
+        self.config = {
+            "prefixes": (".", "/"),
+        }
 
-        for callback in callbacks:
-            self._startup_callbacks.append((priority, callback))
+    def get_loop(self):
+        """Return application's asyncio loop."""
+        return self._loop
 
-        sort_callbacks(self._startup_callbacks)
+    def add_plugin(self, plugin):
+        """Add plugin to the application."""
+        if plugin in self._plugins:
+            raise RuntimeError("Plugin already added")
+        self._plugins.append(plugin)
 
-    def register_dispose(self, *callbacks, priority=0):
-        """
-        Register callbacks for disposing resourses before shutting down.
-
-        :param callbacks: callbacks for registration
-        :param priority: priority of callbacks
-        """
-
-        for callback in callbacks:
-            self._dispose_callbacks.append((priority, callback))
-
-        sort_callbacks(self._dispose_callbacks)
-
-    def register(self, *callbacks, priority=0):
-        """
-        Register callbacks for processing updates with specified priority.
-
-        :param callbacks: callbacks for registration
-        :param priority: priority of callbacks
-        """
-
-        for callback in callbacks:
-            self._callbacks.append((priority, callback))
-
-        sort_callbacks(self._callbacks)
-
-    def register_plugins(self, plugins):
-        """
-        Register plugins in application.
-
-        :param plguins: plugins for registration
-        """
-
+    def add_plugins(self, plugins):
+        """Add every plugin in passed iterable to the application."""
         for plugin in plugins:
-            self.register(
-                *plugin.get_callbacks(), priority=plugin.priority
+            self.add_plugin(plugin)
+
+    def get_plugins(self):
+        """Return list of added plugins."""
+        return self._plugins
+
+    def add_backend(self, backend):
+        """Add backend to the application."""
+        if backend in self._backends:
+            raise RuntimeError("Backend already added")
+        self._backends.append(backend)
+
+    async def _on_start(self, queue):
+        for backend in self._backends:
+            await backend.on_start(self)
+
+            async def perform_updates_request(backend):
+                def submit_update(update):
+                    return queue.put((update, backend))
+
+                while True:
+                    await backend.perform_updates_request(submit_update)
+                    await asyncio.sleep(0)
+
+            asyncio.ensure_future(
+                perform_updates_request(backend),
+                loop=self._loop
             )
 
-            self.register_startup(
-                *plugin.get_callbacks_for_startup(), priority=plugin.priority
+        for plugin in self._plugins:
+            if plugin._on_start:
+                await plugin._on_start(self)
+
+    async def _main_loop(self):
+        self.storage = await NaiveMemory.create()
+
+        queue = asyncio.Queue(maxsize=32, loop=self._loop)
+
+        await self._on_start(queue)
+
+        while True:
+            await self._sem.acquire()
+
+            update, backend = await queue.get()
+
+            ctx = await Context.create(
+                app=self,
+                config=self.config,
+                update=update,
+                backend=backend,
             )
 
-            self.register_dispose(
-                *plugin.get_callbacks_for_dispose(), priority=plugin.priority
+            backend.prepare_context(ctx)
+
+            task = asyncio.ensure_future(
+                self._handle_update_with_logger(update, ctx),
+                loop=self._loop
             )
 
-            self.registered_plugins.append(plugin)
+            task.add_done_callback(lambda t: self._sem.release())
 
-    def add_manager(self, manager):
-        """Add manager to application."""
+    def _init_routers(self):
+        self._routers = SortedList([], key=lambda r: -r.priority)
 
-        self._managers.append(manager)
+        def _add_router(new_router):
+            for router in self._routers:
+                if isinstance(router, new_router.__class__):
+                    router.merge(new_router)
+                    return
 
-    async def process(self, mngr, update):
-        """Create environment and process update from manager."""
+            self._routers.add(new_router)
 
-        env = await mngr.get_environment(update)
+        for plugin in self._plugins:
+            for router in plugin._routers:
+                _add_router(router)
+
+    async def _handle_update_with_logger(self, update, ctx):
+        logger.debug("Processing update %s", update)
 
         try:
-            await env.process(update, self._callbacks)
+            return await self._handle_update(update, ctx)
+        except asyncio.CancelledError:
+            pass
+        except Exception as exc:
+            logger.exception("Exception while handling the update")
 
-        except Exception as e:  # pylint: disable=W0703
-            await env.reply(
-                "Произошла крайне критическая ошибка. Сообщите об этом "
-                "администратору."
-            )
+            for plugin in self._plugins:
+                if plugin._on_exception:
+                    await plugin._on_exception(update, ctx, exc)
 
-            logger.exception(e)
+    async def _handle_update(self, update, ctx):
+        if self._routers is None:
+            self._init_routers()
 
-    async def loop_for_manager(self, mngr):
-        """Receive and process updates from target manager forever."""
+        for plugin in self._plugins:
+            if plugin._on_before:
+                await plugin._on_before(update, ctx)
 
-        receiver = await mngr.get_receiver_coroutine_function()
+        for router in self._routers:
+            if await router.handle(update, ctx) != hr.SKIPPED:
+                ctx._result = hr.COMPLETE
+                break
+        else:
+            ctx._result = hr.SKIPPED
 
-        while self.running:
-            for update in await receiver():
-                task = asyncio.ensure_future(
-                    self.process(mngr, update), loop=self._loop
-                )
+        for plugin in self._plugins:
+            if plugin._on_after:
+                await plugin._on_after(update, ctx, ctx._result)
 
-                self._tasks.append(task)
+        return ctx._result
 
-            await asyncio.sleep(0)
+    async def _shutdown(self):
+        logger.info("Gracecfully shutting application down...")
+
+        # Clean up
+        tasks = []
+
+        for backend in self._backends:
+            tasks.append(backend.on_shutdown(self))
+
+        for plugin in self._plugins:
+            if plugin._on_shutdown:
+                tasks.append(plugin._on_shutdown(self))
+
+        await asyncio.gather(*tasks, loop=self._loop, return_exceptions=True)
+
+        # Cancel everything else
+        tasks = []
+
+        for task in asyncio.Task.all_tasks(loop=self._loop):
+            if task is not asyncio.Task.current_task():
+                task.cancel()
+                tasks.append(task)
+
+        await asyncio.gather(*tasks, loop=self._loop, return_exceptions=True)
+
+        self._loop.stop()
 
     def run(self):
-        """Start application."""
+        """Start the application."""
+        logger.info("Starting application...")
 
-        asyncio.set_event_loop(self._loop)
-
-        for manager in self._managers:
-            self._tasks_loops.append(self.loop_for_manager(manager))
-
-            self._loop.run_until_complete(
-                manager.startup(self)
-            )
-
-            # awaitables = self._loop.run_until_complete(
-            #     manager.startup(self.ensure_future)
-            # )
-
-            # for awaitable in awaitables:
-            #     self._tasks_loops.append(awaitable)
-
-        self._loop.run_until_complete(self.startup())
+        for sig in (signal.SIGHUP, signal.SIGTERM, signal.SIGINT):
+            def signal_handler():  # pragma: no cover
+                asyncio.ensure_future(self._shutdown(), loop=self._loop)
+            self._loop.add_signal_handler(sig, signal_handler)
 
         try:
-            self._loop.run_until_complete(asyncio.gather(*self._tasks_loops))
-
-        except (KeyboardInterrupt, ExitException):
-            pass
-
+            asyncio.ensure_future(self._main_loop(), loop=self._loop)
+            self._loop.run_forever()
         finally:
-            self.running = False
+            self._loop.close()
+            logger.info("Stopped application")
 
-        self._loop.run_until_complete(self.dispose())
-
-    async def startup(self):
-        """Prepare plugins for work."""
-
-        for _, callback in self._startup_callbacks:
-            await callback(self)
-
-
-    async def dispose(self):
-        """Free resources and prepare for shutdown."""
-
-        await asyncio.gather(*self._tasks)
-
-        for _, callback in self._dispose_callbacks:
-            await callback()
-
-        for manager in self._managers:
-            await manager.dispose()
+    def stop(self):
+        """Stop the application."""
+        return asyncio.ensure_future(self._shutdown(), loop=self._loop)

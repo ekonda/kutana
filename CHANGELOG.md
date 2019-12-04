@@ -2,6 +2,16 @@
 
 > Changes to public API is marked as `^`
 
+- v4.0.0
+  - ^ Dramatically changed API
+  - Fixed unknown memory leak
+  - Added routers for more efficient updates dispatching
+  - Added more adequate documentation
+  - Added test with 100% coverage
+  - Updated examples
+  - Updated Makefile
+  - Updated codestyle
+
 - v3.2.1
   - Fixed issue with uploading documents to telegram
 

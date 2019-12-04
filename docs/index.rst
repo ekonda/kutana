@@ -1,4 +1,3 @@
-====================
 Kutana documentation
 ====================
 
@@ -6,156 +5,156 @@ Kutana documentation
     :alt: Kutana
     :scale: 60%
 
-The engine for developing bots for soc. networks,
-instant messengers and other systems.
-
 .. note::
     We apologize in advance for errors and omissions in this documentation.
     If you can help improve the documentation correctness, we will be very
     grateful.
 
-====================
-Kutana documentation
-====================
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
 
 Overview
 --------
 Kutana is an engine for developing bots for social networks, messengers and
 other services. Kutana heavily uses asyncio and coroutines. It supports
-different backends (like vk.com, telegram.org etc.) through different
-managers.
+different backends (like vk.com, telegram.org etc.).
 
 Refer to `example
-<https://github.com/ekonda/kutana/tree/master/example/>`_ for
+<https://github.com/ekonda/kutana/tree/master/example/>`_ folder for
 the showcase of the engine abilities.
 
 Workflow
 --------
-Managers are responsible for receiving and sending data. While data is prepared
-(turned into :class:`.Message` for example) and sent (answer to user's
-message for example) by managers, actual :class:`.Message` or raw updates
-from services is processed callbacks. They registered in :class:`.Kutana`.
-These callbacks receive updates (:class:`.Message` or raw updates
-from services).
 
-Callbacks process updates one by one while callbacks return anything but
-`"DONE"`. If callback returns `"DONE"`, the update is considered processed
-and is dropped.
+In order to use kutana, you should initialize engine, add your backends
+and plugins. After that you can run your application.
 
-Callbacks have priorities. It's just a number, but to not get lost in
-priorities it is highly recommended to use default priority - 0.
-
-The application can contain Plugins. Plugins contain logically grouped
-callbacks with arbitrary data like plugin's name, description, etc.
-Plugins register their callbacks in the executor, and executor register
-callbacks in kutana. Plugins' callbacks can return None (implicitly or
-explicitly) or `"DONE"` to mark an update as processed.
-
-The priority of plugins' callbacks works only in that plugin. If you want to
-make a plugin that does something before (or after) other plugins - you
-should split your plugin into two parts: one with high priority, other
-with normal (0).
-
-`kutana.load_plugins` recursively check all python modules files from
-the specified directory. When it finds a global variable `plugin`, it will be
-added to the loaded plugins' list. When it finds a global variable `plugins`,
-every plugin inside of it will be added to the loaded plugins' list.
-
-Environments
-------------
-Environments are objects with information and methods for interacting with
-data and user. It has methods for replying, performing requests to API,
-stores message that will be passed to next callback e.t.c.
-
-You can replace existing methods in environment with
-:func:`kutana.environment.Environment.replace_method` and set your
-fields to environment with dot notation `env.foo = "bar"`.
-
-Every plugin works with a copy of the update's environment. That means if you
-want to pass anything to other plugins you need to use `env.parent.`
-instead of just `env.`.
-
-Callbacks
----------
-
-Message processing
-~~~~~~~~~~~~~~~~~~
-The typical callback coroutine for message processing from the plugin
-looks like that:
+Below you can find the most simple `run.py` file for kutana application,
+that uses one Vkontakte account and loads plugins from folder `plugins/`.
 
 .. code-block:: python
 
-    @plugin.on_startswith_text("echo")
-    async def on_echo_callback(message, env):
-        await env.reply("{}".format(env.body))
+    from kutana import Kutana, load_plugins
+    from kutana.backends import Vkontakte
 
-
-THe callback receives two arguments - :class:`.Message` and
-:class:`.Environment`.
-
-Raw updates processing
-~~~~~~~~~~~~~~~~~~~~~~
-The callback function for processing only raw update from service
-looks like that:
-
-.. code-block:: python
-
-    @plugin.on_raw()
-    async def on_raw_callback(update, env):
-        pass
-
-
-The callback receives two arguments - raw update's data as dict and
-:class:`.Environment`. It's pretty straight forward and these callbacks
-are used when you need to add something special to workflow often
-connected with concrete service.
+    app = Kutana()
+    app.add_backend(Vkontakte(token=VK_API_TOKEN))
+    app.add_plugins(load_plugins("plugins/"))
+    app.run()
 
 Plugins
 -------
-See :class:`.Plugin` for list of available callback registrators. Example
-of the simple plugin:
+
+Main functionality for your applications are providee by plugins:
+they can add commands, process and preprocess messages, e.t.c.
+
+Below your can find example of simple plugin `echo.py` (that should
+be put into `plugins` folder).
 
 .. code-block:: python
 
     from kutana import Plugin
 
-    plugin = Plugin(name="Echo")
+    plugin = Plugin(name="Echo", description="Reply with send message")
 
-    @plugin.on_startswith_text("echo")
-    async def on_echo(message, env):
-        await env.reply("{}".format(env.body))
+    @plugin.on_commands(["echo"])
+    async def _(msg, ctx):
+        await ctx.reply("{}".format(ctx.body), attachments=msg.attachments)
 
-Example of working engine with :class:`.VKManager`:
+Handlers for messages receive :class:`kutana.update.Message` and
+:class:`kutana.context.Context` as arguments. You can find description of
+their methods for these classes in Full API.
+
+You can find descriptions of all possible "on_*" methods for adding your
+callbacks in :class:`kutana.plugin.Plugin` class.
+
+Attachments
+^^^^^^^^^^^
+
+Interactions with backends are highly unified, because we want you to have
+no problems creating plugins that will work nicely with multiple backends.
+
+You can manage your attachments throught class :class:`kutana.update.Attachment`.
+new attachments can be created using :meth:`kutana.update.Attachment.new`.
+
+Attachments are files that can have types. If type is unique to backends -
+you still can use them, but you will need to manager their uploads,
+parsing, e.t.c. on your own.
+
+Below you can find exmaple handler that will read and send three types
+of attachments. Type "graffiti" is not present in vkontakte's backend,
+so it can be seen as demonstartion of how to work with "custom" types.
 
 .. code-block:: python
 
-    from kutana import Kutana, VKManager, load_plugins
+    @plugin.on_commands(["documents"])
+    async def _(msg, ctx):
+        path_to_pizza = get_path(__file__, "assets/pizza.png")
+        path_to_audio = get_path(__file__, "assets/audio.ogg")
 
-    kutana = Kutana()
+        # Document
+        with open(path_to_pizza, "rb") as fh:
+            doc = Attachment.new(
+                fh.read(),
+                "pizza.png"
+            )
 
-    manager = VKManager("API TOKEN")
+        await ctx.reply("Document", attachments=doc)
 
-    kutana.add_manager(manager)
+        # Graffiti (special for vk)
+        with open(path_to_pizza, "rb") as fh:
+            graffiti = Attachment.new(
+                fh.read(),
+                "pizza.png",
+                type="graffiti"
+            )
 
-    kutana.executor.register_plugins(
-        load_plugins("plugins/")
-    )
+        await ctx.reply("Graffiti", attachments=graffiti)
 
-    kutana.run()
+        # Audio message
+        with open(path_to_audio, "rb") as fh:
+            audio_message = Attachment.new(
+                fh.read(),
+                "audio.ogg",
+                "voice"
+            )
+
+        await ctx.reply("Audio message", attachments=audio_message)
+
+Existing attachments (that already uploaded for example) can be created using
+:meth:`kutana.update.Attachment.existing`. Many backends capable of forwarding
+raw strings (supported by your service) while sending messages.
+
+Available built-in attachment types:
+
+- image
+- doc
+- sticker
+- video
+- audio
+- voice
+
+Not every backend can interact well with all the types, so you should
+be careful. If you have troubling examples - create an issue in the
+repository and we'll update documentation!
+
+API Requests
+^^^^^^^^^^^^
+
+In order to perform a request to your service, your should use
+:meth:`kutana.context.Context.request` method. It accepts method that you
+want to use and any keyword arguments that should be processable by your
+backend. You can check what backend context belongs to by accessing it's
+`backend` attribute.
 
 -------------------------------------------------------------------------------
 
 .. toctree::
     :maxdepth: 1
-    :caption: Managers and environments
-
-    VKontakte <src/kutana.manager.vk>
-    Telegram <src/kutana.manager.tg>
-
-.. toctree::
-    :maxdepth: 1
     :caption: API Reference
 
+    Backends <src/kutana.backends>
     Plugin <src/kutana.plugin>
     Kutana <src/kutana.kutana>
     Full API <src/modules>

@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
+
 """
 :copyright: (c) 2019 by Michael Krukov
 :license: MIT, see LICENSE for more details.
 """
 
-import sys
-
 import setuptools
 
 
-VERSION = "3.2.1"
+VERSION = "4.0.0"
 
 
 with open("README.md", "r") as fh:
@@ -28,10 +27,10 @@ setuptools.setup(
     url="https://github.com/ekonda/kutana",
     packages=setuptools.find_packages(),
     install_requires=[
-        "requests>=2.20.0",
-        "aiohttp>=3.3"
+        "sortedcontainers>=2.1.0",
+        "aiohttp>=3.6.1"
     ],
-    python_requires='>=3.5',
+    python_requires=">=3.6",
     classifiers=[
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3 :: Only",

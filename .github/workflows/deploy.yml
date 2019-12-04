@@ -1,11 +1,8 @@
 name: Upload a new version to the PYPI
 
 on:
-  create:
-    branches:
-      - master
-    tags:
-      - 'v*'
+  release:
+    types: [created]
 
 jobs:
   check:

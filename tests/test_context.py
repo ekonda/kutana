@@ -39,6 +39,18 @@ def test_context():
     ]
 
 
+def test_dynamic_attributes():
+    ctx = Context()
+
+    ctx.var1 = "val1"
+    ctx.var2 = "val2"
+
+    assert ctx.var1 == "val1"
+    assert ctx.var2 == "val2"
+    assert ctx.get("var3") is None
+    assert ctx.get("var3", "default_value_1") == "default_value_1"
+
+
 def test_set_state():
     storage = {}
 

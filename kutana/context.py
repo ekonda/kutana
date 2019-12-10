@@ -71,6 +71,9 @@ class Context:
 
         return ctx
 
+    def get(self, name, default=None):
+        return getattr(self, name, default)
+
     def replace_method(self, method_name, method):
         """
         Replaces this instance's method with specified name with passed method.

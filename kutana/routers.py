@@ -11,21 +11,24 @@ class CommandsRouter(MapRouter):
         super().__init__(priority=priority)
         self._cache = None
 
+    def _populate_cache(self, ctx):
+        commands = list(self._handlers.keys())
+        prefixes = ctx.config["prefixes"]
+
+        self._cache = re.compile(
+            pattern=r"({prefix})({command})($|\s.*)".format(
+                prefix="|".join(re.escape(p) for p in prefixes),
+                command="|".join(re.escape(c) for c in commands),
+            ),
+            flags=re.I,
+        )
+
     def _get_keys(self, update, ctx):
         if update.type != UpdateType.MSG:
             return ()
 
         if self._cache is None:
-            commands = list(self._handlers.keys())
-            prefixes = ctx.config["prefixes"]
-
-            self._cache = re.compile(
-                pattern=r"({prefix})({command})($|\s.*)".format(
-                    prefix="|".join(re.escape(p) for p in prefixes),
-                    command="|".join(re.escape(c) for c in commands),
-                ),
-                flags=re.I,
-            )
+            self._populate_cache(ctx)
 
         match = self._cache.match(update.text)
 

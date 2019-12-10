@@ -34,7 +34,10 @@ class Telegram(Backend):
         self.api_url = f"https://api.telegram.org/bot{token}/{{}}"
         self.file_url = f"https://api.telegram.org/file/bot{token}/{{}}"
 
-    async def request(self, method, kwargs={}):
+    async def request(self, method, kwargs=None):
+        if kwargs is None:
+            kwargs = {}
+
         if not self.session:
             self.session = aiohttp.ClientSession()
 

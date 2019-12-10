@@ -57,7 +57,10 @@ class Vkontakte(Backend):
 
         self.longpoll_url_template = "{}?act=a_check&key={}&wait=25&ts={}"
 
-    async def raw_request(self, method, kwargs={}):
+    async def raw_request(self, method, kwargs=None):
+        if kwargs is None:
+            kwargs = {}
+
         data = {k: v for k, v in kwargs.items() if v is not None}
 
         request_url = self.api_request_url.format(method)

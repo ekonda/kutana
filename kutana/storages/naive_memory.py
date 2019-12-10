@@ -23,8 +23,8 @@ class NaiveMemory(Storage):
         if len(self._storage) >= self.max_size:
             keys = list(self._storage.keys())
 
-            for key in keys[:self.max_size // 2]:
-                self._storage.pop(key)
+            for k in keys[:self.max_size // 2]:
+                self._storage.pop(k)
 
         self._storage[name] = key
 

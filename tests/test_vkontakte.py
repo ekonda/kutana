@@ -381,10 +381,7 @@ def test_happy_path(mock_post):
     )
 
     class _Vkontakte(Vkontakte):
-        async def raw_request(self, method, kwargs=None):
-            if kwargs is None:
-                kwargs = {}
-
+        async def raw_request(self, method, kwargs={}):
             if method == "groups.setLongPollSettings":
                 return 1
 

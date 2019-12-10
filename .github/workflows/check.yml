@@ -35,8 +35,8 @@ jobs:
         flake8 kutana/ --count --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with coverage and pytest
       run: |
-        python -m coverage run -m pytest
-        python -m coverage report -m --include=kutana/* --fail-under=100
+        python -m coverage run -m --include=kutana/* pytest
+	      python -m coverage report -m --fail-under=100
     - name: Upload results to coveralls.io
       run: |
         coveralls

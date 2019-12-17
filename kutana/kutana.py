@@ -64,6 +64,9 @@ class Kutana:
             raise RuntimeError("Backend already added")
         self._backends.append(backend)
 
+    def get_backends(self):
+        return self._backends
+
     async def _on_start(self, queue):
         for backend in self._backends:
             await backend.on_start(self)

@@ -46,7 +46,7 @@ class Telegram(Backend):
             data = await resp.json(content_type=None)
 
             if not data.get("ok"):
-                raise RequestException(self, (method, kwargs), data)
+                raise RequestException(self, (method, {**kwargs}), data)
 
         res = data["result"]
 

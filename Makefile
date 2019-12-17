@@ -10,12 +10,12 @@ docs:
 		make clean; make html
 
 test:
-	python3 -m coverage run -m pytest
-	python3 -m coverage report -m --include=kutana/* --fail-under=100
+	python3 -m coverage run -m --include=kutana/* pytest
+	python3 -m coverage report -m --fail-under=100
 
 test-debug:
-	PYTHONASYNCIODEBUG=1 python3 -m coverage run -m pytest
-	python3 -m coverage report -m --include=kutana/* --fail-under=100
+	PYTHONASYNCIODEBUG=1 python3 -m coverage run -m --include=kutana/* pytest
+	python3 -m coverage report -m --fail-under=100
 
 lint:
 	python3 -m flake8 kutana/ --count --select=E9,F63,F7,F82 --show-source --statistics

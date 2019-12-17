@@ -66,7 +66,7 @@ class Vkontakte(Backend):
             data = await response.json(content_type=None)
 
             if not data.get("response"):
-                raise RequestException(self, (method, kwargs), data)
+                raise RequestException(self, (method, {**kwargs}), data)
 
         return data["response"]
 

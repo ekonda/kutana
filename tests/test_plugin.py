@@ -113,7 +113,7 @@ def test_commands():
     hu(Message(None, UpdateType.MSG, "abc", (), 1, 0, 0, 0))
     hu(Message(None, UpdateType.MSG, "echo abc", (), 1, 0, 0, 0))
 
-    hu(Update(None, UpdateType.UPD)) == hr.SKIPPED
+    assert hu(Update(None, UpdateType.UPD)) == hr.SKIPPED
 
     assert len(debug.answers[1]) == 4
     assert debug.answers[1][0] == (".echo 123", (), {})
@@ -143,7 +143,7 @@ def test_attachments():
     hu(Message(None, UpdateType.MSG, "si", (sticker, image,), 1, 0, 0, 0))
     hu(Message(None, UpdateType.MSG, "s", (sticker,), 1, 0, 0, 0))
 
-    hu(Update(None, UpdateType.UPD)) == hr.SKIPPED
+    assert hu(Update(None, UpdateType.UPD)) == hr.SKIPPED
 
     assert len(debug.answers[1]) == 4
     assert debug.answers[1][0] == ("i", (), {})

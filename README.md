@@ -41,6 +41,8 @@ python -m pip install kutana
 > and plugins are loaded from folder "plugins/"
 
 ```py
+import json
+
 from kutana import *
 
 # Load configuration

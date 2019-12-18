@@ -42,6 +42,8 @@ python -m pip install kutana
 > а плагины будут загружены из папки "plugins/"
 
 ```py
+import json
+
 from kutana import *
 
 # Загрузка настроек

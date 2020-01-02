@@ -47,12 +47,39 @@ async def _(msg, ctx):
     await ctx.reply("Message with keyboard", keyboard=KEYBOARD_STRING)
 
 
-# Intercept messages with payload.
+@plugin.vk.on_payload([1])
+async def _(msg, ctx):
+    await ctx.reply("Your choice was 1 (from handler)")
+
+
+@plugin.vk.on_payload([2])
+async def _(msg, ctx):
+    await ctx.reply("Your choice was 2 (from handler)")
+
+
+@plugin.vk.on_payload([3])
+async def _(msg, ctx):
+    await ctx.reply("Your choice was 3 (from handler)")
+
+
+# This will never be called because of handler below
+@plugin.vk.on_payload([4])
+async def _(msg, ctx):
+    await ctx.reply("Your choice was 4 (from handler)")
+
+
+# Intercept all the messages with payloads and check their payload
 @plugin.on_any_message(priority=10)
 async def _(msg, ctx):
-    payload = msg.raw["object"]["message"].get("payload")
-
-    if not payload:
+    # Only messages from vkontakte can have payload
+    if ctx.backend.source != "vkontakte":
         return HandlerResponse.SKIPPED
 
-    await ctx.reply('Your choice was: "{}"'.format(payload))
+    payload = msg.raw["object"]["message"].get("payload")
+
+    if not payload or payload != "4":
+        return HandlerResponse.SKIPPED
+
+    await ctx.reply(
+        "Your choice was 4 (from global interceptor)".format(payload)
+    )

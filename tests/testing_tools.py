@@ -3,11 +3,14 @@ from kutana.backends import Debug
 from kutana.storages import NaiveMemory
 
 
-def make_kutana_no_run():
+def make_kutana_no_run(backend_source=None):
     app = Kutana()
     app.storage = NaiveMemory()
 
     debug = Debug(messages=[])
+
+    if backend_source:
+        debug.source = backend_source
 
     app.add_backend(debug)
 

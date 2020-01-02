@@ -1,6 +1,7 @@
 import re
 from .handler import Handler, HandlerResponse
 from .update import UpdateType
+from .backends.vkontakte import VkontaktePluginExtension
 from .routers import (
     CommandsRouter, AttachmentsRouter, ListRouter, AnyMessageRouter,
     AnyUnprocessedMessageRouter,
@@ -101,6 +102,10 @@ class Plugin:
         return decorator
 
     # Registrators for updates with specific conditions
+    @property
+    def vk(self) -> VkontaktePluginExtension:
+        return VkontaktePluginExtension(self)
+
     def on_commands(
         self,
         commands,

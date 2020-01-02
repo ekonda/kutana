@@ -11,6 +11,7 @@
   - ^ Updated examples
   - ^ Updated Makefile
   - ^ Updated codestyle
+  - ^ Changed shape of `RequestException`
 
 - v3.2.1
   - Fixed issue with uploading documents to telegram

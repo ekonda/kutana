@@ -3,12 +3,12 @@ import asyncio
 import json
 import re
 import aiohttp
-from ..logger import logger
-from ..backend import Backend
-from ..update import (
+from ...logger import logger
+from ...backend import Backend
+from ...update import (
     ReceiverType, UpdateType, Update, Message, Attachment,
 )
-from ..exceptions import RequestException
+from ...exceptions import RequestException
 
 
 NAIVE_CACHE = {}
@@ -57,16 +57,26 @@ class Vkontakte(Backend):
 
         self.longpoll_url_template = "{}?act=a_check&key={}&wait=25&ts={}"
 
-    async def raw_request(self, method, kwargs={}):
+    async def _get_response(self, method, kwargs={}):
         data = {k: v for k, v in kwargs.items() if v is not None}
 
         request_url = self.api_request_url.format(method)
 
         async with self.session.post(request_url, data=data) as response:
-            data = await response.json(content_type=None)
+            return await response.json(content_type=None)
 
-            if not data.get("response"):
-                raise RequestException(self, (method, {**kwargs}), data)
+    async def raw_request(self, method, kwargs={}):
+        """
+        Call specified method from VKontakte api with specified kwargs
+        and return response's data.
+
+        This method raises RequestException if response contains error.
+        """
+
+        data = await self._get_response(method, kwargs)
+
+        if not data.get("response"):
+            raise RequestException(self, (method, {**kwargs}), data)
 
         return data["response"]
 
@@ -99,23 +109,42 @@ class Vkontakte(Backend):
             )
 
     async def _execute_loop_perform_execute(self, code, requests):
-        result = await self.raw_request("execute", {"code": code})
+        response = await self._get_response("execute", {"code": code})
+
+        result = response.get("response") or []
+        errors = response.get("execute_errors") or []
 
         if len(result) != len(requests):
             result = [*result, *[False] * (len(requests) - len(result))]
 
-        for res, req in zip(result, requests):
+        if len(errors) != len(requests):
+            errors = [*errors, *[None] * (len(requests) - len(errors))]
+
+        for res, req, err in zip(result, requests, errors):
             if req.done():
                 continue
 
             if res is False or res is None:
-                req.set_exception(
-                    RequestException(self, (req.method, req.kwargs), res)
-                )
+                req.set_exception(RequestException(
+                    self,
+                    (req.method, req.kwargs),
+                    res,
+                    err,
+                ))
             else:
                 req.set_result(res)
 
     async def request(self, method, kwargs, timeout=None):
+        """
+        Call specified method from VKontakte api with specified
+        kwargs and return response's data.
+
+        This method respects limits.
+
+        This method raises RequestException if response
+        contains error.
+        """
+
         req = VKRequest(method, kwargs)
 
         self.requests_queue.append(req)
@@ -325,9 +354,15 @@ class Vkontakte(Backend):
                 upload_data["upload_url"], data
             )
 
-            attachments = await self.request(
-                "photos.saveMessagesPhoto", upload_result
-            )
+            try:
+                attachments = await self.request(
+                    "photos.saveMessagesPhoto", upload_result
+                )
+            except RequestException as e:
+                if not peer_id or not e.error or e.error["error_code"] != 1:
+                    raise
+
+                return await self._upload_attachment(attachment, peer_id=None)
 
             return self._make_attachment({
                 "type": "photo",

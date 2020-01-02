@@ -4,7 +4,7 @@ import pytest
 from asynctest import CoroutineMock, patch
 from kutana import Kutana, Plugin, RequestException, Attachment
 from kutana.backends import Vkontakte
-from kutana.backends.vkontakte import VKRequest, NAIVE_CACHE
+from kutana.backends.vkontakte.backend import VKRequest, NAIVE_CACHE
 from test_vkontakte_data import MESSAGES, ATTACHMENTS
 
 
@@ -13,7 +13,7 @@ def test_no_token():
         Vkontakte("")
 
 
-@patch('aiohttp.ClientSession.post')
+@patch("aiohttp.ClientSession.post")
 def test_raw_request(mock_post):
     mock_post.return_value.__aenter__.return_value.json = CoroutineMock(
         side_effect=[{"response": 1}, {"error": 1}]
@@ -30,9 +30,20 @@ def test_raw_request(mock_post):
     asyncio.get_event_loop().run_until_complete(test())
 
 
-@patch('kutana.backends.Vkontakte.raw_request')
-def test_execute_loop_perform_execute(mock_raw_request):
-    mock_raw_request.side_effect = [(1,), (1, False), (1, 2)]
+def make_execute_response(*response, execute_errors=()):
+    return {
+        "response": response,
+        "execute_errors": execute_errors,
+    }
+
+
+@patch("kutana.backends.Vkontakte._get_response")
+def test_execute_loop_perform_execute(mock_get_response):
+    mock_get_response.side_effect = [
+        make_execute_response(1),
+        make_execute_response(1, False),
+        make_execute_response(1, 2),
+    ]
 
     async def test():
         vkontakte = Vkontakte(token="token", session=aiohttp.ClientSession())
@@ -72,7 +83,7 @@ def test_execute_loop_perform_execute(mock_raw_request):
     asyncio.get_event_loop().run_until_complete(test())
 
 
-@patch('kutana.backends.Vkontakte.request')
+@patch("kutana.backends.Vkontakte.request")
 def test_resolve_screen_name(mock_request):
     data = {
         "type": "user",
@@ -97,7 +108,7 @@ def test_resolve_screen_name(mock_request):
     asyncio.get_event_loop().run_until_complete(test())
 
 
-@patch('aiohttp.ClientSession.post')
+@patch("aiohttp.ClientSession.post")
 def test_perform_updates_request(mock_post):
     def make_mock(exc):
         cm = CoroutineMock()
@@ -130,7 +141,7 @@ def test_perform_updates_request(mock_post):
     asyncio.get_event_loop().run_until_complete(test())
 
 
-@patch('aiohttp.ClientSession.post')
+@patch("aiohttp.ClientSession.post")
 def test_upload_file_to_vk(mock_post):
     mock_post.return_value.__aenter__.return_value.json = CoroutineMock(
         side_effect=[{"r": "ok"}]
@@ -227,7 +238,7 @@ def test_upload_attachment():
     asyncio.get_event_loop().run_until_complete(test())
 
 
-@patch('aiohttp.ClientSession.get')
+@patch("aiohttp.ClientSession.get")
 def test_attachments(mock_get):
     mock_read = CoroutineMock(
         side_effect=["content"] * (len(ATTACHMENTS) - 2)
@@ -343,14 +354,68 @@ def test_perform_api_call():
     assert result == 1
 
 
-@patch('aiohttp.ClientSession.post')
+@patch("kutana.backends.Vkontakte.request")
+@patch("kutana.backends.Vkontakte._upload_file_to_vk")
+def test_upload_attachment_error_no_retry(
+    mock_upload_file_to_vk,
+    mock_request,
+):
+    mock_request.side_effect = [
+        {"upload_url": "_"},
+        RequestException(None, None, None, {"error_code": 1}),
+    ]
+
+    mock_upload_file_to_vk.side_effect = [
+        "ok",
+    ]
+
+    vkontakte = Vkontakte("token")
+
+    with pytest.raises(RequestException):
+        asyncio.get_event_loop().run_until_complete(
+            vkontakte._upload_attachment(Attachment.new(b""))
+        )
+
+
+@patch("kutana.backends.Vkontakte.request")
+@patch("kutana.backends.Vkontakte._upload_file_to_vk")
+@patch("kutana.backends.Vkontakte._make_attachment")
+def test_upload_attachment_error_retry(
+    mock_make_attachment,
+    mock_upload_file_to_vk,
+    mock_request,
+):
+    mock_request.side_effect = [
+        {"upload_url": "_"},
+        RequestException(None, None, None, {"error_code": 1}),
+        {"upload_url": "_"},
+        "ok",
+    ]
+
+    mock_upload_file_to_vk.side_effect = [
+        "ok",
+        "ok",
+    ]
+
+    mock_make_attachment.return_value = "ok"
+
+    vkontakte = Vkontakte("token")
+
+    result = asyncio.get_event_loop().run_until_complete(
+        vkontakte._upload_attachment(Attachment.new(b""), peer_id=123)
+    )
+
+    assert result == "ok"
+
+
+@patch("aiohttp.ClientSession.post")
 def test_happy_path(mock_post):
     group_change_settings_update = {
         "type": "group_change_settings",
         "object": {
             "changes": {
-                'screen_name': {'old_value': '', 'new_value': 'sdffff23f23'},
-                'title': {'old_value': 'Спасибо', 'new_value': 'Спасибо 2'}
+                "screen_name": {"old_value": "", "new_value": "sdffff23f23"},
+                "title": {"old_value": "Спасибо", "new_value": "Спасибо 2"}
             }
         }
     }
@@ -381,20 +446,32 @@ def test_happy_path(mock_post):
     )
 
     class _Vkontakte(Vkontakte):
-        async def raw_request(self, method, kwargs={}):
+        async def _get_response(self, method, kwargs={}):
             if method == "groups.setLongPollSettings":
-                return 1
+                return {"response": 1}
 
             if method == "groups.getById":
-                return [{"id": 1, "name": "group", "screen_name": "grp"}]
+                return {
+                    "response": [
+                        {"id": 1, "name": "group", "screen_name": "grp"},
+                    ],
+                }
 
             if method == "groups.getLongPollServer":
                 updated_longpoll.append(1)
-                return {"server": "s", "key": "k", "ts": "1"}
+                return {
+                    "response": {
+                        "server": "s",
+                        "key": "k",
+                        "ts": "1",
+                    },
+                }
 
             if method == "execute":
                 answers.extend(kwargs["code"].split("API.")[1:])
-                return [1] * kwargs["code"].count("API.")
+                return {
+                    "response": [1] * kwargs["code"].count("API."),
+                }
 
             print(method, kwargs)
 
@@ -428,5 +505,5 @@ def test_happy_path(mock_post):
     assert len(answers) == 3
     assert '{"message": ".echo chat [michaelkrukov|Михаил]",' in answers[0]
     assert '{"message": ".echo wa",' in answers[1]
-    assert '"attachment": ""' not in answers[1]
+    assert 'attachment": ""' not in answers[1]
     assert '{"message": ".echo",' in answers[2]

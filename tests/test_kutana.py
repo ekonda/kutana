@@ -63,6 +63,8 @@ def test_same_plugins_and_backends():
     with pytest.raises(RuntimeError):
         app.add_backend(backend)
 
+    assert app.get_backends() == [backend]
+
 
 def test_start_and_shutdown_hooks():
     app, _ = make_kutana([("123", 1), ("321", 1)])

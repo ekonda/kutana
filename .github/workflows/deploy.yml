@@ -35,7 +35,11 @@ jobs:
         python setup.py sdist bdist_wheel
     - name: Upload the distribution archives
       run: |
-        python -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+        python -m twine uploaddist/*
+
+        # Testing:
+        #
+        #   python -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*
       env:
         TWINE_USERNAME: ${{ secrets.PYPI_LOGIN }}
         TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}

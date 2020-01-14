@@ -11,8 +11,8 @@ class Kutana:
     """
     Main class for kutana application
 
-    :ivar storage: Storage for things like states, e.t.c.
-    :ivar config: Application's configuration
+    :ivar ~.storage: Storage for things like states, e.t.c.
+    :ivar ~.config: Application's configuration
     """
 
     def __init__(

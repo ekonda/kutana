@@ -1,6 +1,13 @@
 kutana.backends package
 =======================
 
+Subpackages
+-----------
+
+.. toctree::
+
+   kutana.backends.vkontakte
+
 Submodules
 ----------
 
@@ -8,7 +15,6 @@ Submodules
 
    kutana.backends.debug
    kutana.backends.telegram
-   kutana.backends.vkontakte
 
 Module contents
 ---------------

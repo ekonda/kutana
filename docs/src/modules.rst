@@ -1,5 +1,5 @@
-kutana-4
-========
+kutana
+======
 
 .. toctree::
    :maxdepth: 4

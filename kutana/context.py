@@ -7,15 +7,15 @@ class Context:
     Use Context.create for instantiation of Context object. This object
     can store ane attributes provided by routers or other plugins.
 
-    :ivar app: Context's kutana application.
-    :ivar update: Update currently being processed.
-    :ivar backend: Backend who created update.
-    :ivar config: Application's configuration
-    :ivar default_target_id: Default receiver of responses
-    :ivar group_uid: Group's id plus backend identity
-    :ivar user_uid: User's id plus backend identity
-    :ivar group_state: State of group targeted by update
-    :ivar user_state: State of user targeted by update
+    :ivar ~.app: Context's kutana application.
+    :ivar ~.update: Update currently being processed.
+    :ivar ~.backend: Backend who created update.
+    :ivar ~.config: Application's configuration
+    :ivar ~.default_target_id: Default receiver of responses
+    :ivar ~.group_uid: Group's id plus backend identity
+    :ivar ~.user_uid: User's id plus backend identity
+    :ivar ~.group_state: State of group targeted by update
+    :ivar ~.user_state: State of user targeted by update
     """
 
     def __init__(self, app=None, config=None, update=None, backend=None):

@@ -35,7 +35,7 @@ jobs:
         python setup.py sdist bdist_wheel
     - name: Upload the distribution archives
       run: |
-        python -m twine uploaddist/*
+        python -m twine upload dist/*
 
         # Testing:
         #

@@ -4,7 +4,7 @@ from kutana import Plugin, HandlerResponse
 # Plugins for demonstrating how contexts works
 
 
-plugin1 = Plugin(name="Contexts")
+plugin1 = Plugin(name="Contexts [Provider]")
 
 
 @plugin1.on_commands(["contexts"], priority=5)
@@ -16,7 +16,7 @@ async def _(msg, ctx):
     return HandlerResponse.SKIPPED
 
 
-plugin2 = Plugin(name="_Contexts Provider")
+plugin2 = Plugin(name="Contexts")
 
 
 @plugin2.on_commands(["contexts"])

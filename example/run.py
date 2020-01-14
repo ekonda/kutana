@@ -1,25 +1,19 @@
 import json
+from kutana import Kutana, load_plugins
+from kutana.backends import Vkontakte
 
-from kutana import Kutana, VKManager, load_plugins
-
-
-# Load configuration
-with open("configuration.json") as fh:
+# Import configuration
+with open("config.json") as fh:
     config = json.load(fh)
-
 
 # Create application
 app = Kutana()
 
 # Add manager to application
-app.add_manager(
-    VKManager(config["vk_token"])
-)
+app.add_backend(Vkontakte(token=config["vk_token"]))
 
 # Load and register plugins
-app.register_plugins(
-    load_plugins("plugins/")
-)
+app.add_plugins(load_plugins("plugins/"))
 
 if __name__ == "__main__":
     # Run application

@@ -1,6 +1,5 @@
 import json
-
-from kutana import Plugin, get_path
+from kutana import Plugin, HandlerResponse
 
 
 # See https://vk.com/dev/bots_docs_3 for details
@@ -36,30 +35,51 @@ KEYBOARD_STRING = json.dumps(KEYBOARD_OBJECT)
 
 
 # Plugins for sending keyboard.
-plugin1 = Plugin(name="Keyboard", description="Keyboard for vkontakte")
+plugin = Plugin(name="Keyboard", description="Keyboard for vkontakte")
 
 
-@plugin1.on_text("keyboard")
-async def _(message, env):
-    if env.manager_type != "vkontakte":
-        await env.reply("This example works only for vk.com")
+@plugin.on_commands(["keyboard"])
+async def _(msg, ctx):
+    if ctx.backend.source != "vkontakte":
+        await ctx.reply("This example works only for vk.com")
         return
 
-    await env.reply("Keyboard", keyboard=KEYBOARD_STRING)
+    await ctx.reply("Message with keyboard", keyboard=KEYBOARD_STRING)
 
 
-# Plugin for intercepting messages with payload.
-plugin2 = Plugin(name="_Keyboard_listener", priority=10)
+@plugin.vk.on_payload([1])
+async def _(msg, ctx):
+    await ctx.reply("Your choice was 1 (from handler)")
 
 
-@plugin2.on_has_text()
-async def _(message, env):
-    payload = message.raw_update["object"].get("payload")
-
-    if not payload:
-        return "GOON"
-
-    await env.reply('Your choice was: "{}"'.format(payload))
+@plugin.vk.on_payload([2])
+async def _(msg, ctx):
+    await ctx.reply("Your choice was 2 (from handler)")
 
 
-plugins = [plugin1, plugin2]
+@plugin.vk.on_payload([3])
+async def _(msg, ctx):
+    await ctx.reply("Your choice was 3 (from handler)")
+
+
+# This will never be called because of handler below
+@plugin.vk.on_payload([4])
+async def _(msg, ctx):
+    await ctx.reply("Your choice was 4 (from handler)")
+
+
+# Intercept all the messages with payloads and check their payload
+@plugin.on_any_message(priority=10)
+async def _(msg, ctx):
+    # Only messages from vkontakte can have payload
+    if ctx.backend.source != "vkontakte":
+        return HandlerResponse.SKIPPED
+
+    payload = msg.raw["object"]["message"].get("payload")
+
+    if not payload or payload != "4":
+        return HandlerResponse.SKIPPED
+
+    await ctx.reply(
+        "Your choice was 4 (from global interceptor)".format(payload)
+    )

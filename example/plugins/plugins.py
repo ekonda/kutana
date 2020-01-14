@@ -7,15 +7,15 @@ plugin = Plugin(name="Plugins", description="Show present plugins")
 plugins = []
 
 
-@plugin.on_startup()
+@plugin.on_start()
 async def _(app):
-    for pl in app.registered_plugins:
+    for pl in app.get_plugins():
         if isinstance(pl, Plugin) and pl.name[:1] != "_":
             plugins.append(pl.name)
 
 
-@plugin.on_text("plugins")
-async def _(message, env):
+@plugin.on_commands(["plugins"])
+async def _(msg, ctx):
     lines = ("- {}".format(plugin) for plugin in plugins)
 
-    await env.reply("Plugins:\n" + "\n".join(lines))
+    await ctx.reply("Plugins:\n" + "\n".join(lines))

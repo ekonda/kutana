@@ -1,12 +1,9 @@
-"""Functions for loading and extracting plugins from python files."""
-
 import importlib.util
 import os
 import re
 
 from .logger import logger
 from .plugin import Plugin
-from .utils import is_list_or_tuple
 
 
 def import_module(name, path):
@@ -28,45 +25,32 @@ def import_module(name, path):
 def load_plugins_from_file(path, verbose=False):
     """
     Load plugins from specified path. Plugins can be in module-level
-    variable "plugin" and in module-level variable "plugins" with list of
-    plugins.
+    variable "plugin" and in module-level variable "plugins" (with list of
+    plugins).
 
-    :param path: path to plugin's file
+    :param path: path to file with module
     :returns: loaded module or None if no plugin found
     """
 
-    module = import_module(path, path)
+    mod = import_module(path, path)
 
     plugins = []
 
-    possible_plugins = []
+    for pl in [getattr(mod, "plugin", None), *getattr(mod, "plugins", ())]:
+        if isinstance(pl, Plugin):
+            plugins.append(pl)
 
-    if hasattr(module, "plugin") and isinstance(module.plugin, Plugin):
-        possible_plugins.append(module.plugin)
-
-    if hasattr(module, "plugins") and is_list_or_tuple(module.plugins):
-        possible_plugins.extend(module.plugins)
-
-    for plugin in possible_plugins:
-        if plugin and isinstance(plugin, Plugin):
-            plugins.append(plugin)
-
-    if plugins:
-        count = len(plugins)
-
-        if count == 1:
-            logger.info('Loaded plugin from "%s"', path)
-
-        else:
-            logger.info('Loaded %d plugins from "%s"', count, path)
-
-    elif verbose:  # pragma: no cover
-        logger.warning("No plugins found in \"%s\"", path)
+    if len(plugins) > 1:
+        logger.info('Loaded %d plugins from "%s"', len(plugins), path)
+    elif len(plugins) == 1:
+        logger.info('Loaded plugin from "%s"', path)
+    elif verbose:
+        logger.warning('No plugins found in "%s"', path)
 
     return plugins
 
 
-def load_plugins(folder):
+def load_plugins(folder, verbose=False):
     """
     Import all plugins from target folder recursively.
 
@@ -80,9 +64,9 @@ def load_plugins(folder):
         path = os.path.join(folder, name)
 
         if os.path.isdir(path):
-            plugins_list += load_plugins(path)
+            plugins_list += load_plugins(path, verbose=verbose)
 
         elif re.match(r"^[^_].*\.py$", name):
-            plugins_list += load_plugins_from_file(path)
+            plugins_list += load_plugins_from_file(path, verbose=verbose)
 
     return plugins_list

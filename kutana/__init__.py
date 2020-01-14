@@ -1,18 +1,23 @@
-"""
-Kutana - library for developing systems for messengers and social networks.
-"""
+try:  # pragma: no cover
+    import uvloop
+    uvloop.install()
+except ModuleNotFoundError:  # pragma: no cover
+    pass
 
-from .environment import Environment
-from .exceptions import ExitException
-from .loaders import import_module, load_plugins, load_plugins_from_file
-from .utils import get_path, is_list_or_tuple, sort_callbacks
+
 from .kutana import Kutana
-from .logger import logger, set_logger_level
-from .manager.manager import Manager
-from .manager.debug import DebugEnvironment, DebugManager
-from .manager.tg import TGEnvironment, TGManager, TGResponse
-from .manager.vk import VKEnvironment, VKManager, VKRequest, VKResponse
-from .plugin import Attachment, Message, Plugin
+from .plugin import Plugin
+from .backend import Backend
+from .context import Context
+from .update import Update, Message, Attachment, UpdateType
+from .handler import HandlerResponse
+from .exceptions import RequestException
+from .loaders import load_plugins, load_plugins_from_file
+from .helpers import get_path
 
 
-NAME = "kutana"
+__all__ = [
+    "Kutana", "Plugin", "Backend", "Update", "Message", "Attachment",
+    "UpdateType", "HandlerResponse", "RequestException", "Context",
+    "load_plugins", "load_plugins_from_file", "get_path",
+]

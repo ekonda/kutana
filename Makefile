@@ -1,27 +1,22 @@
 .PHONY: all test docs
 
-python=python3
-
-all: test
+all: run
 
 run:
-	export PYTHONPATH=$(PWD); cd example; $(python) run.py
+	export PYTHONPATH=$(PWD); cd example; python3 run.py
 
 docs:
 	sphinx-apidoc --separate -o docs/src/ . $(PWD)/setup.py; cd docs; \
 		make clean; make html
 
 test:
-	$(python) -m unittest discover -s test
+	python3 -m coverage run -m --include=kutana/* pytest
+	python3 -m coverage report -m --fail-under=100
 
-test-fast:
-	$(python) -m unittest discover -s test -f
-
-cov:
-	coverage run --source=kutana/ -m unittest discover -s test
-	coverage report --include=kutana/* -m
-	coverage html
+test-debug:
+	PYTHONASYNCIODEBUG=1 python3 -m coverage run -m --include=kutana/* pytest
+	python3 -m coverage report -m --fail-under=100
 
 lint:
-	$(python) -m pylint --variable-rgx='[a-z_][a-z0-9_]{0,30}$$' --max-args=8 \
-		--max-attributes=12 kutana/
+	python3 -m flake8 kutana/ --count --select=E9,F63,F7,F82 --show-source --statistics
+	python3 -m flake8 kutana/ --count --max-complexity=10 --max-line-length=127 --statistics

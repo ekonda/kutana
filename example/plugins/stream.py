@@ -2,10 +2,8 @@ import asyncio
 from kutana import Plugin, Attachment, get_path
 
 
-"""
-This example shows how to access existing backend instance and perform
-some actions outside of handlers.
-"""
+# This example shows how to access existing backend instance and perform
+# some actions outside of handlers.
 
 
 plugin = Plugin(name="Stream", description="Send images to subscribers")

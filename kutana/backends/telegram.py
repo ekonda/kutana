@@ -34,7 +34,7 @@ class Telegram(Backend):
         self.api_url = f"https://api.telegram.org/bot{token}/{{}}"
         self.file_url = f"https://api.telegram.org/file/bot{token}/{{}}"
 
-    async def request(self, method, kwargs={}):
+    async def _request(self, method, kwargs={}):
         if not self.session:
             self.session = aiohttp.ClientSession()
 
@@ -55,7 +55,7 @@ class Telegram(Backend):
         return res
 
     async def _request_file(self, file_id):
-        file = await self.request("getFile", {"file_id": file_id})
+        file = await self._request("getFile", {"file_id": file_id})
 
         url = self.file_url.format(file["file_path"])
 
@@ -158,7 +158,7 @@ class Telegram(Backend):
 
     async def perform_updates_request(self, submit_update):
         try:
-            response = await self.request(
+            response = await self._request(
                 "getUpdates", {"timeout": 25, "offset": self.offset}
             )
         except (json.JSONDecodeError, aiohttp.ClientError):
@@ -183,7 +183,7 @@ class Telegram(Backend):
 
         async with self.api_messages_lock:
             if message:
-                result.append(await self.request("sendMessage", {
+                result.append(await self._request("sendMessage", {
                     "chat_id": chat_id,
                     "text": message,
                     **kwargs,
@@ -215,7 +215,7 @@ class Telegram(Backend):
                     raise ValueError("Can't upload attachment '{atype}'")
 
                 result.append(
-                    await self.request(
+                    await self._request(
                         "send" + atype.capitalize(),
                         {"chat_id": chat_id, atype: acontent}
                     )
@@ -226,10 +226,10 @@ class Telegram(Backend):
             return result
 
     async def perform_api_call(self, method, kwargs):
-        return await self.request(method, kwargs)
+        return await self._request(method, kwargs)
 
     async def on_start(self, app):
-        me = await self.request("getMe")
+        me = await self._request("getMe")
 
         name = me["first_name"]
         if me.get("last_name"):
@@ -242,6 +242,25 @@ class Telegram(Backend):
         )
 
         self.api_messages_lock = asyncio.Lock(loop=app.get_loop())
+
+    async def send_message(self, target_id, message, attachments=(), **kwargs):
+        """
+        Send message to specified `target_id` with text `message` and
+        attachments `attachments`.
+
+        This method will forward all excessive keyword arguments to
+        sending method.
+        """
+
+        return await self.perform_send(target_id, message, attachments, kwargs)
+
+    async def request(self, method, **kwargs):
+        """
+        Call specified method from Telegram api with specified
+        kwargs and return response's data.
+        """
+
+        return await self._request(method, kwargs)
 
     async def on_shutdown(self, app):
         if self._is_session_local:

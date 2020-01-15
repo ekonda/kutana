@@ -2,6 +2,11 @@
 
 > Changes to public API is marked as `^`
 
+- v4.1.0
+  - Fixed case mistake in CommandsRouter
+  - Added better API for backends
+  - Added example for background actions
+
 - v4.0.0
   - ^ Dramatically changed API
   - Fixed unknown memory leak

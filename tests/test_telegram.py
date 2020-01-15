@@ -21,10 +21,10 @@ def test_request(mock_post):
     async def test():
         telegram = Telegram(token="token")
 
-        assert await telegram.request("method1", {"arg": "val1"}) == 1
+        assert await telegram._request("method1", {"arg": "val1"}) == 1
 
         with pytest.raises(RequestException):
-            await telegram.request("method2", {"arg": "val2"})
+            await telegram._request("method2", {"arg": "val2"})
 
         await telegram.session.close()
 
@@ -43,7 +43,7 @@ def test_request_file_and_getter(mock_get):
         async def req(method, kwargs={}):
             if method == "getFile" and kwargs["file_id"] == "file_id":
                 return {"file_path": "123"}
-        telegram.request = req
+        telegram._request = req
 
         assert await telegram._request_file("file_id") == b"content"
         assert await telegram._make_getter("file_id")() == b"content"
@@ -111,7 +111,7 @@ def test_upload_attachments():
 
         async def req(method, kwargs):
             requests.append((method, kwargs))
-        telegram.request = req
+        telegram._request = req
 
         attachment = Attachment.new(b"file")
         await telegram.perform_send(1, "", attachment, {})
@@ -125,7 +125,7 @@ def test_upload_attachments():
         assert len(requests) == 3
 
         assert requests[0] == ("sendPhoto", {
-            "chat_id": '1', "photo": b'file'
+            "chat_id": "1", "photo": b"file"
         })
         assert requests[1] == ("sendDocument", {
             "chat_id": '1', "document": b'file'
@@ -157,7 +157,7 @@ def test_perform_api_call():
         assert method == "method"
         assert kwargs["arg"] == "val"
         return 1
-    telegram.request = req
+    telegram._request = req
 
     result = asyncio.get_event_loop().run_until_complete(
         telegram.perform_api_call("method", {"arg": "val"})
@@ -178,7 +178,7 @@ def test_happy_path():
     answers = []
 
     class _Telegram(Telegram):
-        async def request(self, method, kwargs={}):
+        async def _request(self, method, kwargs={}):
             if method == "getMe":
                 return {"first_name": "te", "last_name": "st", "username": "a"}
 

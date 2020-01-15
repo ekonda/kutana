@@ -134,17 +134,7 @@ class Vkontakte(Backend):
             else:
                 req.set_result(res)
 
-    async def request(self, method, kwargs, timeout=None):
-        """
-        Call specified method from VKontakte api with specified
-        kwargs and return response's data.
-
-        This method respects limits.
-
-        This method raises RequestException if response
-        contains error.
-        """
-
+    async def _request(self, method, kwargs, timeout=None):
         req = VKRequest(method, kwargs)
 
         self.requests_queue.append(req)
@@ -162,11 +152,11 @@ class Vkontakte(Backend):
 
         self.longpoll_data = longpoll.copy()
 
-    async def _resolve_screen_name(self, screen_name):
+    async def resolve_screen_name(self, screen_name):
         if screen_name in NAIVE_CACHE:
             return NAIVE_CACHE[screen_name]
 
-        result = await self.request(
+        result = await self._request(
             "utils.resolveScreenName",
             {"screen_name": screen_name}
         )
@@ -188,7 +178,7 @@ class Vkontakte(Backend):
         self.group_screen_name = groups[0]["screen_name"]
 
     def prepare_context(self, ctx):
-        ctx.resolve_screen_name = self._resolve_screen_name
+        ctx.resolve_screen_name = self.resolve_screen_name
 
     def _make_getter(self, url):
         async def getter():
@@ -301,7 +291,14 @@ class Vkontakte(Backend):
         async with self.session.post(upload_url, data=data) as resp:
             return await resp.json(content_type=None)
 
-    async def _upload_attachment(self, attachment, peer_id=None):
+    async def upload_attachment(self, attachment, peer_id=None):
+        """
+        Upload specified attachment to VKontakte with specified peer_id and
+        return newly uploaded attachment.
+
+        This method doesn't change passed attachments.
+        """
+
         attachment_type = attachment.type
 
         if attachment_type == "voice":
@@ -315,12 +312,12 @@ class Vkontakte(Backend):
 
         if attachment_type == "doc":
             if peer_id and doctype != "graffiti":
-                upload_data = await self.request(
+                upload_data = await self._request(
                     "docs.getMessagesUploadServer",
                     {"peer_id": peer_id, "type": doctype},
                 )
             else:
-                upload_data = await self.request(
+                upload_data = await self._request(
                     "docs.getWallUploadServer",
                     {"group_id": self.group_id, "type": doctype},
                 )
@@ -334,14 +331,14 @@ class Vkontakte(Backend):
                 upload_data["upload_url"], data
             )
 
-            attachment = await self.request(
+            attachment = await self._request(
                 "docs.save", upload_result
             )
 
             return self._make_attachment(attachment)
 
         if attachment_type == "image":
-            upload_data = await self.request(
+            upload_data = await self._request(
                 "photos.getMessagesUploadServer", {"peer_id": peer_id}
             )
 
@@ -355,14 +352,14 @@ class Vkontakte(Backend):
             )
 
             try:
-                attachments = await self.request(
+                attachments = await self._request(
                     "photos.saveMessagesPhoto", upload_result
                 )
             except RequestException as e:
                 if not peer_id or not e.error or e.error["error_code"] != 1:
                     raise
 
-                return await self._upload_attachment(attachment, peer_id=None)
+                return await self.upload_attachment(attachment, peer_id=None)
 
             return self._make_attachment({
                 "type": "photo",
@@ -428,10 +425,8 @@ class Vkontakte(Backend):
 
     async def perform_send(self, target_id, message, attachments, kwargs):
         # Form proper arguments
-        true_kwargs = kwargs.copy()
-
-        true_kwargs["message"] = message
-        true_kwargs["peer_id"] = target_id
+        true_kwargs = {"message": message, "peer_id": target_id}
+        true_kwargs.update(kwargs)
 
         if "random_id" not in kwargs:
             true_kwargs["random_id"] = int(random() * 4294967296) - 2147483648
@@ -449,7 +444,7 @@ class Vkontakte(Backend):
                     continue
 
                 if not a.uploaded:
-                    a = await self._upload_attachment(a, peer_id=target_id)
+                    a = await self.upload_attachment(a, peer_id=target_id)
 
                 if not a.id:
                     raise ValueError("Attachment has no ID")
@@ -466,12 +461,13 @@ class Vkontakte(Backend):
             true_attachments += ","
 
         # Add attachments to arguments
-        true_kwargs["attachment"] = true_attachments[:-1]
+        if true_attachments[:-1]:
+            true_kwargs["attachment"] = true_attachments[:-1]
 
-        return await self.request("messages.send", true_kwargs)
+        return await self._request("messages.send", true_kwargs)
 
     async def perform_api_call(self, method, kwargs):
-        return await self.request(method, kwargs)
+        return await self._request(method, kwargs)
 
     async def on_start(self, app):
         if not self.session:
@@ -522,6 +518,30 @@ class Vkontakte(Backend):
             self._execute_loop(loop),
             loop=loop
         )
+
+    async def send_message(self, target_id, message, attachments=(), **kwargs):
+        """
+        Send message to specified `target_id` with text `message` and
+        attachments `attachments`.
+
+        This method will forward all excessive keyword arguments to
+        sending method.
+        """
+
+        return await self.perform_send(target_id, message, attachments, kwargs)
+
+    async def request(self, method, _timeout=None, **kwargs):
+        """
+        Call specified method from VKontakte api with specified
+        kwargs and return response's data.
+
+        This method respects limits.
+
+        This method raises RequestException if response
+        contains error.
+        """
+
+        return await self._request(method, kwargs, _timeout)
 
     async def on_shutdown(self, app):
         if self._is_session_local:

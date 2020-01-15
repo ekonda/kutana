@@ -20,8 +20,11 @@ class CommandsRouter(MapRouter):
                 prefix="|".join(re.escape(p) for p in prefixes),
                 command="|".join(re.escape(c) for c in commands),
             ),
-            flags=re.I,
+            flags=re.IGNORECASE,
         )
+
+    def add_handler(self, handler, key):
+        return super().add_handler(handler, key.lower())
 
     def _get_keys(self, update, ctx):
         if update.type != UpdateType.MSG:
@@ -40,7 +43,7 @@ class CommandsRouter(MapRouter):
         ctx.body = (match.group(3) or "").strip()
         ctx.match = match
 
-        return (ctx.command,)
+        return (ctx.command.lower(),)
 
 
 class AttachmentsRouter(MapRouter):

@@ -83,7 +83,7 @@ def test_execute_loop_perform_execute(mock_get_response):
     asyncio.get_event_loop().run_until_complete(test())
 
 
-@patch("kutana.backends.Vkontakte.request")
+@patch("kutana.backends.Vkontakte._request")
 def test_resolve_screen_name(mock_request):
     data = {
         "type": "user",
@@ -157,7 +157,7 @@ def test_upload_file_to_vk(mock_post):
 
 def test_upload_attachment():
     class _Vkontakte(Vkontakte):
-        async def request(self, method, kwargs):
+        async def _request(self, method, kwargs):
             if method == "photos.getMessagesUploadServer":
                 return {"upload_url": "upload_url_photo"}
 
@@ -204,28 +204,28 @@ def test_upload_attachment():
 
     async def test():
         attachment = Attachment.new(b"content")
-        image = await vkontakte._upload_attachment(attachment, peer_id=123)
+        image = await vkontakte.upload_attachment(attachment, peer_id=123)
 
         assert image.type == "image"
         assert image.id is not None
         assert image.file is None
 
         attachment = Attachment.new(b"content", type="doc")
-        doc = await vkontakte._upload_attachment(attachment, peer_id=123)
+        doc = await vkontakte.upload_attachment(attachment, peer_id=123)
 
         assert doc.type == "doc"
         assert doc.id is not None
         assert doc.file is None
 
         attachment = Attachment.new(b"content", type="voice")
-        voice = await vkontakte._upload_attachment(attachment, peer_id=123)
+        voice = await vkontakte.upload_attachment(attachment, peer_id=123)
 
         assert voice.type == "voice"
         assert voice.id is not None
         assert voice.file is None
 
         attachment = Attachment.new(b"content", type="graffiti")
-        voice = await vkontakte._upload_attachment(attachment, peer_id=123)
+        voice = await vkontakte.upload_attachment(attachment, peer_id=123)
 
         assert voice.type == "graffiti"
         assert voice.id == "graffiti87641997_497831521"
@@ -233,7 +233,7 @@ def test_upload_attachment():
 
         attachment = Attachment.new(b"content", type="video")
         with pytest.raises(ValueError):
-            await vkontakte._upload_attachment(attachment, peer_id=123)
+            await vkontakte.upload_attachment(attachment, peer_id=123)
 
     asyncio.get_event_loop().run_until_complete(test())
 
@@ -288,7 +288,7 @@ def test_perform_send_string():
         assert method == "messages.send"
         assert kwargs["attachment"] == "hey,hoy"
         return 1
-    vkontakte.request = req
+    vkontakte._request = req
 
     result = asyncio.get_event_loop().run_until_complete(
         vkontakte.perform_send(1, "text", ("hey", "hoy"), {})
@@ -302,10 +302,10 @@ def test_perform_send_sticker():
 
     async def req(method, kwargs):
         assert method == "messages.send"
-        assert kwargs["attachment"] == ""
+        assert "attachment" not in kwargs
         assert kwargs["sticker_id"] == "123"
         return 1
-    vkontakte.request = req
+    vkontakte._request = req
 
     sticker_attachment = Attachment.existing("123", "sticker")
 
@@ -321,13 +321,13 @@ def test_perform_send_new():
 
     async def _upl_att(attachment, peer_id):
         return attachment._replace(id=1, raw={"ok": "ok"})
-    vkontakte._upload_attachment = _upl_att
+    vkontakte.upload_attachment = _upl_att
 
     async def req(method, kwargs):
         assert method == "messages.send"
         assert kwargs["attachment"] == "1"
         return 1
-    vkontakte.request = req
+    vkontakte._request = req
 
     attachment = Attachment.new(b"content", "image")
 
@@ -345,7 +345,7 @@ def test_perform_api_call():
         assert method == "method"
         assert kwargs["arg"] == "val"
         return 1
-    vkontakte.request = req
+    vkontakte._request = req
 
     result = asyncio.get_event_loop().run_until_complete(
         vkontakte.perform_api_call("method", {"arg": "val"})
@@ -354,7 +354,7 @@ def test_perform_api_call():
     assert result == 1
 
 
-@patch("kutana.backends.Vkontakte.request")
+@patch("kutana.backends.Vkontakte._request")
 @patch("kutana.backends.Vkontakte._upload_file_to_vk")
 def test_upload_attachment_error_no_retry(
     mock_upload_file_to_vk,
@@ -373,11 +373,11 @@ def test_upload_attachment_error_no_retry(
 
     with pytest.raises(RequestException):
         asyncio.get_event_loop().run_until_complete(
-            vkontakte._upload_attachment(Attachment.new(b""))
+            vkontakte.upload_attachment(Attachment.new(b""))
         )
 
 
-@patch("kutana.backends.Vkontakte.request")
+@patch("kutana.backends.Vkontakte._request")
 @patch("kutana.backends.Vkontakte._upload_file_to_vk")
 @patch("kutana.backends.Vkontakte._make_attachment")
 def test_upload_attachment_error_retry(
@@ -402,7 +402,7 @@ def test_upload_attachment_error_retry(
     vkontakte = Vkontakte("token")
 
     result = asyncio.get_event_loop().run_until_complete(
-        vkontakte._upload_attachment(Attachment.new(b""), peer_id=123)
+        vkontakte.upload_attachment(Attachment.new(b""), peer_id=123)
     )
 
     assert result == "ok"

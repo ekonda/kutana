@@ -4,7 +4,7 @@ from kutana import Plugin
 pl = Plugin("Quest")
 
 
-@pl.on_commands(["start"], user_state="")
+@pl.on_commands(["quest"], user_state="")
 async def _(msg, ctx):
     await ctx.set_state(user_state="quest:1")
     await ctx.reply("Choose: left or right")
@@ -52,7 +52,7 @@ async def _(msg, ctx):
     await ctx.reply("Bye")
 
 
-@pl.on_any_message(user_state="quest:end")
+@pl.on_any_unprocessed_message(user_state="quest:end")
 async def _(msg, ctx):
     await ctx.reply("Write '.OK'")
 

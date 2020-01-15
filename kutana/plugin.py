@@ -118,6 +118,9 @@ class Plugin:
         incoming update is message, starts with prefix and one of
         provided commands.
 
+        If case_insensitive is True, commands will be processed with ignored
+        case.
+
         Context is automatically populated with following values:
 
         - prefix

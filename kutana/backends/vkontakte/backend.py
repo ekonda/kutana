@@ -152,7 +152,7 @@ class Vkontakte(Backend):
 
         self.longpoll_data = longpoll.copy()
 
-    async def _resolve_screen_name(self, screen_name):
+    async def resolve_screen_name(self, screen_name):
         if screen_name in NAIVE_CACHE:
             return NAIVE_CACHE[screen_name]
 
@@ -178,7 +178,7 @@ class Vkontakte(Backend):
         self.group_screen_name = groups[0]["screen_name"]
 
     def prepare_context(self, ctx):
-        ctx.resolve_screen_name = self._resolve_screen_name
+        ctx.resolve_screen_name = self.resolve_screen_name
 
     def _make_getter(self, url):
         async def getter():

@@ -95,12 +95,12 @@ def test_resolve_screen_name(mock_request):
     async def test():
         vkontakte = Vkontakte(token="token", session=aiohttp.ClientSession())
 
-        assert await vkontakte._resolve_screen_name("durov") == data
-        assert await vkontakte._resolve_screen_name("durov") == data
+        assert await vkontakte.resolve_screen_name("durov") == data
+        assert await vkontakte.resolve_screen_name("durov") == data
 
         NAIVE_CACHE.update({i: None for i in range(500_000)})
 
-        assert await vkontakte._resolve_screen_name("krukov") == data
+        assert await vkontakte.resolve_screen_name("krukov") == data
 
         assert len(NAIVE_CACHE) == 1
         assert next(mock_request.side_effect, None) is None
@@ -485,6 +485,9 @@ def test_happy_path(mock_post):
 
     @echo_plugin.on_commands(["echo", "ec"])
     async def _(message, ctx):
+        assert ctx.resolve_screen_name
+        assert ctx.reply
+
         await ctx.reply(message.text, attachments=message.attachments)
 
     app.add_plugin(echo_plugin)

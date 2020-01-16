@@ -26,8 +26,11 @@ async def bg_loop(vk):
 
 @plugin.on_start()
 async def _(app):
-    vk = app.get_backends()[0]
-    asyncio.ensure_future(bg_loop(vk))
+    backend = app.get_backends()[0]
+
+    # Run only if first backend is Vkontakte
+    if backend.source == "vkontakte":
+        asyncio.ensure_future(bg_loop(backend))
 
 @plugin.on_commands(["stream sub"])
 async def _(msg, ctx):

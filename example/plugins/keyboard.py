@@ -40,7 +40,7 @@ plugin = Plugin(name="Keyboard", description="Keyboard for vkontakte")
 
 @plugin.on_commands(["keyboard"])
 async def _(msg, ctx):
-    if ctx.backend.source != "vkontakte":
+    if ctx.backend.get_identity() != "vkontakte":
         await ctx.reply("This example works only for vk.com")
         return
 
@@ -72,7 +72,7 @@ async def _(msg, ctx):
 @plugin.on_any_message(priority=10)
 async def _(msg, ctx):
     # Only messages from vkontakte can have payload
-    if ctx.backend.source != "vkontakte":
+    if ctx.backend.get_identity() != "vkontakte":
         return HandlerResponse.SKIPPED
 
     payload = msg.raw["object"]["message"].get("payload")

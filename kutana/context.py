@@ -43,17 +43,17 @@ class Context:
         )
 
         if update.type == ut.MSG:
-            backend_name = backend.__class__.__name__
+            backend_identity = backend.get_identity()
             storage = app.storage
 
             if update.receiver_type == rt.MULTI:
                 ctx.default_target_id = update.receiver_id
 
-                ctx.group_uid = f"{update.receiver_id}{backend_name}"
-                ctx.user_uid = f"{update.receiver_id}{backend_name}"
+                ctx.group_uid = f"{update.receiver_id}{backend_identity}"
+                ctx.user_uid = f"{update.receiver_id}{backend_identity}"
 
-                ctx.group_state_key = f"_st_gr_{ctx.group_uid}"
-                ctx.user_state_key = f"_st_us_{ctx.user_uid}"
+                ctx.group_state_key = f"_sg:{ctx.group_uid}"
+                ctx.user_state_key = f"_su:{ctx.user_uid}"
 
                 ctx.group_state = await storage.load(ctx.group_state_key, "")
                 ctx.user_state = await storage.load(ctx.user_state_key, "")
@@ -61,10 +61,10 @@ class Context:
                 ctx.default_target_id = update.sender_id
 
                 ctx.group_uid = ""
-                ctx.user_uid = f"{update.sender_id}{backend_name}"
+                ctx.user_uid = f"{update.sender_id}{backend_identity}"
 
                 ctx.group_state_key = ""
-                ctx.user_state_key = f"_st_us_{ctx.user_uid}"
+                ctx.user_state_key = f"_su:{ctx.user_uid}"
 
                 ctx.group_state = ""
                 ctx.user_state = await storage.load(ctx.user_state_key, "")

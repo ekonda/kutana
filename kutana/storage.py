@@ -1,11 +1,8 @@
 class Storage:
-    """Use Storage.create for instantiation of Storage object."""
+    async def initiate(self):  # pragma: no cover
+        pass
 
-    @staticmethod
-    async def create(*args, **kwargs):
-        raise NotImplementedError
-
-    async def save(self, name, key):
+    async def save(self, name, value):
         raise NotImplementedError
 
     async def load(self, name, default=None):

@@ -15,6 +15,7 @@ Submodules
 
    kutana.backends.debug
    kutana.backends.telegram
+   kutana.backends.terminal
 
 Module contents
 ---------------

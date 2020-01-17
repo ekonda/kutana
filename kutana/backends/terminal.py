@@ -6,9 +6,6 @@ from ..update import Message, ReceiverType, UpdateType
 
 
 class Terminal(Backend):
-    def __init__(self):
-        self.source = "terminal"
-
     def _make_update(self, text, sender_id=1):
         return Message(
             raw=None,

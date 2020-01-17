@@ -69,10 +69,10 @@ def test_set_state():
     ctx = Context(app=App)
 
     # Happy path
-    ctx.group_uid = ":gr"
-    ctx.group_state_key = "_st_gr_:gr"
-    ctx.user_uid = ":us"
-    ctx.user_state_key = "_st_us_:us"
+    ctx.group_uid = "*gr"
+    ctx.group_state_key = "_sg:*gr"
+    ctx.user_uid = "*us"
+    ctx.user_state_key = "_su:*us"
 
     async def test():
         await ctx.set_state(user_state="new_us_state")
@@ -103,8 +103,8 @@ def test_set_state():
 
     asyncio.get_event_loop().run_until_complete(test())
 
-    assert storage["_st_gr_:gr"] == "new_gr_state"
-    assert storage["_st_us_:us"] == "new_us_state"
+    assert storage["_sg:*gr"] == "new_gr_state"
+    assert storage["_su:*us"] == "new_us_state"
 
 
 def test_set_state_non_string():

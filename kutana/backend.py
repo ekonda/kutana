@@ -16,3 +16,7 @@ class Backend:
 
     async def perform_api_call(self, method, kwargs):
         raise NotImplementedError
+
+    @classmethod
+    def get_identity(cls):
+        return cls.__name__.lower()

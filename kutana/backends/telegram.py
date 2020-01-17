@@ -16,8 +16,6 @@ class Telegram(Backend):
         proxy=None,
         api_url="https://api.telegram.org"
     ):
-        self.source = "telegram"
-
         if not token:
             raise ValueError("No `token` specified")
 

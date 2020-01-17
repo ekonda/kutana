@@ -21,7 +21,9 @@ class PayloadRouter(MapRouter):
         return obj
 
     def _get_keys(self, update, ctx):
-        if update.type != UpdateType.MSG or ctx.backend.source != "vkontakte":
+        backend_identity = ctx.backend.get_identity()
+
+        if update.type != UpdateType.MSG or backend_identity != "vkontakte":
             return ()
 
         message = update.raw["object"]["message"]

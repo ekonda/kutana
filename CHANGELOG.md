@@ -2,6 +2,12 @@
 
 > Changes to public API is marked as `^`
 
+- v4.1.2
+  - Improved storage descriptions
+  - Improved states processes
+  - Removed unused attribute
+  - Updated tests and docs
+
 - v4.1.1
   - Updated example plugins
   - Improved error messages

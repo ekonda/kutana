@@ -5,8 +5,6 @@ from ..update import Message, ReceiverType, UpdateType
 
 class Debug(Backend):
     def __init__(self, messages=None, on_complete=None, save_replies=True):
-        self.source = "debug"
-
         if isinstance(messages, GeneratorType):  # pragma: no cover
             self.messages = messages
             self.messages_count = -1

@@ -18,8 +18,8 @@ class Kutana:
     def __init__(
         self,
         concurrent_handlers_count=3_000,
+        storage=None,
         loop=None,
-        raise_exceptions=False
     ):
         self._plugins = []
         self._backends = []
@@ -31,9 +31,8 @@ class Kutana:
         )
 
         self._routers = None
-        self._raise_exceptions = raise_exceptions
 
-        self.storage = None
+        self.storage = storage
 
         self.config = {
             "prefixes": (".", "/"),
@@ -89,7 +88,8 @@ class Kutana:
                 await plugin._on_start(self)
 
     async def _main_loop(self):
-        self.storage = await NaiveMemory.create()
+        if self.storage is None:
+            self.storage = NaiveMemory()
 
         queue = asyncio.Queue(maxsize=32, loop=self._loop)
 

@@ -31,8 +31,6 @@ class Vkontakte(Backend):
         api_version="5.103",
         api_url="https://api.vk.com"
     ):
-        self.source = "vkontakte"
-
         if not token:
             raise ValueError("No `token` specified")
 

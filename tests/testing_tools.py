@@ -10,7 +10,7 @@ def make_kutana_no_run(backend_source=None):
     debug = Debug(messages=[])
 
     if backend_source:
-        debug.source = backend_source
+        debug.get_identity = lambda: backend_source
 
     app.add_backend(debug)
 

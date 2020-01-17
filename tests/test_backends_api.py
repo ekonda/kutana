@@ -1,7 +1,26 @@
 import asyncio
 from asynctest import patch
+import kutana.backends
 from kutana.backends import Vkontakte, Telegram
 from kutana.backends.vkontakte.backend import VKRequest
+
+
+def test_backend_identities():
+    identities = set()
+
+    for backend_name in kutana.backends.__all__:
+        backend_class = getattr(kutana.backends, backend_name)
+        identity = backend_class.get_identity()
+        assert identity not in identities
+        identities.add(identity)
+
+    for i1 in identities:
+        for i2 in identities:
+            if i1 == i2:
+                continue
+            assert not i1.endswith(i2)
+
+    assert len(identities) == len(kutana.backends.__all__)
 
 
 @patch("kutana.backends.Vkontakte._request")

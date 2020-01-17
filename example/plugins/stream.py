@@ -29,7 +29,7 @@ async def _(app):
     backend = app.get_backends()[0]
 
     # Run only if first backend is Vkontakte
-    if backend.source == "vkontakte":
+    if backend.get_identity() == "vkontakte":
         asyncio.ensure_future(bg_loop(backend))
 
 @plugin.on_commands(["stream sub"])

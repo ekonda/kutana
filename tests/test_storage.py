@@ -4,7 +4,7 @@ from kutana.storages import NaiveMemory
 
 def test_naive_memory_storage():
     async def test():
-        storage = await NaiveMemory.create()
+        storage = NaiveMemory()
 
         await storage.save("key1", "value1")
         await storage.save("key2", "value2")
@@ -19,7 +19,7 @@ def test_naive_memory_storage():
 
 def test_naive_memory_overflow():
     async def test():
-        storage = await NaiveMemory.create(max_size=100)
+        storage = NaiveMemory(max_size=100)
 
         for i in range(100):
             await storage.save(f"key{i}", "val")

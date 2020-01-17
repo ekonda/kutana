@@ -2,6 +2,10 @@
 
 > Changes to public API is marked as `^`
 
+- v4.1.1
+  - Updated example plugins
+  - Improved error messages
+
 - v4.1.0
   - Fixed case mistake in CommandsRouter
   - Added better API for backends

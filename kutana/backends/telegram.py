@@ -212,7 +212,7 @@ class Telegram(Backend):
                 if atype not in (
                     "document", "photo", "audio", "video", "voice", "sticker"
                 ):
-                    raise ValueError("Can't upload attachment '{atype}'")
+                    raise ValueError(f"Can't upload attachment '{atype}'")
 
                 result.append(
                     await self._request(

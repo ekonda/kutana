@@ -366,7 +366,7 @@ class Vkontakte(Backend):
                 "photo": attachments[0],
             })
 
-        raise ValueError("Can't upload passed attachment")
+        raise ValueError(f"Can't upload attachment '{attachment_type}'")
 
     async def _get_updates(self):
         longpoll_url = self.longpoll_url_template.format(

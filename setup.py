@@ -8,7 +8,7 @@
 import setuptools
 
 
-VERSION = "4.1.0"
+VERSION = "4.1.1"
 
 
 with open("README.md", "r") as fh:

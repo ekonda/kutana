@@ -197,7 +197,7 @@ class Kutana:
         """Start the application."""
         logger.info("Starting application...")
 
-        for sig in (signal.SIGHUP, signal.SIGTERM, signal.SIGINT):
+        for sig in (signal.SIGTERM, signal.SIGINT):
             def signal_handler():  # pragma: no cover
                 asyncio.ensure_future(self._shutdown(), loop=self._loop)
             self._loop.add_signal_handler(sig, signal_handler)

@@ -197,13 +197,11 @@ class Kutana:
         """Start the application."""
         logger.info("Starting application...")
 
-        for sig in (signal.SIGTERM, signal.SIGINT):
-            def signal_handler():  # pragma: no cover
-                asyncio.ensure_future(self._shutdown(), loop=self._loop)
-            self._loop.add_signal_handler(sig, signal_handler)
-
         try:
             asyncio.ensure_future(self._main_loop(), loop=self._loop)
+            self._loop.run_forever()
+        except KeyboardInterrupt:
+            asyncio.ensure_future(self._shutdown(), loop=self._loop)
             self._loop.run_forever()
         finally:
             self._loop.close()

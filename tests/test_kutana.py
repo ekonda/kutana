@@ -196,3 +196,22 @@ def test_handler_with_exception():
     app.add_plugin(pl)
 
     app.run()
+
+
+def test_kutana_shutdown():
+    app = Kutana()
+
+    async def trigger():
+        raise KeyboardInterrupt
+
+    _shutdown = app._shutdown
+    async def checker():
+        checker._called = True
+        await _shutdown()
+    checker._called = False
+
+    app._main_loop = trigger
+    app._shutdown = checker
+    app.run()
+
+    assert checker._called == True

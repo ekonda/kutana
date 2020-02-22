@@ -3,11 +3,11 @@ sortedcontainers
 aiohttp
 
 # Optional requirements
-psutil      # metrics plugin
+psutil
 
-uvloop      # optional speedup
-cchardet    # optional speedup
-aiodns      # optional speedup
+uvloop;platform_system!='Windows'
+cchardet;platform_system!='Windows'
+aiodns;platform_system!='Windows'
 
 # Development requirements
 recommonmark

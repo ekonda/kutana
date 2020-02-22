@@ -1,6 +1,10 @@
+import sys
 import asyncio
 from asynctest import patch
 from kutana.backends import Terminal
+
+
+IS_WINDOWS = sys.platform == "win32"
 
 
 @patch("builtins.print")
@@ -11,10 +15,13 @@ def test_perform_send(mock):
 
     asyncio.get_event_loop().run_until_complete(test())
 
-@patch('select.select')
+@patch('msvcrt.kbhit' if IS_WINDOWS else 'select.select')
 @patch('sys.stdin.readline')
 def test_request(mock2, mock1):
-    mock1.return_value = (True, (), ())
+    if IS_WINDOWS:
+        mock1.return_value = True
+    else:
+        mock1.return_value = (True, (), ())
     mock2.return_value = "msg"
 
     upds = []

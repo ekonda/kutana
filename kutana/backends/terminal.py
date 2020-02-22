@@ -3,7 +3,7 @@ import time
 from ..backend import Backend
 from ..update import Message, ReceiverType, UpdateType
 
-if sys.platform == "win32":
+if sys.platform == "win32":  # pragma: no cover
     import msvcrt
 
     def attempt_to_read_message():
@@ -16,9 +16,7 @@ else:
 
     def attempt_to_read_message():
         ready_objects, _, _ = select.select([sys.stdin], [], [], 0.05)
-        if ready_objects:
-            return sys.stdin.readline().strip()
-        return None
+        return sys.stdin.readline().strip() if ready_objects else None
 
 
 class Terminal(Backend):

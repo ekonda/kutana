@@ -1,6 +1,5 @@
-from sortedcontainers import SortedList
-import signal
 import asyncio
+from sortedcontainers import SortedList
 from .handler import HandlerResponse as hr
 from .storages import NaiveMemory
 from .context import Context

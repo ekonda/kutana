@@ -1,6 +1,7 @@
 # Required requirements
 sortedcontainers
 aiohttp
+msvcrt;platform_system=='Windows'
 
 # Optional requirements
 psutil

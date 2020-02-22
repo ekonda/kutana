@@ -1,8 +1,24 @@
 import sys
 import time
-import select
 from ..backend import Backend
 from ..update import Message, ReceiverType, UpdateType
+
+if sys.platform == "win32":
+    import msvcrt
+
+    def attempt_to_read_message():
+        if msvcrt.kbhit():
+            return sys.stdin.readline().strip()
+        return None
+
+else:
+    import select
+
+    def attempt_to_read_message():
+        ready_objects, _, _ = select.select([sys.stdin], [], [], 0.05)
+        if ready_objects:
+            return sys.stdin.readline().strip()
+        return None
 
 
 class Terminal(Backend):
@@ -19,10 +35,8 @@ class Terminal(Backend):
         )
 
     async def perform_updates_request(self, submit_update):
-        ready_objects, _, _ = select.select([sys.stdin], [], [], 0.1)
-
-        if ready_objects:
-            message = sys.stdin.readline().strip()
+        message = attempt_to_read_message()
+        if message:
             await submit_update(self._make_update(message))
 
     async def perform_send(self, target_id, message, attachments, kwargs):

@@ -12,10 +12,11 @@ on:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       max-parallel: 4
       matrix:
+        os: [windows-latest, ubuntu-latest]
         python-version: [3.6, 3.7, 3.8]
 
     steps:

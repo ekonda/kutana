@@ -5,7 +5,7 @@ on:
     types: [created]
 
 jobs:
-  check:
+  check-and-publish:
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 4

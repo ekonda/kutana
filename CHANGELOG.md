@@ -2,6 +2,9 @@
 
 > Changes to public API is marked as `^`
 
+- v4.1.4
+  - Fixed bugs in windows
+
 - v4.1.2
   - Improved storage descriptions
   - Improved states processes

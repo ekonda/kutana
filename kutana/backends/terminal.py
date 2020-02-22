@@ -11,7 +11,7 @@ if sys.platform == "win32":  # pragma: no cover
             return sys.stdin.readline().strip()
         return None
 
-else:
+else:  # pragma: no cover
     import select
 
     def attempt_to_read_message():

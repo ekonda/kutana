@@ -5,6 +5,7 @@
 - v4.1.5
   - Fixed `.send_message` with long messages.
   - Fixed `.reply` with non-str argument.
+  - Fixed `.resolve_screen_name` for not found users.
   - Fixed `.body` with command and multiline body.
 
 - v4.1.4

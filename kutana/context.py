@@ -112,6 +112,8 @@ class Context:
         :returns: tuple of chunks
         """
 
+        text = str(text)
+
         yield text[0: length]
 
         for i in range(length, len(text), length):
@@ -159,7 +161,7 @@ class Context:
                 target_id,
                 part,
                 (),
-                None,
+                {},
             ))
 
         responses.append(await self.backend.perform_send(

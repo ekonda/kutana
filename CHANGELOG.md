@@ -2,6 +2,11 @@
 
 > Changes to public API is marked as `^`
 
+- v4.1.5
+  - Fixed `.send_message` with long messages.
+  - Fixed `.reply` with non-str argument.
+  - Fixed `.body` with command and multiline body.
+
 - v4.1.4
   - Fixed bugs in windows
 

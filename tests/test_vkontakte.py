@@ -108,6 +108,16 @@ def test_resolve_screen_name(mock_request):
     asyncio.get_event_loop().run_until_complete(test())
 
 
+@patch("kutana.backends.Vkontakte._request")
+def test_resolve_screen_name_empty(mock_request):
+    mock_request.return_value = []
+
+    async def test():
+        vkontakte = Vkontakte(token="token", session=aiohttp.ClientSession())
+        assert await vkontakte.resolve_screen_name("asdjfgakyuhagkuf") == {}
+    asyncio.get_event_loop().run_until_complete(test())
+
+
 @patch("aiohttp.ClientSession.post")
 def test_perform_updates_request(mock_post):
     def make_mock(exc):

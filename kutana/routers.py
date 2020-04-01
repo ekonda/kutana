@@ -16,7 +16,7 @@ class CommandsRouter(MapRouter):
         prefixes = ctx.config["prefixes"]
 
         self._cache = re.compile(
-            pattern=r"({prefix})({command})($|\s.*)".format(
+            pattern=r"({prefix})({command})(?:$|\s([\s\S]*))".format(
                 prefix="|".join(re.escape(p) for p in prefixes),
                 command="|".join(re.escape(c) for c in commands),
             ),

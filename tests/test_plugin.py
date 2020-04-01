@@ -121,6 +121,22 @@ def test_commands():
     assert debug.answers[1][2] == (".echo", (), {})
     assert debug.answers[1][3] == (".ec\n123", (), {})
 
+def test_command_full_body():
+    app, debug, hu = make_kutana_no_run()
+
+    pl = Plugin("")
+
+    @pl.on_commands(["echo"])
+    async def _(msg, ctx):
+        await ctx.reply(ctx.body)
+
+    app.add_plugin(pl)
+
+    hu(Message(None, UpdateType.MSG, ".echo abc\nabc\nabc", (), 1, 0, 0, 0))
+
+    assert len(debug.answers[1]) == 1
+    assert debug.answers[1][0] == ("abc\nabc\nabc", (), {})
+
 
 def test_attachments():
     app, debug, hu = make_kutana_no_run()

@@ -159,6 +159,9 @@ class Vkontakte(Backend):
             {"screen_name": screen_name}
         )
 
+        if not result:
+            return {}
+
         if len(NAIVE_CACHE) >= 500_000:
             NAIVE_CACHE.clear()
 

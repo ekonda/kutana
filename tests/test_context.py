@@ -1,6 +1,14 @@
 import asyncio
 import pytest
+from asynctest import MagicMock, CoroutineMock
 from kutana import Context
+
+
+def test_reply_non_str():
+    ctx = Context(backend=MagicMock(perform_send=CoroutineMock()))
+    ctx.default_target_id = 1
+    asyncio.get_event_loop().run_until_complete(ctx.reply(123))
+    ctx.backend.perform_send.assert_called_with(1, '123', (), {})
 
 
 def test_context():
@@ -37,6 +45,16 @@ def test_context():
         ("ps", message[4096: 4096 * 2]),
         ("ps", message[4096 * 2:]),
     ]
+
+
+def test_lont_message_for_kwargs():
+    ctx = Context(backend=CoroutineMock(perform_send=CoroutineMock()))
+    ctx.default_target_id = 1
+
+    asyncio.get_event_loop().run_until_complete(ctx.reply("a" * (4096 * 2 - 1)))
+
+    ctx.backend.perform_send.assert_any_await(1, "a" * 4096, (), {})
+    ctx.backend.perform_send.assert_any_await(1, "a" * 4095, (), {})
 
 
 def test_dynamic_attributes():

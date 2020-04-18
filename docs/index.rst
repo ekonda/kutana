@@ -69,6 +69,17 @@ their methods for these classes in Full API.
 You can find descriptions of all possible "on_*" methods for adding your
 callbacks in :class:`kutana.plugin.Plugin` class.
 
+Order of "on_*" methods
+^^^^^^^^^^^^^^^^^^^^^^^
+Default order of processors:
+
+- on_any_message: 9
+- on_payload (vk): 7
+- on_commands: 6
+- on_attachments: 3
+- on_any_unprocessed_message: -3
+- Rest: ~0
+
 Attachments
 ^^^^^^^^^^^
 

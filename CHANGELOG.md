@@ -1,6 +1,10 @@
 # Changelog
 
-> Changes to public API is marked as `^`
+> Changes to public API is marked as `^`. Possible changes to public API is marked as `^?`.
+
+- v4.1.6
+  - ^? Fixed merging of 'different' routers
+  - Added tests for routers merges
 
 - v4.1.5
   - Fixed `.send_message` with long messages.

@@ -16,6 +16,13 @@ class Router:
             -handler.priority,
         )
 
+    def _assert_routers_alike(self, other_router):
+        if type(other_router) is not type(self):
+            raise RuntimeError("Can't merge routers with different classes")
+
+        if other_router.priority != self.priority:
+            raise RuntimeError("Can't merge routers with different priorities")
+
     def _check_update(self, update, ctx):
         """Should update be processed?"""
         return True
@@ -46,9 +53,7 @@ class ListRouter(Router):
         self._handlers.add(handler)
 
     def merge(self, other_router):
-        if not isinstance(other_router, self.__class__):
-            raise RuntimeError("Can't merge routers with different classes")
-
+        self._assert_routers_alike(other_router)
         self._handlers.update(other_router._handlers)
 
     async def handle(self, update, ctx):
@@ -85,8 +90,7 @@ class MapRouter(Router):
             self._handlers[key] = SortedList([handler], key=self._key)
 
     def merge(self, other_router):
-        if not isinstance(other_router, self.__class__):
-            raise RuntimeError("Can't merge routers with different classes")
+        self._assert_routers_alike(other_router)
 
         for key, handlers in other_router._handlers.items():
             for handler in handlers:

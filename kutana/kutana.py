@@ -120,7 +120,7 @@ class Kutana:
 
         def _add_router(new_router):
             for router in self._routers:
-                if isinstance(router, new_router.__class__):
+                if type(router) is type(new_router) and router.priority == new_router.priority:
                     router.merge(new_router)
                     return
 

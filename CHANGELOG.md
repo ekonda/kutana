@@ -1,6 +1,6 @@
 # Changelog
 
-> Changes to public API is marked as `^`. Possible changes to public API is marked as `^?`.
+> Changes to public API are marked as `^`. Possible changes to public API are marked as `^?`.
 
 - v4.1.6
   - ^? Fixed merging of 'different' routers

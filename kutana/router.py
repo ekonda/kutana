@@ -16,6 +16,9 @@ class Router:
             -handler.priority,
         )
 
+    def alike(self, other):
+        return type(self) is type(other) and self.priority == other.priority
+
     def _assert_routers_alike(self, other_router):
         if type(other_router) is not type(self):
             raise RuntimeError("Can't merge routers with different classes")

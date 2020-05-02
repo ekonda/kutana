@@ -50,8 +50,7 @@ class Vkontakte(Backend):
 
         self.requests_queue = []
 
-        self.api_request_url = \
-            api_url + f"/method/{{}}?access_token={token}&v={api_version}"
+        self.api_request_url = api_url + f"/method/{{}}?access_token={token}&v={api_version}"
 
         self.longpoll_url_template = "{}?act=a_check&key={}&wait=25&ts={}"
 

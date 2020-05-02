@@ -48,29 +48,25 @@ class VkontaktePluginExtension:
         payloads,
         group_state="*",
         user_state="*",
-        priority=0
+        priority=0,
+        router_priority=None,
     ):
         """
         Decorator for registering coroutine to be called when
         incoming update is message and payload have specified
         content.
 
-        You can specify group_state and/or user_state to control
-        which state must have groups and users attempting to
-        access this coroutine.
-
-        Priority is a value that used to determine order in which
-        coroutines are executed. If coroutine returns anythign but
-        :class:`kutana.handler.HandlerResponse` SKIPPED, other
-        coroutines are not executed further.
+        See :class:`kutana.plugin.Plugin.on_commands` for details
+        about 'group_state', 'user_state', 'priority' and 'router_priority'.
         """
 
         def decorator(func):
-            router = self.plugin._get_or_add_router(PayloadRouter)
             for payload in payloads:
-                router.add_handler(
-                    Handler(func, group_state, user_state, priority),
-                    payload,
+                self.plugin._add_handler_for_router(
+                    PayloadRouter,
+                    handler=self.plugin._make_handler(func, group_state, user_state, priority),
+                    handler_key=payload,
+                    router_priority=router_priority,
                 )
             return func
 

@@ -1,6 +1,14 @@
 # Changelog
 
-> Changes to public API are marked as `^`. Possible changes to public API are marked as `^?`.
+> Changes to public API are marked as `^`. Possible changes
+> to public API are marked as `^?`.
+
+- v4.2.0
+  - Added `router_priority` to plugin's registrators to allow more precise
+      ordering of handlers.
+  - Added handlers for raw updates
+  - Fixed merging of 'different' routers further
+  - Updated comments and documentation for context and plugins
 
 - v4.1.6
   - ^? Fixed merging of 'different' routers

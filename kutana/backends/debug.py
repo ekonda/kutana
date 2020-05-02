@@ -8,7 +8,6 @@ class Debug(Backend):
         if isinstance(messages, GeneratorType):  # pragma: no cover
             self.messages = messages
             self.messages_count = -1
-
         else:
             self.messages = (m for m in messages)
             self.messages_count = len(messages)

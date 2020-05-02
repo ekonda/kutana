@@ -2,7 +2,7 @@ import pytest
 from kutana import Context
 from kutana.handler import Handler
 from kutana.router import Router, ListRouter, MapRouter
-from kutana.routers import AnyMessageRouter, AnyUnprocessedMessageRouter
+from kutana.routers import AnyMessageRouter
 
 
 def test_check():
@@ -56,8 +56,11 @@ def test_router_merge():
 
 
 def test_router_subclass_merge():
+    class Sub(AnyMessageRouter):
+        pass
+
     mr1 = AnyMessageRouter()
-    mr2 = AnyUnprocessedMessageRouter()
+    mr2 = Sub()
     mr3 = ListRouter()
     mr4 = AnyMessageRouter()
 

@@ -71,9 +71,12 @@ class AnyMessageRouter(ListRouter):
         return update.type == UpdateType.MSG and update.text.strip()
 
 
-class AnyUnprocessedMessageRouter(AnyMessageRouter):
+class AnyUpdateRouter(ListRouter):
     __slots__ = ()
 
-    def __init__(self, priority=-3):
-        """Base priority is -3."""
+    def __init__(self, priority=9):
+        """Base priority is 9."""
         super().__init__(priority=priority)
+
+    def _check_update(self, update, ctx):
+        return update.type == UpdateType.UPD

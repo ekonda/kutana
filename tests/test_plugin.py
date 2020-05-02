@@ -92,6 +92,85 @@ def test_any_unprocessed_message():
     assert debug.answers[1][1] == (".abc", (), {})
 
 
+def test_any_update():
+    app, debug, hu = make_kutana_no_run()
+
+    pl = Plugin("")
+
+    received = []
+
+    @pl.on_any_update()
+    async def _(upd, ctx):
+        received.append(upd.raw)
+
+    app.add_plugin(pl)
+
+    hu(Update('a', UpdateType.UPD))
+    hu(Update('b', UpdateType.UPD))
+    assert hu(Message(None, UpdateType.MSG, ".123", (), 1, 0, 0, 0)) == hr.SKIPPED
+
+    assert received[0] == 'a'
+    assert received[1] == 'b'
+
+
+def test_any_unprocessed_update():
+    app, debug, hu = make_kutana_no_run()
+
+    pl = Plugin("")
+
+    received = []
+
+    @pl.on_any_update()
+    async def _(upd, ctx):
+        if upd.raw == 'a':
+            return hr.SKIPPED
+        received.append(upd.raw)
+
+    @pl.on_any_unprocessed_update()
+    async def _(upd, ctx):
+        received.append(upd.raw * 2)
+
+    app.add_plugin(pl)
+
+    hu(Update('a', UpdateType.UPD))
+    hu(Update('b', UpdateType.UPD))
+    assert hu(Message(None, UpdateType.MSG, ".123", (), 1, 0, 0, 0)) == hr.SKIPPED
+
+    assert received[0] == 'aa'
+    assert received[1] == 'b'
+
+
+def test_router_priority():
+    app, debug, hu = make_kutana_no_run()
+
+    pl = Plugin("")
+
+    received = []
+
+    @pl.on_any_update(router_priority=10)
+    async def _(upd, ctx):
+        received.append(upd.raw * 2)
+
+    @pl.on_any_unprocessed_update(priority=1, router_priority=10)
+    async def _(upd, ctx):
+        received.append(upd.raw * 3)
+
+    @pl.on_any_update(router_priority=20)
+    async def _(upd, ctx):
+        if upd.raw == 'a':
+            return hr.SKIPPED
+        received.append(upd.raw)
+
+    app.add_plugin(pl)
+
+    hu(Update('a', UpdateType.UPD))
+    hu(Update('b', UpdateType.UPD))
+    assert hu(Message(None, UpdateType.MSG, ".123", (), 1, 0, 0, 0)) == hr.SKIPPED
+
+    assert received[0] == 'aaa'
+    assert received[1] == 'b'
+
+
 def test_commands():
     app, debug, hu = make_kutana_no_run()
 

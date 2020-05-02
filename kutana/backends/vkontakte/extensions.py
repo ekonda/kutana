@@ -1,7 +1,6 @@
 import json
 from ...routers import MapRouter
 from ...update import UpdateType
-from ...handler import Handler
 
 
 class PayloadRouter(MapRouter):

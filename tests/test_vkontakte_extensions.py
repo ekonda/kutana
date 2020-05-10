@@ -156,4 +156,3 @@ def test_on_message_action_types():
     assert len(debug.answers[1]) == 2
     assert debug.answers[1][0] == ("http://example.com/50", (), {})
     assert debug.answers[1][1] == ("example1@mail.com", (), {})
-

@@ -6,7 +6,6 @@ from .routers import (
     CommandsRouter, AttachmentsRouter, ListRouter, AnyMessageRouter,
     AnyUpdateRouter
 )
-from .router import Router
 
 
 class Plugin:

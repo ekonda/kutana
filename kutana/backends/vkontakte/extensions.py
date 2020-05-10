@@ -54,15 +54,15 @@ class ActionMessageRouter(MapRouter):
         if update.type != UpdateType.MSG or backend_identity != "vkontakte":
             return ()
 
-        message = update.raw['object']['message']
-        if 'action' not in message:
+        message = update.raw["object"]["message"]
+        if "action" not in message:
             return ()
 
-        action = message['action']
+        action = message["action"]
 
-        ctx.action_type = action['type']
+        ctx.action_type = action["type"]
         ctx.action = action
-        return action['type'],
+        return action["type"],
 
 
 class VkontaktePluginExtension:
@@ -101,7 +101,7 @@ class VkontaktePluginExtension:
     def on_message_action(
             self,
             action_types,
-            group_state='*',
+            group_state="*",
             user_state="*",
             priority=0,
             router_priority=None,

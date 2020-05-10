@@ -328,23 +328,3 @@ class Plugin:
             return func
 
         return decorator
-
-    def on__custom_router(self, router, group_state="*", user_state="*", priority=0, router_priority=-5):
-        """
-        Decorator for registering coroutine to be called with custom router.
-
-        See :class:`kutana.plugin.Plugin.on_commands` for details
-        about 'group_state', 'user_state', 'priority' and 'router_priority'.
-        """
-        if not issubclass(router, Router):
-            raise TypeError("'router' must be a subclass of `kutana.router.Router`")
-
-        def decorator(func):
-            self._add_handler_for_router(
-                router,
-                handler=self._make_handler(func, group_state, user_state, priority),
-                router_priority=router_priority,
-            )
-            return func
-
-        return decorator

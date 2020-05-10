@@ -62,7 +62,7 @@ class ActionMessageRouter(MapRouter):
 
         ctx.action_type = action["type"]
         ctx.action = action
-        return action["type"],
+        return (action["type"],)
 
 
 class VkontaktePluginExtension:

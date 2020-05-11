@@ -55,7 +55,7 @@ def test_any_message():
 
     pl = Plugin("")
 
-    @pl.on_any_message()
+    @pl.on_messages()
     async def _(msg, ctx):
         await ctx.reply(msg.text)
 
@@ -78,7 +78,7 @@ def test_any_unprocessed_message():
     async def _(msg, ctx):
         await ctx.reply(msg.text)
 
-    @pl.on_any_unprocessed_message()
+    @pl.on_unprocessed_messages()
     async def _(msg, ctx):
         await ctx.reply(msg.text * 2)
 
@@ -99,7 +99,7 @@ def test_any_update():
 
     received = []
 
-    @pl.on_any_update()
+    @pl.on_updates()
     async def _(upd, ctx):
         received.append(upd.raw)
 
@@ -120,13 +120,13 @@ def test_any_unprocessed_update():
 
     received = []
 
-    @pl.on_any_update()
+    @pl.on_updates()
     async def _(upd, ctx):
         if upd.raw == 'a':
             return hr.SKIPPED
         received.append(upd.raw)
 
-    @pl.on_any_unprocessed_update()
+    @pl.on_unprocessed_updates()
     async def _(upd, ctx):
         received.append(upd.raw * 2)
 
@@ -147,15 +147,15 @@ def test_router_priority():
 
     received = []
 
-    @pl.on_any_update(router_priority=10)
+    @pl.on_updates(router_priority=10)
     async def _(upd, ctx):
         received.append(upd.raw * 2)
 
-    @pl.on_any_unprocessed_update(priority=1, router_priority=10)
+    @pl.on_unprocessed_updates(priority=1, router_priority=10)
     async def _(upd, ctx):
         received.append(upd.raw * 3)
 
-    @pl.on_any_update(router_priority=20)
+    @pl.on_updates(router_priority=20)
     async def _(upd, ctx):
         if upd.raw == 'a':
             return hr.SKIPPED

@@ -1,4 +1,5 @@
 import re
+import warnings
 from .handler import Handler, HandlerResponse
 from .update import UpdateType
 from .backends.vkontakte import VkontaktePluginExtension
@@ -203,12 +204,19 @@ class Plugin:
 
         return decorator
 
-    def on_any_message(self, group_state="*", user_state="*", priority=0, router_priority=None):
+    def on_any_message(self, *args, **kwargs):
+        warnings.warn(
+            '"on_any_message" is deprecated, use "on_messages" instead',
+            DeprecationWarning
+        )
+        return self.on_messages(*args, **kwargs)
+
+    def on_messages(self, group_state="*", user_state="*", priority=0, router_priority=None):
         """
         Decorator for registering coroutine to be called when
         incoming update is message. This will always be called.
         If you want to catch all unprocessed message, you should
-        use :meth:`kutana.plugin.Plugin.on_any_unprocessed_message`.
+        use :meth:`kutana.plugin.Plugin.on_unprocessed_messages`.
 
         See :class:`kutana.plugin.Plugin.on_commands` for details
         about 'group_state', 'user_state', 'priority' and 'router_priority'.
@@ -224,7 +232,14 @@ class Plugin:
 
         return decorator
 
-    def on_any_unprocessed_message(
+    def on_any_unprocessed_message(self, *args, **kwargs):
+        warnings.warn(
+            '"on_any_unprocessed_message" is deprecated, use "on_unprocessed_messages" instead',
+            DeprecationWarning
+        )
+        return self.on_unprocessed_messages(*args, **kwargs)
+
+    def on_unprocessed_messages(
         self,
         group_state="*",
         user_state="*",
@@ -287,12 +302,19 @@ class Plugin:
 
         return decorator
 
-    def on_any_update(self, group_state="*", user_state="*", priority=0, router_priority=None):
+    def on_any_update(self, *args, **kwargs):
+        warnings.warn(
+            '"on_any_update" is deprecated, use "on_updates" instead',
+            DeprecationWarning
+        )
+        return self.on_updates(self, *args, **kwargs)
+
+    def on_updates(self, group_state="*", user_state="*", priority=0, router_priority=None):
         """
         Decorator for registering coroutine to be called when
         incoming update is not message. This will always be called.
         If you want to catch all unprocessed message, you should
-        use :meth:`kutana.plugin.Plugin.on_any_unprocessed_update`.
+        use :meth:`kutana.plugin.Plugin.on_unprocessed_updates`.
 
         See :class:`kutana.plugin.Plugin.on_commands` for details
         about 'group_state', 'user_state', 'priority' and 'router_priority'.
@@ -308,7 +330,14 @@ class Plugin:
 
         return decorator
 
-    def on_any_unprocessed_update(self, group_state="*", user_state="*", priority=0, router_priority=-3):
+    def on_any_unprocessed_update(self, *args, **kwargs):
+        warnings.warn(
+            '"on_any_unprocessed_update" is deprecated, use "on_unprocessed_updates" instead',
+            DeprecationWarning
+        )
+        return self.on_unprocessed_updates(self, *args, **kwargs)
+
+    def on_unprocessed_updates(self, group_state="*", user_state="*", priority=0, router_priority=-3):
         """
         Decorator for registering coroutine to be called when
         incoming update is update. This will be called if no other

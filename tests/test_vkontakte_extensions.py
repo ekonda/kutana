@@ -41,12 +41,12 @@ def make_message_action(action_type, member_id, text, email, photo):
     return obj
 
 
-def test_on_payload():
+def test_on_payloads():
     app, debug, hu = make_kutana_no_run(backend_source="vkontakte")
 
     pl = Plugin("")
 
-    @pl.vk.on_payload([{"command": "test"}])
+    @pl.vk.on_payloads([{"command": "test"}])
     async def _(msg, ctx):
         await ctx.reply(msg.text)
 
@@ -62,12 +62,12 @@ def test_on_payload():
     assert debug.answers[1][0] == ("hey1", (), {})
 
 
-def test_on_payload_types():
+def test_on_payloads_types():
     app, debug, hu = make_kutana_no_run(backend_source="vkontakte")
 
     pl = Plugin("")
 
-    @pl.vk.on_payload([{"command": {"why": "test"}}, "txt"])
+    @pl.vk.on_payloads([{"command": {"why": "test"}}, "txt"])
     async def _(msg, ctx):
         await ctx.reply(msg.text)
 
@@ -92,12 +92,12 @@ def test_on_payload_types():
     assert debug.answers[1][1] == ("hey4", (), {})
 
 
-def test_on_message_action():
+def test_on_message_actions():
     app, debug, hu = make_kutana_no_run(backend_source="vkontakte")
 
     pl = Plugin("")
 
-    @pl.vk.on_message_action(['chat_title_update', 'chat_create'])
+    @pl.vk.on_message_actions(['chat_title_update', 'chat_create'])
     async def _(msg, ctx):
         await ctx.reply(msg.raw["object"]["message"]["action"]["text"])
 
@@ -113,16 +113,16 @@ def test_on_message_action():
     assert debug.answers[1][0] == ("they1", (), {})
 
 
-def test_on_message_action_types():
+def test_on_message_actions_types():
     app, debug, hu = make_kutana_no_run(backend_source="vkontakte")
 
     pl = Plugin("")
 
-    @pl.vk.on_message_action(["chat_photo_remove"])
+    @pl.vk.on_message_actions(["chat_photo_remove"])
     async def _(msg, ctx):
         await ctx.reply(msg.raw['object']['message']["action"]["photo"]["photo_50"])
 
-    @pl.vk.on_message_action(['chat_invite_user'])
+    @pl.vk.on_message_actions(['chat_invite_user'])
     async def _(msg, ctx):
         if msg.raw['object']['message']['action']['member_id'] < 0:
             await ctx.reply(msg.raw['object']['message']['action']['email'])

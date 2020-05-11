@@ -3,6 +3,18 @@
 > Changes to public API are marked as `^`. Possible changes
 > to public API are marked as `^?`.
 
+- v4.3.0
+  - Added router for vkontakte's chat actions + tests
+  - ^ Renamed some plugin's decorators. Old decorators will
+      still work but is considered deprecated. It's possible,
+      that this change will be undone, or further updated. List
+      of changed names:
+    - `on_any_message` -> `on_messages`
+    - `on_any_unprocessed_message` -> `on_unprocessed_messages`
+    - `on_any_update` -> `on_updates`
+    - `on_any_unprocessed_update` -> `on_unprocessed_updates`
+    - `on_payload` -> `on_payloads`
+
 - v4.2.0
   - Added `router_priority` to plugin's registrators to allow more precise
       ordering of handlers.

@@ -11,7 +11,7 @@ def test_happy_path():
     # Simple echo plugin
     pl = Plugin("")
 
-    @pl.on_any_message()
+    @pl.on_messages()
     async def _(message, ctx):
         await ctx.reply(message.text)
 
@@ -77,7 +77,7 @@ def test_start_and_shutdown_hooks():
     async def _(app):
         called.append("start")
 
-    @pl.on_any_message()
+    @pl.on_messages()
     async def _(msg, ctx):
         await ctx.reply("ok")
 
@@ -105,7 +105,7 @@ def test_before_and_after_hooks():
         called.append("before")
         saved_ctxs.append(ctx)
 
-    @pl.on_any_message()
+    @pl.on_messages()
     async def _(msg, ctx):
         await ctx.reply("ok")
         called.append("handle")
@@ -130,7 +130,7 @@ def test_exception_hooks():
 
     pl = Plugin("")
 
-    @pl.on_any_message()
+    @pl.on_messages()
     async def _(msg, ctx):
         called.append("bruh")
         await ctx.reply("bruh")

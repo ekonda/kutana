@@ -12,7 +12,7 @@ plugin = Plugin(
 )
 
 
-@plugin.on_any_message(priority=5)
+@plugin.on_messages(priority=5)
 async def _(msg, ctx):
     words_count = statistics.get(msg.sender_id, 0)
 

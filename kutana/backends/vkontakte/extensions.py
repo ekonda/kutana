@@ -1,4 +1,5 @@
 import json
+import warnings
 from ...routers import MapRouter
 from ...update import UpdateType
 
@@ -69,7 +70,14 @@ class VkontaktePluginExtension:
     def __init__(self, plugin):
         self.plugin = plugin
 
-    def on_payload(
+    def on_payload(self, *args, **kwargs):
+        warnings.warn(
+            '"on_payload" is deprecated, use "on_payloads" instead',
+            DeprecationWarning
+        )
+        return self.on_payloads(self, *args, **kwargs)
+
+    def on_payloads(
         self,
         payloads,
         group_state="*",
@@ -98,7 +106,7 @@ class VkontaktePluginExtension:
 
         return decorator
 
-    def on_message_action(
+    def on_message_actions(
             self,
             action_types,
             group_state="*",
@@ -113,6 +121,7 @@ class VkontaktePluginExtension:
         See :class:`kutana.plugin.Plugin.on_commands` for details
         about 'group_state', 'user_state', 'priority' and 'router_priority'.
         """
+
         def decorator(func):
             for action_type in action_types:
                 self.plugin._add_handler_for_router(

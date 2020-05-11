@@ -73,11 +73,11 @@ Order of "on_*" methods
 ^^^^^^^^^^^^^^^^^^^^^^^
 Default order of processors:
 
-- on_any_message: 9
-- on_payload (vk): 7
+- on_messages, on_updates: 9
+- on_payloads (vk): 7
 - on_commands: 6
 - on_attachments: 3
-- on_any_unprocessed_message: -3
+- on_unprocessed_messages, on_unprocessed_updates: -3
 - Rest: ~0
 
 Attachments

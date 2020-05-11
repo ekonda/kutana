@@ -33,7 +33,7 @@ async def _(msg, ctx):
     await ctx.reply("Bye")
 
 
-@pl.on_any_unprocessed_message(user_state="quest:end")
+@pl.on_unprocessed_messages(user_state="quest:end")
 async def _(msg, ctx):
     await ctx.reply("Write '.ok'")
 # ---------------------------------------

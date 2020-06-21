@@ -200,6 +200,26 @@ def test_commands():
     assert debug.answers[1][2] == (".echo", (), {})
     assert debug.answers[1][3] == (".ec\n123", (), {})
 
+def test_commands_with_spaces():
+    app, debug, hu = make_kutana_no_run()
+
+    pl = Plugin("")
+
+    @pl.on_commands(["echo", "ec"])
+    async def _(msg, ctx):
+        await ctx.reply(msg.text)
+
+    app.add_plugin(pl)
+
+    hu(Message(None, UpdateType.MSG, " . echo 123", (), 1, 0, 0, 0))
+    hu(Message(None, UpdateType.MSG, ". echo 123", (), 1, 0, 0, 0))
+    hu(Message(None, UpdateType.MSG, ".\nec abc", (), 1, 0, 0, 0))
+
+    assert len(debug.answers[1]) == 3
+    assert debug.answers[1][0] == (" . echo 123", (), {})
+    assert debug.answers[1][1] == (". echo 123", (), {})
+    assert debug.answers[1][2] == (".\nec abc", (), {})
+
 def test_command_full_body():
     app, debug, hu = make_kutana_no_run()
 

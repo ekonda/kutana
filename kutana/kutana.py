@@ -10,6 +10,11 @@ class Kutana:
     """
     Main class for kutana application
 
+    Configuration:
+
+    - '.prefixes' - prefixes for commands (default is [".", "/"])
+    - '.ignore_initial_spaces' - ignore spaces after prefix (default is True)
+
     :ivar ~.storage: Storage for things like states, e.t.c.
     :ivar ~.config: Application's configuration
     """
@@ -35,6 +40,7 @@ class Kutana:
 
         self.config = {
             "prefixes": (".", "/"),
+            "ignore_initial_spaces": True
         }
 
     def get_loop(self):

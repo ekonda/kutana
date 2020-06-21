@@ -14,11 +14,13 @@ class CommandsRouter(MapRouter):
     def _populate_cache(self, ctx):
         commands = list(self._handlers.keys())
         prefixes = ctx.config["prefixes"]
+        ignore_initial_spaces = ctx.config['ignore_initial_spaces']
 
         self._cache = re.compile(
-            pattern=r"({prefix})({command})(?:$|\s([\s\S]*))".format(
+            pattern=r"{spaces_pattern}({prefix}){spaces_pattern}({command})(?:$|\s([\s\S]*))".format(
                 prefix="|".join(re.escape(p) for p in prefixes),
                 command="|".join(re.escape(c) for c in commands),
+                spaces_pattern=r"\s*" if ignore_initial_spaces else "",
             ),
             flags=re.IGNORECASE,
         )

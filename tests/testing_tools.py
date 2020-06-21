@@ -17,7 +17,7 @@ def make_kutana_no_run(backend_source=None):
     async def _handle_update(update):
         ctx = await Context.create(
             app=app,
-            config={"prefixes": (".",)},
+            config={"prefixes": (".",), "ignore_initial_spaces": True},
             update=update,
             backend=debug
         )

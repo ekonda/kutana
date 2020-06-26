@@ -14,7 +14,7 @@ class CommandsRouter(MapRouter):
     def _populate_cache(self, ctx):
         commands = list(self._handlers.keys())
         prefixes = ctx.config["prefixes"]
-        ignore_initial_spaces = ctx.config['ignore_initial_spaces']
+        ignore_initial_spaces = ctx.config["ignore_initial_spaces"]
 
         self._cache = re.compile(
             pattern=r"{spaces_pattern}({prefix}){spaces_pattern}({command})(?:$|\s([\s\S]*))".format(

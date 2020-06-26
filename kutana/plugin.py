@@ -59,7 +59,7 @@ class Plugin:
         """
         def decorator(func):
             if self._on_start is not None:
-                raise RuntimeError(f"Hook 'on_start' already set")
+                raise RuntimeError("Hook 'on_start' already set")
             self._on_start = func
             return func
         return decorator
@@ -72,7 +72,7 @@ class Plugin:
         """
         def decorator(func):
             if self._on_before is not None:
-                raise RuntimeError(f"Hook 'on_before' already set")
+                raise RuntimeError("Hook 'on_before' already set")
             self._on_before = func
             return func
         return decorator
@@ -86,7 +86,7 @@ class Plugin:
         """
         def decorator(func):
             if self._on_after is not None:
-                raise RuntimeError(f"Hook 'on_after' already set")
+                raise RuntimeError("Hook 'on_after' already set")
             self._on_after = func
             return func
         return decorator
@@ -99,7 +99,7 @@ class Plugin:
         """
         def decorator(func):
             if self._on_exception is not None:
-                raise RuntimeError(f"Hook 'on_exception' already set")
+                raise RuntimeError("Hook 'on_exception' already set")
             self._on_exception = func
             return func
         return decorator
@@ -111,7 +111,7 @@ class Plugin:
         """
         def decorator(func):
             if self._on_shutdown is not None:
-                raise RuntimeError(f"Hook 'on_shutdown' already set")
+                raise RuntimeError("Hook 'on_shutdown' already set")
             self._on_shutdown = func
             return func
         return decorator

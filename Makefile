@@ -6,6 +6,7 @@ run:
 	export PYTHONPATH=$(PWD); cd example; python3 run.py
 
 docs:
+	python3 -m pip install recommonmark
 	sphinx-apidoc --separate -o docs/src/ . $(PWD)/setup.py; cd docs; \
 		make clean; make html
 

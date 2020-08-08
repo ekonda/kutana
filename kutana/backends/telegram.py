@@ -25,6 +25,7 @@ class Telegram(Backend):
         self.session = session
         self._is_session_local = session is None
 
+        self.username = None
         self.api_token = token
         self.api_messages_pause = 1 / messages_per_second
         self.api_messages_lock = None
@@ -120,6 +121,32 @@ class Telegram(Backend):
                 raw=d,
             )
 
+    def _extract_text(self, update):
+        entities = update["message"].get("entities", ())
+
+        if not entities:
+            return update["message"].get("text", "")
+
+        text = update["message"].get("text", "")
+
+        final_text = ""
+        last_index = 0
+
+        for entity in sorted(entities, key=lambda entity: entity["offset"]):
+            if entity["type"] == "bot_command":
+                new_last_index = entity["offset"] + entity["length"]
+
+                command = text[last_index: new_last_index]
+
+                if command.endswith(f"@{self.username}"):
+                    final_text += command[:-len(f"@{self.username}")]
+                else:
+                    final_text += command
+
+                last_index = new_last_index
+
+        return final_text + text[last_index:]
+
     def _make_update(self, raw_update):
         if "message" not in raw_update:
             return Update(raw_update, UpdateType.UPD)
@@ -140,13 +167,15 @@ class Telegram(Backend):
 
         if raw_update["message"]["chat"]["type"] == "private":
             receiver_type = ReceiverType.SOLO
+            text = raw_update["message"].get("text", "")
         else:
             receiver_type = ReceiverType.MULTI
+            text = self._extract_text(raw_update)
 
         return Message(
             raw=raw_update,
             type=UpdateType.MSG,
-            text=raw_update["message"].get("text", ""),
+            text=text,
             attachments=attachments,
             sender_id=raw_update["message"]["from"]["id"],
             receiver_id=raw_update["message"]["chat"]["id"],
@@ -229,15 +258,16 @@ class Telegram(Backend):
     async def on_start(self, app):
         me = await self._request("getMe")
 
-        name = me["first_name"]
-        if me.get("last_name"):
-            name += " " + me["last_name"]
+        name = me.get("first_name", "") + " " + me.get("last_name", "")
+        name = name.strip() or "(unknown)"
 
         logger.info(
             'logged in as "%s" ( https://t.me/%s )',
             name,
             me["username"],
         )
+
+        self.username = me["username"]
 
         self.api_messages_lock = asyncio.Lock(loop=app.get_loop())
 

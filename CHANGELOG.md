@@ -3,6 +3,9 @@
 > Changes to public API are marked as `^`. Possible changes
 > to public API are marked as `^?`.
 
+- v4.4.0 - WIP
+  - Added stripping of mentions for the telegram bot
+
 - v4.3.0
   - Added router for vkontakte's chat actions + tests
   - ^ Renamed some plugin's decorators. Old decorators will

@@ -172,6 +172,9 @@ def test_happy_path():
         MESSAGES["message"],
         MESSAGES[".echo"],
         MESSAGES[".echo chat"],
+        MESSAGES["/echo@bot chat"],
+        MESSAGES["/echo chat"],
+        MESSAGES[".echo@bot chat"],
         MESSAGES["_image"],
     ]
 
@@ -180,7 +183,7 @@ def test_happy_path():
     class _Telegram(Telegram):
         async def _request(self, method, kwargs={}):
             if method == "getMe":
-                return {"first_name": "te", "last_name": "st", "username": "a"}
+                return {"first_name": "te", "last_name": "st", "username": "bot"}
 
             if method == "getUpdates":
                 if not updates:
@@ -223,7 +226,9 @@ def test_happy_path():
     app.run()
 
     answers.sort()
-    assert len(answers) == 3
+    assert len(answers) == 5
     assert answers[0][0] == "image"
     assert answers[1] == ("msg", ".echo")
     assert answers[2] == ("msg", ".echo chat")
+    assert answers[3] == ("msg", "/echo chat")
+    assert answers[4] == ("msg", "/echo chat")

@@ -1,5 +1,9 @@
 import os
-from kutana.helpers import get_path
+from kutana.helpers import get_path, get_random_string
+
+
+def test_get_random_string():
+    assert len(get_random_string(4)) == 4
 
 
 def test_get_path():

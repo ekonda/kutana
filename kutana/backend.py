@@ -9,12 +9,15 @@ class Backend:
         pass
 
     async def perform_updates_request(self, submit_update):
+        # TODO: Rename to "acquire_updates"
         raise NotImplementedError
 
     async def perform_send(self, target_id, message, attachments, kwargs):
+        # TODO: Rename to "send_message"
         raise NotImplementedError
 
     async def perform_api_call(self, method, kwargs):
+        # TODO: Rename to "api_request"
         raise NotImplementedError
 
     @classmethod

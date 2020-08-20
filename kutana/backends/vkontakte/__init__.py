@@ -1,4 +1,13 @@
 from .extensions import VkontaktePluginExtension
-from .backend import Vkontakte
+from .longpoll import VkontakteLongpoll
+from .callback import VkontakteCallback
 
-__all__ = ["VkontaktePluginExtension", "Vkontakte"]
+
+Vkontakte = VkontakteLongpoll  # Alias for backward compatibility
+
+
+__all__ = [
+    "VkontaktePluginExtension",
+    "Vkontakte", "VkontakteLongpoll",
+    "VkontakteCallback",
+]

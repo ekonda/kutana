@@ -27,8 +27,7 @@ class Vkontakte(Backend):
         token,
         session=None,
         requests_per_second=19,
-        longpoll_settings=None,
-        api_version="5.103",
+        api_version="5.122",
         api_url="https://api.vk.com"
     ):
         if not token:
@@ -45,14 +44,13 @@ class Vkontakte(Backend):
         self.group_screen_name = None
         self.group_name = None
 
-        self.longpoll_settings = longpoll_settings or {}
-        self.longpoll_data = None
-
         self.requests_queue = []
 
         self.api_request_url = api_url + f"/method/{{}}?access_token={token}&v={api_version}"
 
-        self.longpoll_url_template = "{}?act=a_check&key={}&wait=25&ts={}"
+    @classmethod
+    def get_identity(cls):
+        return "vkontakte"
 
     async def _get_response(self, method, kwargs={}):
         data = {k: v for k, v in kwargs.items() if v is not None}
@@ -141,13 +139,6 @@ class Vkontakte(Backend):
         logger.debug("Vkontakte: %s(%s) => %s", method, kwargs, res)
 
         return res
-
-    async def update_longpoll_data(self):
-        longpoll = await self.raw_request(
-            "groups.getLongPollServer", {"group_id": self.group_id}
-        )
-
-        self.longpoll_data = longpoll.copy()
 
     async def resolve_screen_name(self, screen_name):
         if screen_name in NAIVE_CACHE:
@@ -368,61 +359,6 @@ class Vkontakte(Backend):
 
         raise ValueError(f"Can't upload attachment '{attachment_type}'")
 
-    async def _get_updates(self):
-        longpoll_url = self.longpoll_url_template.format(
-            self.longpoll_data["server"],
-            self.longpoll_data["key"],
-            self.longpoll_data["ts"],
-        )
-
-        try:
-            async with self.session.post(longpoll_url) as resp:
-                return await resp.json(content_type=None)
-
-        except (json.JSONDecodeError, aiohttp.ClientError):
-            return None
-
-        except asyncio.CancelledError:
-            raise
-
-        except Exception:
-            logger.exception("Exceptions while gettings updates (Vkontakte)")
-            await asyncio.sleep(1)
-            return None
-
-    async def perform_updates_request(self, submit_update):
-        response = await self._get_updates()
-
-        if response is None:
-            return
-
-        if "ts" in response:
-            self.longpoll_data["ts"] = response["ts"]
-
-        if "failed" in response:
-            if response["failed"] in (2, 3):
-                await self.update_longpoll_data()
-            return
-
-        for update_data in response["updates"]:
-            if "type" not in update_data or "object" not in update_data:
-                continue
-
-            if update_data["type"] == "group_change_settings":
-                changes = update_data["object"]["changes"]
-
-                screen_name = changes.get("screen_name")
-                if screen_name:
-                    self.group_screen_name = screen_name["new_value"]
-
-                title = changes.get("title")
-                if title:
-                    self.group_name = title["new_value"]
-
-            update = self._make_update(update_data)
-
-            await submit_update(update)
-
     async def perform_send(self, target_id, message, attachments, kwargs):
         # Form proper arguments
         true_kwargs = {"message": message, "peer_id": target_id}
@@ -475,49 +411,13 @@ class Vkontakte(Backend):
 
         await self._update_group_data()
 
-        longpoll_settings = dict(
-            message_new=1, message_reply=0, message_allow=0,
-            message_deny=0, message_edit=0, photo_new=0, audio_new=0,
-            video_new=0, wall_reply_new=0, wall_reply_edit=0,
-            wall_reply_delete=0, wall_reply_restore=0, wall_post_new=0,
-            wall_repost=0, board_post_new=0, board_post_edit=0,
-            board_post_restore=0, board_post_delete=0, photo_comment_new=0,
-            photo_comment_edit=0, photo_comment_delete=0,
-            photo_comment_restore=0, video_comment_new=0,
-            video_comment_edit=0, video_comment_delete=0,
-            video_comment_restore=0, market_comment_new=0,
-            market_comment_edit=0, market_comment_delete=0,
-            market_comment_restore=0, poll_vote_new=0, group_join=0,
-            group_leave=0, group_change_settings=1, group_change_photo=0,
-            group_officers_edit=0, user_block=0, user_unblock=0
-        )
-
-        longpoll_settings.update(self.longpoll_settings)
-
-        await self.raw_request(
-            "groups.setLongPollSettings",
-            {
-                "group_id": self.group_id,
-                "api_version": self.api_version,
-                "enabled": 1,
-                **longpoll_settings,
-            }
-        )
-
-        await self.update_longpoll_data()
-
         logger.info(
             'logged in as "%s" ( https://vk.com/club%s )',
             self.group_name,
             self.group_id,
         )
 
-        loop = app.get_loop()
-
-        asyncio.ensure_future(
-            self._execute_loop(loop),
-            loop=loop
-        )
+        asyncio.ensure_future(self._execute_loop(app.get_loop()), loop=app.get_loop())
 
     async def send_message(self, target_id, message, attachments=(), **kwargs):
         """
@@ -544,5 +444,5 @@ class Vkontakte(Backend):
         return await self._request(method, kwargs, _timeout)
 
     async def on_shutdown(self, app):
-        if self._is_session_local:
+        if self.session and self._is_session_local:
             await self.session.close()

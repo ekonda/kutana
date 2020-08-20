@@ -5,6 +5,9 @@
 
 - v4.4.0 - WIP
   - Added stripping of mentions for the telegram bot
+  - Added `VkontakteCallback`; `Vkontakte` is now
+      alias for `VkontakteLongpoll`
+  - Updated "stream" plugin to be more adequate
 
 - v4.3.0
   - Added router for vkontakte's chat actions + tests

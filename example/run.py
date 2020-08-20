@@ -1,6 +1,6 @@
 import json
 from kutana import Kutana, load_plugins
-from kutana.backends import Vkontakte, Telegram
+from kutana.backends import Vkontakte, VkontakteCallback, Telegram
 
 # Import configuration
 with open("config.json") as fh:
@@ -11,7 +11,13 @@ app = Kutana()
 
 # Add backends to application
 if "vk" in config:
-    app.add_backend(Vkontakte(token=config["vk"]["token"]))
+    if "address" in config["vk"]:
+        app.add_backend(VkontakteCallback(
+            token=config["vk"]["token"],
+            address=config["vk"]["address"]
+        ))
+    else:
+        app.add_backend(Vkontakte(token=config["vk"]["token"]))
 
 if "tg" in config:
     app.add_backend(Telegram(token=config["tg"]["token"]))

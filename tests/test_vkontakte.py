@@ -1,16 +1,17 @@
 import aiohttp
 import asyncio
+import random
 import pytest
 from asynctest import CoroutineMock, patch
 from kutana import Kutana, Plugin, RequestException, Attachment
-from kutana.backends import Vkontakte
+from kutana.backends import VkontakteLongpoll, VkontakteCallback
 from kutana.backends.vkontakte.backend import VKRequest, NAIVE_CACHE
 from test_vkontakte_data import MESSAGES, ATTACHMENTS
 
 
 def test_no_token():
     with pytest.raises(ValueError):
-        Vkontakte("")
+        VkontakteLongpoll("")
 
 
 @patch("aiohttp.ClientSession.post")
@@ -20,7 +21,7 @@ def test_raw_request(mock_post):
     )
 
     async def test():
-        vkontakte = Vkontakte(token="token", session=aiohttp.ClientSession())
+        vkontakte = VkontakteLongpoll(token="token", session=aiohttp.ClientSession())
 
         assert await vkontakte.raw_request("method1", {"arg": "val1"}) == 1
 
@@ -46,7 +47,7 @@ def test_execute_loop_perform_execute(mock_get_response):
     ]
 
     async def test():
-        vkontakte = Vkontakte(token="token", session=aiohttp.ClientSession())
+        vkontakte = VkontakteLongpoll(token="token", session=aiohttp.ClientSession())
 
         tasks = [VKRequest("m1", {}), VKRequest("m2", {})]
 
@@ -93,7 +94,7 @@ def test_resolve_screen_name(mock_request):
     mock_request.side_effect = [data, data]
 
     async def test():
-        vkontakte = Vkontakte(token="token", session=aiohttp.ClientSession())
+        vkontakte = VkontakteLongpoll(token="token", session=aiohttp.ClientSession())
 
         assert await vkontakte.resolve_screen_name("durov") == data
         assert await vkontakte.resolve_screen_name("durov") == data
@@ -113,7 +114,7 @@ def test_resolve_screen_name_empty(mock_request):
     mock_request.return_value = []
 
     async def test():
-        vkontakte = Vkontakte(token="token", session=aiohttp.ClientSession())
+        vkontakte = VkontakteLongpoll(token="token", session=aiohttp.ClientSession())
         assert await vkontakte.resolve_screen_name("asdjfgakyuhagkuf") == {}
     asyncio.get_event_loop().run_until_complete(test())
 
@@ -133,7 +134,7 @@ def test_perform_updates_request(mock_post):
     ]
 
     async def test():
-        vkontakte = Vkontakte(token="token", session=aiohttp.ClientSession())
+        vkontakte = VkontakteLongpoll(token="token", session=aiohttp.ClientSession())
 
         vkontakte.longpoll_data = {
             "ts": "ts",
@@ -158,7 +159,7 @@ def test_upload_file_to_vk(mock_post):
     )
 
     async def test():
-        vkontakte = Vkontakte(token="token", session=aiohttp.ClientSession())
+        vkontakte = VkontakteLongpoll(token="token", session=aiohttp.ClientSession())
         result = await vkontakte._upload_file_to_vk("url", {"file": "file"})
         assert result == {"r": "ok"}
 
@@ -166,7 +167,7 @@ def test_upload_file_to_vk(mock_post):
 
 
 def test_upload_attachment():
-    class _Vkontakte(Vkontakte):
+    class _VkontakteLongpoll(VkontakteLongpoll):
         async def _request(self, method, kwargs):
             if method == "photos.getMessagesUploadServer":
                 return {"upload_url": "upload_url_photo"}
@@ -210,7 +211,7 @@ def test_upload_attachment():
 
             raise RuntimeError("Unknown url")
 
-    vkontakte = _Vkontakte(token="token")
+    vkontakte = _VkontakteLongpoll(token="token")
 
     async def test():
         attachment = Attachment.new(b"content")
@@ -257,7 +258,7 @@ def test_attachments(mock_get):
     mock_get.return_value.__aenter__.return_value.read = mock_read
 
     async def test():
-        vkontakte = Vkontakte(token="token", session=aiohttp.ClientSession())
+        vkontakte = VkontakteLongpoll(token="token", session=aiohttp.ClientSession())
 
         for k, v in ATTACHMENTS.items():
             attachment = vkontakte._make_attachment(v)
@@ -280,7 +281,7 @@ def test_attachments(mock_get):
 
 
 def test_perform_send_exception():
-    vkontakte = Vkontakte(token="token")
+    vkontakte = VkontakteLongpoll(token="token")
 
     attachment = vkontakte._make_attachment(ATTACHMENTS["image"])
     attachment = attachment._replace(id=None)
@@ -292,7 +293,7 @@ def test_perform_send_exception():
 
 
 def test_perform_send_string():
-    vkontakte = Vkontakte(token="token")
+    vkontakte = VkontakteLongpoll(token="token")
 
     async def req(method, kwargs):
         assert method == "messages.send"
@@ -308,7 +309,7 @@ def test_perform_send_string():
 
 
 def test_perform_send_sticker():
-    vkontakte = Vkontakte(token="token")
+    vkontakte = VkontakteLongpoll(token="token")
 
     async def req(method, kwargs):
         assert method == "messages.send"
@@ -327,7 +328,7 @@ def test_perform_send_sticker():
 
 
 def test_perform_send_new():
-    vkontakte = Vkontakte(token="token")
+    vkontakte = VkontakteLongpoll(token="token")
 
     async def _upl_att(attachment, peer_id):
         return attachment._replace(id=1, raw={"ok": "ok"})
@@ -349,7 +350,7 @@ def test_perform_send_new():
 
 
 def test_perform_api_call():
-    vkontakte = Vkontakte(token="token")
+    vkontakte = VkontakteLongpoll(token="token")
 
     async def req(method, kwargs):
         assert method == "method"
@@ -379,7 +380,7 @@ def test_upload_attachment_error_no_retry(
         "ok",
     ]
 
-    vkontakte = Vkontakte("token")
+    vkontakte = VkontakteLongpoll("token")
 
     with pytest.raises(RequestException):
         asyncio.get_event_loop().run_until_complete(
@@ -409,13 +410,183 @@ def test_upload_attachment_error_retry(
 
     mock_make_attachment.return_value = "ok"
 
-    vkontakte = Vkontakte("token")
+    vkontakte = VkontakteLongpoll("token")
 
     result = asyncio.get_event_loop().run_until_complete(
         vkontakte.upload_attachment(Attachment.new(b""), peer_id=123)
     )
 
     assert result == "ok"
+
+
+def test_callback_settings():
+    vk = VkontakteCallback("token", address="api.bot.vk/callback")
+
+    assert vk.api_token == "token"
+    assert vk._address == "https://api.bot.vk/callback"
+    assert vk._address_path == "/callback"
+    assert vk._server_path == "/callback"
+
+
+def test_callback_without_address():
+    vk = VkontakteCallback("token")
+
+    assert vk.api_token == "token"
+    assert vk._address is None
+    assert vk._address_path == "/"
+    assert vk._server_path == "/"
+
+
+def test_callback_server():
+    async def test():
+        port = random.randint(9900, 9999)
+
+        vk = VkontakteCallback("token", host="127.0.0.1", port=port)
+
+        # Mini-start
+        vk.updates_queue = asyncio.Queue()
+
+        try:
+            await vk.start_server()
+        except OSError as e:
+            if e.errno != 48:
+                raise
+            return await test()
+
+        calls = []
+
+        async def _request(*args, **kwargs):
+            calls.append([args, kwargs])
+            return {"code": "123"}
+
+        vk.request = _request
+
+        async with aiohttp.ClientSession() as session:
+            async with session.post(f'http://127.0.0.1:{port}', json={
+                "type": "confirmation",
+                "group_id": 1,
+            }) as resp:
+                assert await resp.text() == "123"
+
+        assert len(calls) == 1
+
+        async with aiohttp.ClientSession() as session:
+            async with session.post(f'http://127.0.0.1:{port}', json={
+                "type": "raw_update",
+                "object": "bruh"
+            }) as resp:
+                assert await resp.text() == "ok"
+
+        assert len(calls) == 1
+        assert vk.updates_queue.qsize() == 1
+
+        await vk.stop_server()
+
+    asyncio.get_event_loop().run_until_complete(test())
+
+
+def test_callback_queue():
+    async def test():
+        vk = VkontakteCallback("token")
+        vk.updates_queue = asyncio.Queue()
+        await vk.updates_queue.put("hey")
+
+        submitted = []
+
+        async def submit(arg):
+            submitted.append(arg)
+
+        await vk.perform_updates_request(submit)
+
+        assert submitted == ["hey"]
+
+    asyncio.get_event_loop().run_until_complete(test())
+
+
+
+def test_callback_setup_without_address():
+    async def noop(*args, **kwargs):
+        pass
+
+    calls = []
+
+    async def _request(self, method, **kwargs):
+        calls.append([method, kwargs])
+
+    async def test():
+        vk = VkontakteCallback("token")
+
+        vk.start_server = noop
+        vk._execute_loop = noop
+        vk._update_group_data = noop
+        vk.request = _request
+
+        await vk.on_start(Kutana())
+
+        assert vk.updates_queue
+        assert len(calls) == 0
+
+    asyncio.get_event_loop().run_until_complete(test())
+
+def test_callback_setup():
+    calls = []
+
+    class _VkontakteCallback(VkontakteCallback):
+        async def _execute_loop(self, loop):
+            pass
+
+        async def start_server(self):
+            pass
+
+        async def request(self, method, _timeout=None, **kwargs):
+            return await self.raw_request(method, kwargs)
+
+        async def _get_response(self, method, kwargs={}):
+            calls.append([method, kwargs])
+
+            if method == "groups.getById":
+                return {
+                    "response": [
+                        {"id": 1, "name": "group", "screen_name": "grp"},
+                    ],
+                }
+
+            if method == "groups.getCallbackServers":
+                return {
+                    "response": {
+                        "items": [
+                            {"url": self._address, "id": 1},
+                            {"url": "123", "title": "kutana@2"},
+                            {"url": "abc", "title": "kutana@3"},
+                        ]
+                    }
+                }
+
+            if method == "groups.deleteCallbackServer":
+                return {"response": "ok"}
+
+            if method == "groups.addCallbackServer":
+                return {"response": {"server_id": "10"}}
+
+            if method == "groups.setCallbackSettings":
+                assert kwargs["server_id"] == "10"
+                return {"response": "ok"}
+
+            print(method, kwargs)
+
+    app = Kutana()
+
+    async def test():
+        vk = _VkontakteCallback("token", address="127.0.0.1:8080")
+
+        await vk.on_start(app)
+
+        assert vk.updates_queue
+        assert len(calls) == 5
+
+        await vk.on_shutdown(app)
+
+    app.get_loop().run_until_complete(test())
 
 
 @patch("aiohttp.ClientSession.post")
@@ -455,7 +626,7 @@ def test_happy_path(mock_post):
         side_effect=acquire_updates
     )
 
-    class _Vkontakte(Vkontakte):
+    class _VkontakteLongpoll(VkontakteLongpoll):
         async def _get_response(self, method, kwargs={}):
             if method == "groups.setLongPollSettings":
                 return {"response": 1}
@@ -487,7 +658,7 @@ def test_happy_path(mock_post):
 
     app = Kutana()
 
-    vkontakte = _Vkontakte(token="token")
+    vkontakte = _VkontakteLongpoll(token="token")
 
     app.add_backend(vkontakte)
 

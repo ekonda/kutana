@@ -1,5 +1,5 @@
 import asyncio
-from kutana import Plugin, Attachment, get_path
+from kutana import Plugin, Attachment, get_path, RequestException
 
 
 # This example shows how to access existing backend instance and perform
@@ -17,12 +17,20 @@ async def bg_loop(vk):
         with open(get_path(__file__, "assets/pizza.png"), "rb") as fh:
             temp_a = Attachment.new(fh.read(), "pizza.png")
 
-        a = await vk.upload_attachment(temp_a, peer_id=None)
+        try:
+            a = await vk.upload_attachment(temp_a, peer_id=None)
+        except RequestException:
+            for sub in subscribers:
+                await vk.send_message(sub, "Failed to upload attachment; Paused for 1 hour")
+
+            await asyncio.sleep(60 * 60)
+
+            continue
 
         for sub in subscribers:
             await vk.send_message(sub, "", a)
 
-        await asyncio.sleep(5)
+        await asyncio.sleep(60 * 10)
 
 @plugin.on_start()
 async def _(app):

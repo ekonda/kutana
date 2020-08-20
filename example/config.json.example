@@ -1,3 +1,5 @@
 {
-    "vk_token": "VK TOKEN HERE"
+    "vk": {
+        "token": "VK TOKEN HERE"
+    }
 }

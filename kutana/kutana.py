@@ -45,6 +45,7 @@ class Kutana:
 
     def get_loop(self):
         """Return application's asyncio loop."""
+        # TODO: Replace with property
         return self._loop
 
     def add_plugin(self, plugin):
@@ -76,8 +77,8 @@ class Kutana:
             await backend.on_start(self)
 
             async def perform_updates_request(backend):
-                def submit_update(update):
-                    return queue.put((update, backend))
+                async def submit_update(update):
+                    return await queue.put((update, backend))
 
                 while True:
                     await backend.perform_updates_request(submit_update)

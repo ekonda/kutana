@@ -1,4 +1,10 @@
+import string
+import random
 import os.path
+
+
+def get_random_string(length=16):
+    return "".join(random.choices(string.ascii_letters + string.digits, k=length))
 
 
 def get_path(root, path):

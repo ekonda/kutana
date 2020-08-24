@@ -200,6 +200,17 @@ class Plugin:
         )
         return self.on_messages(*args, **kwargs)
 
+    def _make_decorator(self, router, priority, router_priority):
+        def decorator(func):
+            self._add_handler_for_router(
+                router,
+                handler=Handler(func, priority),
+                router_priority=router_priority,
+            )
+            return func
+
+        return decorator
+
     def on_messages(self, priority=0, router_priority=None):
         """
         Decorator for registering coroutine to be called when
@@ -211,15 +222,7 @@ class Plugin:
         about 'priority' and 'router_priority'.
         """
 
-        def decorator(func):
-            self._add_handler_for_router(
-                AnyMessageRouter,
-                handler=Handler(func, priority),
-                router_priority=router_priority,
-            )
-            return func
-
-        return decorator
+        return self._make_decorator(AnyMessageRouter, priority, router_priority)
 
     def on_any_unprocessed_message(self, *args, **kwargs):
         warnings.warn(
@@ -242,15 +245,7 @@ class Plugin:
         about 'priority' and 'router_priority'.
         """
 
-        def decorator(func):
-            self._add_handler_for_router(
-                AnyMessageRouter,
-                handler=Handler(func, priority),
-                router_priority=router_priority,
-            )
-            return func
-
-        return decorator
+        return self._make_decorator(AnyMessageRouter, priority, router_priority)
 
     def on_match(self, pattern, priority=0, router_priority=-3):
         """
@@ -307,15 +302,7 @@ class Plugin:
         about 'priority' and 'router_priority'.
         """
 
-        def decorator(func):
-            self._add_handler_for_router(
-                AnyUpdateRouter,
-                handler=Handler(func, priority),
-                router_priority=router_priority,
-            )
-            return func
-
-        return decorator
+        return self._make_decorator(AnyUpdateRouter, priority, router_priority)
 
     def on_any_unprocessed_update(self, *args, **kwargs):
         warnings.warn(
@@ -334,12 +321,4 @@ class Plugin:
         about 'priority' and 'router_priority'.
         """
 
-        def decorator(func):
-            self._add_handler_for_router(
-                AnyUpdateRouter,
-                handler=Handler(func, priority),
-                router_priority=router_priority,
-            )
-            return func
-
-        return decorator
+        return self._make_decorator(AnyUpdateRouter, priority, router_priority)

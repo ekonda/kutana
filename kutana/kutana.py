@@ -1,7 +1,6 @@
 import asyncio
 from sortedcontainers import SortedList
 from .handler import HandlerResponse as hr
-from .storages import NaiveMemory
 from .context import Context
 from .logger import logger
 
@@ -15,14 +14,12 @@ class Kutana:
     - '.prefixes' - prefixes for commands (default is [".", "/"])
     - '.ignore_initial_spaces' - ignore spaces after prefix (default is True)
 
-    :ivar ~.storage: Storage for things like states, e.t.c.
     :ivar ~.config: Application's configuration
     """
 
     def __init__(
         self,
-        concurrent_handlers_count=3000,
-        storage=None,
+        concurrent_handlers_count=512,
         loop=None,
     ):
         self._plugins = []
@@ -30,13 +27,12 @@ class Kutana:
 
         self._loop = loop or asyncio.new_event_loop()
 
+        self._concurrent_handlers_count = concurrent_handlers_count
         self._sem = asyncio.Semaphore(
             value=concurrent_handlers_count, loop=self._loop
         )
 
         self._routers = None
-
-        self.storage = storage
 
         self.config = {
             "prefixes": (".", "/"),
@@ -76,16 +72,17 @@ class Kutana:
         for backend in self._backends:
             await backend.on_start(self)
 
-            async def perform_updates_request(backend):
-                async def submit_update(update):
-                    return await queue.put((update, backend))
+            async def submit_update(update):
+                return await queue.put((update, backend))
 
+            async def perform_updates_request():
                 while True:
-                    await backend.perform_updates_request(submit_update)
+                    if queue.qsize() < queue.maxsize:
+                        await backend.perform_updates_request(submit_update)
                     await asyncio.sleep(0)
 
             asyncio.ensure_future(
-                perform_updates_request(backend),
+                perform_updates_request(),
                 loop=self._loop
             )
 
@@ -94,10 +91,10 @@ class Kutana:
                 await plugin._on_start(self)
 
     async def _main_loop(self):
-        if self.storage is None:
-            self.storage = NaiveMemory()
-
-        queue = asyncio.Queue(maxsize=32, loop=self._loop)
+        queue = asyncio.Queue(
+            maxsize=self._concurrent_handlers_count,
+            loop=self._loop
+        )
 
         await self._on_start(queue)
 
@@ -200,7 +197,7 @@ class Kutana:
         self._loop.stop()
 
     def run(self):
-        """Start the application."""
+        """Run the application."""
         logger.info("Starting application...")
 
         try:

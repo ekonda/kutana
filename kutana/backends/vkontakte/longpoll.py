@@ -28,7 +28,6 @@ class VkontakteLongpoll(Vkontakte):
         try:
             async with self.session.post(longpoll_url) as resp:
                 return await resp.json(content_type=None)
-
         except (json.JSONDecodeError, aiohttp.ClientError, asyncio.TimeoutError):
             return None
 
@@ -69,9 +68,7 @@ class VkontakteLongpoll(Vkontakte):
                 if title:
                     self.group_name = title["new_value"]
 
-            update = self._make_update(update_data)
-
-            await submit_update(update)
+            await submit_update(self._make_update(update_data))
 
     async def on_start(self, app):
         await super().on_start(app)

@@ -7,10 +7,10 @@ class Debug(Backend):
     def __init__(self, messages=None, on_complete=None, save_replies=True):
         if isinstance(messages, GeneratorType):  # pragma: no cover
             self.messages = messages
-            self.messages_count = -1
         else:
             self.messages = (m for m in messages)
-            self.messages_count = len(messages)
+
+        self.messages_count = 0
 
         self.save_replies = save_replies
         self.answers = {}
@@ -38,7 +38,9 @@ class Debug(Backend):
 
         for _ in range(25):
             try:
-                await submit_update(self._make_update(next(self.messages)))
+                message = next(self.messages)
+                self.messages_count += 1
+                await submit_update(self._make_update(message))
             except StopIteration:
                 self.messages = None
                 break
@@ -54,5 +56,11 @@ class Debug(Backend):
 
         self.answers_count += 1
 
-        if self.answers_count == self.messages_count and self.on_complete:
+        self.check_if_complete()
+
+    def check_if_complete(self):
+        if self.messages or not self.on_complete:
+            return
+
+        if self.answers_count == self.messages_count:
             self.on_complete()

@@ -159,25 +159,6 @@ want to use and any keyword arguments that should be processable by your
 backend. You can check what backend context belongs to by accessing it's
 `backend` attribute.
 
-Storage
-^^^^^^^
-
-Kutana uses storage to store some information like user states. By default,
-it uses :class:`kutana.storages.NaiveMemory` for storing data. If you need
-to use more advanced storage, you can extend :class:`kutana.storage.Storage`
-and implement it with any library and backend you want. Just pass storage to
-the application constructor.
-
-If you want load storage from the plugin, you still need to implement
-your "Storage" and pass it to application. But you can delay initialization
-until your database plugin's "on_start" method. You can access storage with
-"app.storage".
-
-But it's it's not recommended using the application's
-storage as database for your plugins' data. Just implement methods and
-access database in your plugin, if it's the case.
-
-
 -------------------------------------------------------------------------------
 
 .. toctree::

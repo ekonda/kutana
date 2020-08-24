@@ -5,14 +5,15 @@ Subpackages
 -----------
 
 .. toctree::
+   :maxdepth: 4
 
    kutana.backends
-   kutana.storages
 
 Submodules
 ----------
 
 .. toctree::
+   :maxdepth: 4
 
    kutana.backend
    kutana.context
@@ -25,7 +26,6 @@ Submodules
    kutana.plugin
    kutana.router
    kutana.routers
-   kutana.storage
    kutana.update
 
 Module contents

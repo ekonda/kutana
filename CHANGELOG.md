@@ -4,6 +4,8 @@
 > to public API are marked as `^?`.
 
 - v4.4.0 - WIP
+  - ^ Removed `Storage`, `set_state`, `group_state`, `user_state`,
+      `storage`.
   - Added stripping of mentions for the telegram bot
   - Added `VkontakteCallback`; `Vkontakte` is now
       alias for `VkontakteLongpoll`

@@ -1,5 +1,6 @@
 import json
 import warnings
+from ...handler import Handler
 from ...routers import MapRouter
 from ...update import UpdateType
 
@@ -80,8 +81,6 @@ class VkontaktePluginExtension:
     def on_payloads(
         self,
         payloads,
-        group_state="*",
-        user_state="*",
         priority=0,
         router_priority=None,
     ):
@@ -91,14 +90,14 @@ class VkontaktePluginExtension:
         content.
 
         See :class:`kutana.plugin.Plugin.on_commands` for details
-        about 'group_state', 'user_state', 'priority' and 'router_priority'.
+        about 'priority' and 'router_priority'.
         """
 
         def decorator(func):
             for payload in payloads:
                 self.plugin._add_handler_for_router(
                     PayloadRouter,
-                    handler=self.plugin._make_handler(func, group_state, user_state, priority),
+                    handler=Handler(func, priority),
                     handler_key=payload,
                     router_priority=router_priority,
                 )
@@ -109,8 +108,6 @@ class VkontaktePluginExtension:
     def on_message_actions(
             self,
             action_types,
-            group_state="*",
-            user_state="*",
             priority=0,
             router_priority=None,
     ):
@@ -119,14 +116,14 @@ class VkontaktePluginExtension:
         incoming update is message with action(only for conversations).
 
         See :class:`kutana.plugin.Plugin.on_commands` for details
-        about 'group_state', 'user_state', 'priority' and 'router_priority'.
+        about 'priority' and 'router_priority'.
         """
 
         def decorator(func):
             for action_type in action_types:
                 self.plugin._add_handler_for_router(
                     ActionMessageRouter,
-                    handler=self.plugin._make_handler(func, group_state, user_state, priority),
+                    handler=Handler(func, priority),
                     handler_key=action_type,
                     router_priority=router_priority,
                 )

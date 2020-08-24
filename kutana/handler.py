@@ -8,5 +8,5 @@ class HandlerResponse(Enum):
 
 
 Handler = namedtuple("Handler", [
-    "handle", "group_state", "user_state", "priority",
+    "handle", "priority",
 ])

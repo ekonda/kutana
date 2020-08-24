@@ -77,7 +77,7 @@ class Vkontakte(Backend):
 
     async def _execute_loop(self, loop):
         while True:
-            await asyncio.sleep(self.api_request_pause)
+            await asyncio.sleep(0)
 
             requests = []
 
@@ -102,6 +102,8 @@ class Vkontakte(Backend):
                 self._execute_loop_perform_execute(code, requests),
                 loop=loop,
             )
+
+            await asyncio.sleep(self.api_request_pause)
 
     async def _execute_loop_perform_execute(self, code, requests):
         response = await self._get_response("execute", {"code": code})

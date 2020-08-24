@@ -5,6 +5,7 @@ Subpackages
 -----------
 
 .. toctree::
+   :maxdepth: 4
 
    kutana.backends.vkontakte
 
@@ -12,6 +13,7 @@ Submodules
 ----------
 
 .. toctree::
+   :maxdepth: 4
 
    kutana.backends.debug
    kutana.backends.telegram

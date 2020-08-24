@@ -42,9 +42,6 @@ class Plugin:
         self._routers.append(router)
         return router
 
-    def _make_handler(self, func, group_state, user_state, priority):
-        return Handler(func, group_state, user_state, priority)
-
     def _add_handler_for_router(self, router, handler, handler_key=None, router_priority=None):
         router = self._get_or_add_router(router, priority=router_priority)
         if handler_key:
@@ -124,8 +121,6 @@ class Plugin:
     def on_commands(
         self,
         commands,
-        group_state="*",
-        user_state="*",
         priority=0,
         router_priority=None
     ):
@@ -143,10 +138,6 @@ class Plugin:
         - command
         - body
         - match
-
-        You can specify group_state and/or user_state to control
-        which state must have groups and users attempting to
-        access this coroutine.
 
         Priority is a value that used to determine order in which
         coroutines are executed. Router priority is a value that
@@ -167,7 +158,7 @@ class Plugin:
             for command in commands:
                 self._add_handler_for_router(
                     CommandsRouter,
-                    handler=self._make_handler(func, group_state, user_state, priority),
+                    handler=Handler(func, priority),
                     handler_key=command,
                     router_priority=router_priority,
                 )
@@ -178,8 +169,6 @@ class Plugin:
     def on_attachments(
         self,
         types,
-        group_state="*",
-        user_state="*",
         priority=0,
         router_priority=None
     ):
@@ -189,14 +178,14 @@ class Plugin:
         attachment with one of specified types.
 
         See :class:`kutana.plugin.Plugin.on_commands` for details
-        about 'group_state', 'user_state', 'priority' and 'router_priority'.
+        about 'priority' and 'router_priority'.
         """
 
         def decorator(func):
             for atype in types:
                 self._add_handler_for_router(
                     AttachmentsRouter,
-                    handler=self._make_handler(func, group_state, user_state, priority),
+                    handler=Handler(func, priority),
                     handler_key=atype,
                     router_priority=router_priority,
                 )
@@ -211,7 +200,7 @@ class Plugin:
         )
         return self.on_messages(*args, **kwargs)
 
-    def on_messages(self, group_state="*", user_state="*", priority=0, router_priority=None):
+    def on_messages(self, priority=0, router_priority=None):
         """
         Decorator for registering coroutine to be called when
         incoming update is message. This will always be called.
@@ -219,13 +208,13 @@ class Plugin:
         use :meth:`kutana.plugin.Plugin.on_unprocessed_messages`.
 
         See :class:`kutana.plugin.Plugin.on_commands` for details
-        about 'group_state', 'user_state', 'priority' and 'router_priority'.
+        about 'priority' and 'router_priority'.
         """
 
         def decorator(func):
             self._add_handler_for_router(
                 AnyMessageRouter,
-                handler=self._make_handler(func, group_state, user_state, priority),
+                handler=Handler(func, priority),
                 router_priority=router_priority,
             )
             return func
@@ -241,8 +230,6 @@ class Plugin:
 
     def on_unprocessed_messages(
         self,
-        group_state="*",
-        user_state="*",
         priority=0,
         router_priority=-3
     ):
@@ -252,20 +239,20 @@ class Plugin:
         coroutine processed update.
 
         See :class:`kutana.plugin.Plugin.on_commands` for details
-        about 'group_state', 'user_state', 'priority' and 'router_priority'.
+        about 'priority' and 'router_priority'.
         """
 
         def decorator(func):
             self._add_handler_for_router(
                 AnyMessageRouter,
-                handler=self._make_handler(func, group_state, user_state, priority),
+                handler=Handler(func, priority),
                 router_priority=router_priority,
             )
             return func
 
         return decorator
 
-    def on_match(self, pattern, group_state="*", user_state="*", priority=0, router_priority=-3):
+    def on_match(self, pattern, priority=0, router_priority=-3):
         """
         Decorator for registering coroutine to be called when
         incoming update is message and it's text is matched by
@@ -276,7 +263,7 @@ class Plugin:
         - match
 
         See :class:`kutana.plugin.Plugin.on_commands` for details
-        about 'group_state', 'user_state', 'priority' and 'router_priority'.
+        about 'priority' and 'router_priority'.
         """
 
         def decorator(func):
@@ -294,7 +281,7 @@ class Plugin:
 
             self._add_handler_for_router(
                 ListRouter,
-                handler=self._make_handler(wrapper, group_state, user_state, priority),
+                handler=Handler(wrapper, priority),
                 router_priority=router_priority,
             )
 
@@ -309,7 +296,7 @@ class Plugin:
         )
         return self.on_updates(self, *args, **kwargs)
 
-    def on_updates(self, group_state="*", user_state="*", priority=0, router_priority=None):
+    def on_updates(self, priority=0, router_priority=None):
         """
         Decorator for registering coroutine to be called when
         incoming update is not message. This will always be called.
@@ -317,13 +304,13 @@ class Plugin:
         use :meth:`kutana.plugin.Plugin.on_unprocessed_updates`.
 
         See :class:`kutana.plugin.Plugin.on_commands` for details
-        about 'group_state', 'user_state', 'priority' and 'router_priority'.
+        about 'priority' and 'router_priority'.
         """
 
         def decorator(func):
             self._add_handler_for_router(
                 AnyUpdateRouter,
-                handler=self._make_handler(func, group_state, user_state, priority),
+                handler=Handler(func, priority),
                 router_priority=router_priority,
             )
             return func
@@ -337,20 +324,20 @@ class Plugin:
         )
         return self.on_unprocessed_updates(self, *args, **kwargs)
 
-    def on_unprocessed_updates(self, group_state="*", user_state="*", priority=0, router_priority=-3):
+    def on_unprocessed_updates(self, priority=0, router_priority=-3):
         """
         Decorator for registering coroutine to be called when
         incoming update is update. This will be called if no other
         coroutine processed update.
 
         See :class:`kutana.plugin.Plugin.on_commands` for details
-        about 'group_state', 'user_state', 'priority' and 'router_priority'.
+        about 'priority' and 'router_priority'.
         """
 
         def decorator(func):
             self._add_handler_for_router(
                 AnyUpdateRouter,
-                handler=self._make_handler(func, group_state, user_state, priority),
+                handler=Handler(func, priority),
                 router_priority=router_priority,
             )
             return func

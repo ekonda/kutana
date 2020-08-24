@@ -10,11 +10,7 @@ class Router:
 
     def _key(self, handler):
         """Key for sorting handlers."""
-        return (
-            handler.group_state == "*",
-            handler.user_state == "*",
-            -handler.priority,
-        )
+        return -handler.priority
 
     def alike(self, other):
         return type(self) is type(other) and self.priority == other.priority
@@ -29,14 +25,6 @@ class Router:
     def _check_update(self, update, ctx):
         """Should update be processed?"""
         return True
-
-    def _check(self, handler, update, ctx):
-        """Should this handler handle update?"""
-
-        return (
-            (handler.group_state in ("*", ctx.group_state))
-            and (handler.user_state in ("*", ctx.user_state))
-        )
 
     def merge(self, other_router):
         raise NotImplementedError
@@ -64,9 +52,8 @@ class ListRouter(Router):
             return hr.SKIPPED
 
         for handler in self._handlers:
-            if self._check(handler, update, ctx):
-                if await handler.handle(update, ctx) != hr.SKIPPED:
-                    return hr.COMPLETE
+            if await handler.handle(update, ctx) != hr.SKIPPED:
+                return hr.COMPLETE
 
         return hr.SKIPPED
 
@@ -83,7 +70,6 @@ class MapRouter(Router):
         Returns tuple of strings for determining handlers in `_handlers`
         dictionary.
         """
-
         raise NotImplementedError
 
     def add_handler(self, handler, key):
@@ -107,8 +93,7 @@ class MapRouter(Router):
                 continue
 
             for handler in self._handlers[key]:
-                if self._check(handler, update, ctx):
-                    if await handler.handle(update, ctx) != hr.SKIPPED:
-                        return hr.COMPLETE
+                if await handler.handle(update, ctx) != hr.SKIPPED:
+                    return hr.COMPLETE
 
         return hr.SKIPPED

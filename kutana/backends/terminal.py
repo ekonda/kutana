@@ -32,10 +32,10 @@ class Terminal(Backend):
             date=time.time(),
         )
 
-    async def perform_updates_request(self, submit_update):
+    async def acquire_updates(self, submit_update):
         message = attempt_to_read_message()
         if message:
             await submit_update(self._make_update(message))
 
-    async def perform_send(self, target_id, message, attachments, kwargs):
+    async def execute_send(self, target_id, message, attachments, kwargs):
         print(">", message)

@@ -72,19 +72,16 @@ class Kutana:
         for backend in self._backends:
             await backend.on_start(self)
 
-            async def submit_update(update):
-                return await queue.put((update, backend))
+            async def acquire_updates(backend):  # don't forget to capture backend
+                async def submit_update(update):
+                    return await queue.put((update, backend))
 
-            async def perform_updates_request():
                 while True:
                     if queue.qsize() < queue.maxsize:
-                        await backend.perform_updates_request(submit_update)
+                        await backend.acquire_updates(submit_update)
                     await asyncio.sleep(0)
 
-            asyncio.ensure_future(
-                perform_updates_request(),
-                loop=self._loop
-            )
+            asyncio.ensure_future(acquire_updates(backend), loop=self._loop)
 
         for plugin in self._plugins:
             if plugin._on_start:

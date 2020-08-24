@@ -183,7 +183,7 @@ class Telegram(Backend):
             date=raw_update["message"]["date"],
         )
 
-    async def perform_updates_request(self, submit_update):
+    async def acquire_updates(self, submit_update):
         try:
             response = await self._request(
                 "getUpdates", {"timeout": 25, "offset": self.offset}
@@ -203,7 +203,7 @@ class Telegram(Backend):
             await submit_update(self._make_update(update))
             self.offset = update["update_id"] + 1
 
-    async def perform_send(self, target_id, message, attachments, kwargs):
+    async def execute_send(self, target_id, message, attachments, kwargs):
         result = []
 
         chat_id = str(target_id)
@@ -252,7 +252,7 @@ class Telegram(Backend):
 
             return result
 
-    async def perform_api_call(self, method, kwargs):
+    async def execute_request(self, method, kwargs):
         return await self._request(method, kwargs)
 
     async def on_start(self, app):
@@ -280,7 +280,7 @@ class Telegram(Backend):
         sending method.
         """
 
-        return await self.perform_send(target_id, message, attachments, kwargs)
+        return await self.execute_send(target_id, message, attachments, kwargs)
 
     async def request(self, method, **kwargs):
         """

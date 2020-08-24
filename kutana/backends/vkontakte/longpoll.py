@@ -39,7 +39,7 @@ class VkontakteLongpoll(Vkontakte):
             await asyncio.sleep(1)
             return None
 
-    async def perform_updates_request(self, submit_update):
+    async def acquire_updates(self, submit_update):
         response = await self._get_updates()
 
         if response is None:

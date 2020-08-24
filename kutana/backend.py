@@ -8,16 +8,13 @@ class Backend:
     def prepare_context(self, ctx):
         pass
 
-    async def perform_updates_request(self, submit_update):
-        # TODO: Rename to "acquire_updates"
+    async def acquire_updates(self, submit_update):
         raise NotImplementedError
 
-    async def perform_send(self, target_id, message, attachments, kwargs):
-        # TODO: Rename to "send_message"
+    async def execute_send(self, target_id, message, attachments, kwargs):
         raise NotImplementedError
 
-    async def perform_api_call(self, method, kwargs):
-        # TODO: Rename to "api_request"
+    async def execute_request(self, method, kwargs):
         raise NotImplementedError
 
     @classmethod

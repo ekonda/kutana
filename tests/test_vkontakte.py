@@ -120,7 +120,7 @@ def test_resolve_screen_name_empty(mock_request):
 
 
 @patch("aiohttp.ClientSession.post")
-def test_perform_updates_request(mock_post):
+def test_acquire_updates(mock_post):
     def make_mock(exc):
         cm = CoroutineMock()
         cm.__aenter__ = CoroutineMock(side_effect=exc)
@@ -142,12 +142,12 @@ def test_perform_updates_request(mock_post):
             "server": "server",
         }
 
-        await vkontakte.perform_updates_request(None)
+        await vkontakte.acquire_updates(None)
 
         with pytest.raises(asyncio.CancelledError):
-            await vkontakte.perform_updates_request(None)
+            await vkontakte.acquire_updates(None)
 
-        await vkontakte.perform_updates_request(None)
+        await vkontakte.acquire_updates(None)
 
     asyncio.get_event_loop().run_until_complete(test())
 
@@ -280,7 +280,7 @@ def test_attachments(mock_get):
     asyncio.get_event_loop().run_until_complete(test())
 
 
-def test_perform_send_exception():
+def test_execute_send_exception():
     vkontakte = VkontakteLongpoll(token="token")
 
     attachment = vkontakte._make_attachment(ATTACHMENTS["image"])
@@ -288,11 +288,11 @@ def test_perform_send_exception():
 
     with pytest.raises(ValueError):
         asyncio.get_event_loop().run_until_complete(
-            vkontakte.perform_send(1, "text", attachment, {})
+            vkontakte.execute_send(1, "text", attachment, {})
         )
 
 
-def test_perform_send_string():
+def test_execute_send_string():
     vkontakte = VkontakteLongpoll(token="token")
 
     async def req(method, kwargs):
@@ -302,13 +302,13 @@ def test_perform_send_string():
     vkontakte._request = req
 
     result = asyncio.get_event_loop().run_until_complete(
-        vkontakte.perform_send(1, "text", ("hey", "hoy"), {})
+        vkontakte.execute_send(1, "text", ("hey", "hoy"), {})
     )
 
     assert result == 1
 
 
-def test_perform_send_sticker():
+def test_execute_send_sticker():
     vkontakte = VkontakteLongpoll(token="token")
 
     async def req(method, kwargs):
@@ -321,13 +321,13 @@ def test_perform_send_sticker():
     sticker_attachment = Attachment.existing("123", "sticker")
 
     result = asyncio.get_event_loop().run_until_complete(
-        vkontakte.perform_send(1, "text", sticker_attachment, {})
+        vkontakte.execute_send(1, "text", sticker_attachment, {})
     )
 
     assert result == 1
 
 
-def test_perform_send_new():
+def test_execute_send_new():
     vkontakte = VkontakteLongpoll(token="token")
 
     async def _upl_att(attachment, peer_id):
@@ -343,13 +343,13 @@ def test_perform_send_new():
     attachment = Attachment.new(b"content", "image")
 
     result = asyncio.get_event_loop().run_until_complete(
-        vkontakte.perform_send(1, "text", attachment, {})
+        vkontakte.execute_send(1, "text", attachment, {})
     )
 
     assert result == 1
 
 
-def test_perform_api_call():
+def test_execute_request():
     vkontakte = VkontakteLongpoll(token="token")
 
     async def req(method, kwargs):
@@ -359,7 +359,7 @@ def test_perform_api_call():
     vkontakte._request = req
 
     result = asyncio.get_event_loop().run_until_complete(
-        vkontakte.perform_api_call("method", {"arg": "val"})
+        vkontakte.execute_request("method", {"arg": "val"})
     )
 
     assert result == 1
@@ -496,7 +496,7 @@ def test_callback_queue():
         async def submit(arg):
             submitted.append(arg)
 
-        await vk.perform_updates_request(submit)
+        await vk.acquire_updates(submit)
 
         assert submitted == ["hey"]
 

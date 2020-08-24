@@ -8,9 +8,9 @@ IS_WINDOWS = sys.platform == "win32"
 
 
 @patch("builtins.print")
-def test_perform_send(mock):
+def test_execute_send(mock):
     async def test():
-        await Terminal().perform_send(0, "msg", (), {})
+        await Terminal().execute_send(0, "msg", (), {})
         mock.assert_called_once_with(">", "msg")
 
     asyncio.get_event_loop().run_until_complete(test())
@@ -30,7 +30,7 @@ def test_request(mock2, mock1):
         upds.append(upd)
 
     async def test():
-        await Terminal().perform_updates_request(submit_update)
+        await Terminal().acquire_updates(submit_update)
         assert upds[0].text == "msg"
 
     asyncio.get_event_loop().run_until_complete(test())

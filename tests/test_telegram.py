@@ -52,7 +52,7 @@ def test_request_file_and_getter(mock_get):
 
 
 @patch('aiohttp.ClientSession.post')
-def test_perform_updates_request(mock_post):
+def test_acquire_updates(mock_post):
     def make_mock(exc):
         cm = CoroutineMock()
         cm.__aenter__ = CoroutineMock(side_effect=exc)
@@ -68,12 +68,12 @@ def test_perform_updates_request(mock_post):
     async def test():
         telegram = Telegram(token="token", session=aiohttp.ClientSession())
 
-        await telegram.perform_updates_request(None)
+        await telegram.acquire_updates(None)
 
         with pytest.raises(asyncio.CancelledError):
-            await telegram.perform_updates_request(None)
+            await telegram.acquire_updates(None)
 
-        await telegram.perform_updates_request(None)
+        await telegram.acquire_updates(None)
 
         await telegram.session.close()
 
@@ -114,13 +114,13 @@ def test_upload_attachments():
         telegram._request = req
 
         attachment = Attachment.new(b"file")
-        await telegram.perform_send(1, "", attachment, {})
+        await telegram.execute_send(1, "", attachment, {})
 
         attachment = Attachment.new(b"file", type="doc")
-        await telegram.perform_send(1, "", attachment, {})
+        await telegram.execute_send(1, "", attachment, {})
 
         attachment = Attachment.new(b"file", type="voice")
-        await telegram.perform_send(1, "", attachment, {})
+        await telegram.execute_send(1, "", attachment, {})
 
         assert len(requests) == 3
 
@@ -145,12 +145,12 @@ def test_upload_attachment_unknown_type():
         attachment = Attachment.new(b"bruh", type="location")
 
         with pytest.raises(ValueError):
-            await telegram.perform_send(1, "", attachment, {})
+            await telegram.execute_send(1, "", attachment, {})
 
     asyncio.get_event_loop().run_until_complete(test())
 
 
-def test_perform_api_call():
+def test_execute_request():
     telegram = Telegram(token="token")
 
     async def req(method, kwargs):
@@ -160,7 +160,7 @@ def test_perform_api_call():
     telegram._request = req
 
     result = asyncio.get_event_loop().run_until_complete(
-        telegram.perform_api_call("method", {"arg": "val"})
+        telegram.execute_request("method", {"arg": "val"})
     )
 
     assert result == 1

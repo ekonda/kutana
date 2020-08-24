@@ -92,7 +92,7 @@ class Context:
     async def request(self, method, **kwargs):
         """Perform request to backend's API and return response."""
 
-        return await self.backend.perform_api_call(
+        return await self.backend.execute_request(
             method,
             kwargs,
         )
@@ -127,14 +127,14 @@ class Context:
         parts = tuple(self.split_large_text(message))
 
         for part in parts[:-1]:
-            responses.append(await self.backend.perform_send(
+            responses.append(await self.backend.execute_send(
                 target_id,
                 part,
                 (),
                 {},
             ))
 
-        responses.append(await self.backend.perform_send(
+        responses.append(await self.backend.execute_send(
             target_id,
             parts[-1],
             attachments,

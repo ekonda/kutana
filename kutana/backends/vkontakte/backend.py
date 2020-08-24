@@ -361,7 +361,7 @@ class Vkontakte(Backend):
 
         raise ValueError(f"Can't upload attachment '{attachment_type}'")
 
-    async def perform_send(self, target_id, message, attachments, kwargs):
+    async def execute_send(self, target_id, message, attachments, kwargs):
         # Form proper arguments
         true_kwargs = {"message": message, "peer_id": target_id}
         true_kwargs.update(kwargs)
@@ -404,7 +404,7 @@ class Vkontakte(Backend):
 
         return await self._request("messages.send", true_kwargs)
 
-    async def perform_api_call(self, method, kwargs):
+    async def execute_request(self, method, kwargs):
         return await self._request(method, kwargs)
 
     async def on_start(self, app):
@@ -430,7 +430,7 @@ class Vkontakte(Backend):
         sending method.
         """
 
-        return await self.perform_send(target_id, message, attachments, kwargs)
+        return await self.execute_send(target_id, message, attachments, kwargs)
 
     async def request(self, method, _timeout=None, **kwargs):
         """

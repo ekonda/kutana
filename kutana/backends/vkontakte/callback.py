@@ -162,5 +162,5 @@ class VkontakteCallback(Vkontakte):
         await super().on_shutdown(app)
         await self.stop_server()
 
-    async def perform_updates_request(self, submit_update):
+    async def acquire_updates(self, submit_update):
         await submit_update(await self.updates_queue.get())

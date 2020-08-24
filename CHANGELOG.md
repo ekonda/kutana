@@ -6,6 +6,9 @@
 - v4.4.0 - WIP
   - ^ Removed `Storage`, `set_state`, `group_state`, `user_state`,
       `storage`.
+  - Renamed `perform_api_call` to `execute_request`
+  - Renamed `perform_updates_request` to `acquire_updates`
+  - Renamed `perform_send` to `execute_send`
   - Added stripping of mentions for the telegram bot
   - Added `VkontakteCallback`; `Vkontakte` is now
       alias for `VkontakteLongpoll`

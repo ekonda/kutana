@@ -5,20 +5,20 @@ from kutana import Context
 
 
 def test_reply_non_str():
-    ctx = Context(backend=MagicMock(perform_send=CoroutineMock()))
+    ctx = Context(backend=MagicMock(execute_send=CoroutineMock()))
     ctx.default_target_id = 1
     asyncio.get_event_loop().run_until_complete(ctx.reply(123))
-    ctx.backend.perform_send.assert_called_with(1, '123', (), {})
+    ctx.backend.execute_send.assert_called_with(1, '123', (), {})
 
 
 def test_context():
     called = []
 
     class Backend:
-        async def perform_send(self, target_id, message, attachments, kwargs):
+        async def execute_send(self, target_id, message, attachments, kwargs):
             called.append(("ps", message))
 
-        async def perform_api_call(self, method, kwargs):
+        async def execute_request(self, method, kwargs):
             called.append(("pac", method, kwargs))
 
     ctx = Context(backend=Backend())
@@ -48,13 +48,13 @@ def test_context():
 
 
 def test_lont_message_for_kwargs():
-    ctx = Context(backend=CoroutineMock(perform_send=CoroutineMock()))
+    ctx = Context(backend=CoroutineMock(execute_send=CoroutineMock()))
     ctx.default_target_id = 1
 
     asyncio.get_event_loop().run_until_complete(ctx.reply("a" * (4096 * 2 - 1)))
 
-    ctx.backend.perform_send.assert_any_await(1, "a" * 4096, (), {})
-    ctx.backend.perform_send.assert_any_await(1, "a" * 4095, (), {})
+    ctx.backend.execute_send.assert_any_await(1, "a" * 4096, (), {})
+    ctx.backend.execute_send.assert_any_await(1, "a" * 4095, (), {})
 
 
 def test_dynamic_attributes():

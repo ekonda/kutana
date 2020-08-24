@@ -32,7 +32,7 @@ class Debug(Backend):
             date=0,
         )
 
-    async def perform_updates_request(self, submit_update):
+    async def acquire_updates(self, submit_update):
         if not self.messages:
             return
 
@@ -45,7 +45,7 @@ class Debug(Backend):
                 self.messages = None
                 break
 
-    async def perform_send(self, target_id, message, attachments, kwargs):
+    async def execute_send(self, target_id, message, attachments, kwargs):
         if self.save_replies:
             if target_id not in self.answers:
                 self.answers[target_id] = []

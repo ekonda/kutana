@@ -7,7 +7,7 @@ from ...helpers import get_random_string
 from ...logger import logger
 
 
-DEFAULT_ADDRESS = "127.0.0.1:8080/callback/1"
+DEFAULT_ADDRESS = "0.0.0.0:8080/callback/1"
 
 
 class VkontakteCallback(Vkontakte):
@@ -16,7 +16,7 @@ class VkontakteCallback(Vkontakte):
         *args,
         address=None,
         address_path=None,
-        host="localhost",
+        host="0.0.0.0",
         port=10888,
         queue_limit=0,
         callback_settings=None,

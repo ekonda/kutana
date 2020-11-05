@@ -1,17 +1,18 @@
+import logging
 import argparse
 import yaml
-from kutana import Kutana, load_plugins
+from kutana import Kutana, load_plugins, logger
 from kutana.backends import Vkontakte, VkontakteCallback, Telegram
 
 
 parser = argparse.ArgumentParser("kutana", description="Run kutana application instance using provided config.")
 parser.add_argument(
     "--config", dest="config", type=str,
-    default="config.yml", help="file with config in yaml format",
+    default="config.yml", help="file with config in yaml format (default: config.yml",
 )
 parser.add_argument(
     "--plugins", dest="plugins", type=str,
-    default="plugins", help="folder with plugins to load",
+    default="plugins", help="folder with plugins to load (default: plugins)",
 )
 parser.add_argument(
     "--debug", dest="debug", action="store_const",
@@ -30,6 +31,9 @@ def run():
     """
 
     args = parser.parse_args()
+
+    if args.debug:
+        logger.set_logger_level(logging.DEBUG)
 
     # Import configuration
     with open(args.config) as fh:

@@ -30,6 +30,28 @@ python -m pip install kutana
     with list of instances of `Plugin` class.
 - Start the application.
 
+## Running from CLI
+
+Following command with populate application's config, add specified backends and
+load plugins from specified folder.
+
+```bash
+python3 -m kutana --config example/config.yml --plugins example/plugins
+
+# usage: python3 -m kutana [-h] [--config CONFIG] [--plugins PLUGINS] [--debug]
+
+# Run kutana application instance using provided config.
+
+# optional arguments:
+#   -h, --help         show this help message and exit
+#   --config CONFIG    file with config in yaml format (default: config.yml
+#   --plugins PLUGINS  folder with plugins to load (default: plugins)
+#   --debug            set logging level to debug
+```
+
+Refer to the example [config.yml](https://github.com/ekonda/kutana/tree/master/example/config.example.yml)
+for the configuration details.
+
 ## Example `run.py`
 
 > Token for Vkontakte is loaded from the file "config.json"

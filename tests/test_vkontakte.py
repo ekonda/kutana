@@ -186,9 +186,6 @@ def test_upload_attachment():
                 if kwargs["data"] == "doc":
                     return ATTACHMENTS["doc"]
 
-                if kwargs["data"] == "graffiti":
-                    return ATTACHMENTS["graffiti"]
-
                 if kwargs["data"] == "audio_message":
                     return ATTACHMENTS["voice"]
 
@@ -201,9 +198,6 @@ def test_upload_attachment():
             if url == "upload_url_doc":
                 return {"data": "doc"}
 
-            if url == "upload_url_graffiti":
-                return {"data": "graffiti"}
-
             if url == "upload_url_audio_message":
                 return {"data": "audio_message"}
 
@@ -214,6 +208,7 @@ def test_upload_attachment():
     vkontakte = _VkontakteLongpoll(token="token")
 
     async def test():
+        # image
         attachment = Attachment.new(b"content")
         image = await vkontakte.upload_attachment(attachment, peer_id=123)
 
@@ -221,6 +216,7 @@ def test_upload_attachment():
         assert image.id is not None
         assert image.file is None
 
+        # doc with peer_id
         attachment = Attachment.new(b"content", type="doc")
         doc = await vkontakte.upload_attachment(attachment, peer_id=123)
 
@@ -228,6 +224,15 @@ def test_upload_attachment():
         assert doc.id is not None
         assert doc.file is None
 
+        # doc without peer_id
+        attachment = Attachment.new(b"content", type="doc")
+        doc = await vkontakte.upload_attachment(attachment, peer_id=None)
+
+        assert doc.type == "doc"
+        assert doc.id is not None
+        assert doc.file is None
+
+        # voice
         attachment = Attachment.new(b"content", type="voice")
         voice = await vkontakte.upload_attachment(attachment, peer_id=123)
 
@@ -235,13 +240,7 @@ def test_upload_attachment():
         assert voice.id is not None
         assert voice.file is None
 
-        attachment = Attachment.new(b"content", type="graffiti")
-        voice = await vkontakte.upload_attachment(attachment, peer_id=123)
-
-        assert voice.type == "graffiti"
-        assert voice.id == "graffiti87641997_497831521"
-        assert voice.file is None
-
+        # video
         attachment = Attachment.new(b"content", type="video")
         with pytest.raises(ValueError):
             await vkontakte.upload_attachment(attachment, peer_id=123)

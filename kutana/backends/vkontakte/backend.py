@@ -316,14 +316,11 @@ class Vkontakte(Backend):
         if attachment_type == "voice":
             attachment_type = "doc"
             doctype = "audio_message"
-        elif attachment_type == "graffiti":
-            attachment_type = "doc"
-            doctype = "graffiti"
         else:
             doctype = "doc"
 
         if attachment_type == "doc":
-            if peer_id and doctype != "graffiti":
+            if peer_id:
                 upload_data = await self._request(
                     "docs.getMessagesUploadServer",
                     {"peer_id": peer_id, "type": doctype},

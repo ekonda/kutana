@@ -11,7 +11,7 @@ parser.add_argument(
 )
 parser.add_argument(
     "--plugins", dest="plugins", type=str,
-    default='./plugins', help="folder with plugins to load",
+    default="plugins", help="folder with plugins to load",
 )
 parser.add_argument(
     "--debug", dest="debug", action="store_const",

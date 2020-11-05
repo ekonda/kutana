@@ -93,45 +93,6 @@ Attachments are files that can have types. If type is unique to backends -
 you still can use them, but you will need to manager their uploads,
 parsing, e.t.c. on your own.
 
-Below you can find example handler that will read and send three types
-of attachments.
-
-.. code-block:: python
-
-    @plugin.on_commands(["documents"])
-    async def __(msg, ctx):
-        path_to_pizza = get_path(__file__, "assets/pizza.png")
-        path_to_audio = get_path(__file__, "assets/audio.ogg")
-
-        # Document
-        with open(path_to_pizza, "rb") as fh:
-            doc = Attachment.new(
-                fh.read(),
-                "pizza.png"
-            )
-
-        await ctx.reply("Document", attachments=doc)
-
-        # Graffiti (special for vk)
-        with open(path_to_pizza, "rb") as fh:
-            graffiti = Attachment.new(
-                fh.read(),
-                "pizza.png",
-                type="graffiti"
-            )
-
-        await ctx.reply("Graffiti", attachments=graffiti)
-
-        # Audio message
-        with open(path_to_audio, "rb") as fh:
-            audio_message = Attachment.new(
-                fh.read(),
-                "audio.ogg",
-                "voice"
-            )
-
-        await ctx.reply("Audio message", attachments=audio_message)
-
 Existing attachments (that already uploaded for example) can be created using
 :meth:`kutana.update.Attachment.existing`. Many backends capable of forwarding
 raw strings (supported by your service) while sending messages.

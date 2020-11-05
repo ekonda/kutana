@@ -3,7 +3,7 @@
 all: run
 
 run:
-	export PYTHONPATH=$(PWD); cd example; python3 run.py
+	python3 -m kutana --config example/config.yml --plugins example/plugins
 
 docs:
 	python3 -m pip install sphinx recommonmark

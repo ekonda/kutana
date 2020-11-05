@@ -1,6 +1,7 @@
 import asyncio
 import pytest
 from kutana import Kutana, Plugin
+from kutana.storage import OptimisticLockException
 from kutana.backends import Debug
 from testing_tools import make_kutana
 
@@ -12,7 +13,7 @@ def test_happy_path():
     pl = Plugin("")
 
     @pl.on_messages()
-    async def _(message, ctx):
+    async def __(message, ctx):
         await ctx.reply(message.text)
 
     app.add_plugin(pl)
@@ -74,15 +75,15 @@ def test_start_and_shutdown_hooks():
     pl = Plugin("")
 
     @pl.on_start()
-    async def _(app):
+    async def __(app):
         called.append("start")
 
     @pl.on_messages()
-    async def _(msg, ctx):
+    async def __(msg, ctx):
         await ctx.reply("ok")
 
     @pl.on_shutdown()
-    async def _(app):
+    async def __(app):
         called.append("shutdown")
 
     app.add_plugin(pl)
@@ -101,17 +102,17 @@ def test_before_and_after_hooks():
     pl = Plugin("")
 
     @pl.on_before()
-    async def _(update, ctx):
+    async def __(update, ctx):
         called.append("before")
         saved_ctxs.append(ctx)
 
     @pl.on_messages()
-    async def _(msg, ctx):
+    async def __(msg, ctx):
         await ctx.reply("ok")
         called.append("handle")
 
     @pl.on_after()
-    async def _(update, ctx, r):
+    async def __(update, ctx, r):
         called.append("after")
         saved_ctxs.append(ctx)
 
@@ -131,19 +132,19 @@ def test_exception_hooks():
     pl = Plugin("")
 
     @pl.on_messages()
-    async def _(msg, ctx):
+    async def __(msg, ctx):
         called.append("bruh")
         await ctx.reply("bruh")
         raise Exception("bruh")
 
     @pl.on_exception()
-    async def _(update, ctx, exc):
+    async def __(update, ctx, exc):
         called.append("exception")
         assert exc == Exception
         assert str(exc) == "bruh"
 
     @pl.on_after()
-    async def _(update, ctx, r):
+    async def __(update, ctx, r):
         called.append("after")
 
     app.add_plugin(pl)
@@ -159,7 +160,7 @@ def test_routers_merge():
     pl1 = Plugin("")
 
     @pl1.on_match("123")
-    async def _(msg, ctx):
+    async def __(msg, ctx):
         await ctx.reply("ok1")
 
     app.add_plugin(pl1)
@@ -167,7 +168,7 @@ def test_routers_merge():
     pl2 = Plugin("")
 
     @pl2.on_match("321")
-    async def _(msg, ctx):
+    async def __(msg, ctx):
         await ctx.reply("ok2")
 
     app.add_plugin(pl2)
@@ -179,19 +180,24 @@ def test_routers_merge():
 
 
 def test_handler_with_exception():
-    app, _ = make_kutana([("msg1", 1), ("msg2", 2)])
+    app, _ = make_kutana([("msg1", 1), ("msg2", 2), ("msg3", 3)])
 
     pl = Plugin("")
 
     @pl.on_match("msg1")
-    async def _(message, ctx):
+    async def __(message, ctx):
         await ctx.reply("ok")
         raise asyncio.CancelledError
 
     @pl.on_match("msg2")
-    async def _(message, ctx):
+    async def __(message, ctx):
         await ctx.reply("ok")
         raise Exception
+
+    @pl.on_match("msg3")
+    async def __(message, ctx):
+        await ctx.reply("ok")
+        raise OptimisticLockException
 
     app.add_plugin(pl)
 

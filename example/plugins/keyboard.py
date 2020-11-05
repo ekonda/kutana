@@ -39,7 +39,7 @@ plugin = Plugin(name="Keyboard", description="Keyboard for vkontakte")
 
 
 @plugin.on_commands(["keyboard"])
-async def _(msg, ctx):
+async def __(msg, ctx):
     if ctx.backend.get_identity() != "vkontakte":
         await ctx.reply("This example works only for vk.com")
         return
@@ -48,29 +48,29 @@ async def _(msg, ctx):
 
 
 @plugin.vk.on_payloads([1])
-async def _(msg, ctx):
+async def __(msg, ctx):
     await ctx.reply("Your choice was 1 (from handler)")
 
 
 @plugin.vk.on_payloads([2])
-async def _(msg, ctx):
+async def __(msg, ctx):
     await ctx.reply("Your choice was 2 (from handler)")
 
 
 @plugin.vk.on_payloads([3])
-async def _(msg, ctx):
+async def __(msg, ctx):
     await ctx.reply("Your choice was 3 (from handler)")
 
 
 # This will never be called because of handler below
 @plugin.vk.on_payloads([4])
-async def _(msg, ctx):
+async def __(msg, ctx):
     await ctx.reply("Your choice was 4 (from handler)")
 
 
 # Intercept all the messages with payloads and check their payload
 @plugin.on_messages(priority=10)
-async def _(msg, ctx):
+async def __(msg, ctx):
     # Only messages from vkontakte can have payload
     if ctx.backend.get_identity() != "vkontakte":
         return HandlerResponse.SKIPPED

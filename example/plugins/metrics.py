@@ -8,7 +8,7 @@ plugin = Plugin(name="Metrics", description="Send some information")
 
 
 @plugin.on_commands(["metrics"])
-async def _(msg, ctx):
+async def __(msg, ctx):
     process = psutil.Process(os.getpid())
 
     taken_memory = int(process.memory_info().rss / 2**20)

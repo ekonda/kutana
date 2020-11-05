@@ -209,11 +209,11 @@ def test_happy_path():
     echo_plugin = Plugin("echo")
 
     @echo_plugin.on_commands(["echo", "ec"])
-    async def _(message, ctx):
+    async def __(message, ctx):
         await ctx.reply(message.text)
 
     @echo_plugin.on_attachments(["image"])
-    async def _(message, ctx):
+    async def __(message, ctx):
         await ctx.reply(message.text, attachments=message.attachments[0])
 
     app.add_plugin(echo_plugin)

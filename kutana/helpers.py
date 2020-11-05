@@ -17,3 +17,9 @@ def get_path(root, path):
     """
 
     return os.path.join(os.path.dirname(root), path)
+
+
+def ensure_list(value):
+    if isinstance(value, (list, tuple)):
+        return value
+    return [value]

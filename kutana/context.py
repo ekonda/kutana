@@ -20,6 +20,8 @@ class Context:
         self.backend = backend
         self.config = config
 
+        self.sender_key = None
+        self.receiver_key = None
         self.default_target_id = None
 
     @staticmethod
@@ -39,7 +41,16 @@ class Context:
             else:
                 ctx.default_target_id = update.sender_id
 
+            ctx.sender_key = ctx.get_key_for(sender_id=update.sender_id)
+            ctx.receiver_key = ctx.get_key_for(receiver_id=update.receiver_id)
+            ctx.sender_here_key = ctx.get_key_for(sender_id=update.sender_id, receiver_id=update.receiver_id)
+
         return ctx
+
+    def get_key_for(self, sender_id=None, receiver_id=None):
+        sender_segment = f":s{sender_id}" if sender_id else ""
+        receiver_segment = f":r{receiver_id}" if receiver_id else ""
+        return f"{self.backend.get_identity()}{sender_segment}{receiver_segment}"
 
     def get(self, name, default=None):
         return getattr(self, name, default)

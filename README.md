@@ -66,12 +66,12 @@ from kutana import Plugin
 plugin = Plugin(name="Echo")
 
 @plugin.on_commands(["echo"])
-async def _(msg, ctx):
+async def __(msg, ctx):
     await ctx.reply(ctx.body, attachments=msg.attachments)
 ```
 
 > If your function exists only to be decorated, you can use `_` to avoid
-> unnecessary names
+> unnecessary names. Use `__` if you use something like pydash.
 
 ## Available backends
 

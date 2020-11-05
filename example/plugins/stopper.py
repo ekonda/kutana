@@ -5,10 +5,10 @@ plugin = Plugin(name="Stop", description="Turns application off")
 
 
 @plugin.on_start()
-async def _(app):
+async def __(app):
     plugin.stop = app.stop
 
 
 @plugin.on_commands(["stop"])
-async def _(msg, ctx):
+async def __(msg, ctx):
     plugin.stop()

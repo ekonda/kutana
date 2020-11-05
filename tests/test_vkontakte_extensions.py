@@ -47,7 +47,7 @@ def test_on_payloads():
     pl = Plugin("")
 
     @pl.vk.on_payloads([{"command": "test"}])
-    async def _(msg, ctx):
+    async def __(msg, ctx):
         await ctx.reply(msg.text)
 
     app.add_plugin(pl)
@@ -68,7 +68,7 @@ def test_on_payloads_types():
     pl = Plugin("")
 
     @pl.vk.on_payloads([{"command": {"why": "test"}}, "txt"])
-    async def _(msg, ctx):
+    async def __(msg, ctx):
         await ctx.reply(msg.text)
 
     app.add_plugin(pl)
@@ -98,7 +98,7 @@ def test_on_message_actions():
     pl = Plugin("")
 
     @pl.vk.on_message_actions(['chat_title_update', 'chat_create'])
-    async def _(msg, ctx):
+    async def __(msg, ctx):
         await ctx.reply(msg.raw["object"]["message"]["action"]["text"])
 
     app.add_plugin(pl)
@@ -119,11 +119,11 @@ def test_on_message_actions_types():
     pl = Plugin("")
 
     @pl.vk.on_message_actions(["chat_photo_remove"])
-    async def _(msg, ctx):
+    async def __(msg, ctx):
         await ctx.reply(msg.raw['object']['message']["action"]["photo"]["photo_50"])
 
     @pl.vk.on_message_actions(['chat_invite_user'])
-    async def _(msg, ctx):
+    async def __(msg, ctx):
         if msg.raw['object']['message']['action']['member_id'] < 0:
             await ctx.reply(msg.raw['object']['message']['action']['email'])
 

@@ -1,4 +1,5 @@
 *.py.nocommit
+config.yml
 
 # VScode
 .vscode/

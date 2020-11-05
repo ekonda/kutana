@@ -1,0 +1,6 @@
+prefixes: ['.', '!', '/']
+backends:
+  - kind: vk
+    token: <token-for-vk-here>
+  - kind: tg
+    token: <token-for-tg-here>

@@ -33,7 +33,7 @@ async def bg_loop(vk):
         await asyncio.sleep(60 * 10)
 
 @plugin.on_start()
-async def _(app):
+async def __(app):
     backend = app.get_backends()[0]
 
     # Run only if first backend is Vkontakte
@@ -41,12 +41,12 @@ async def _(app):
         asyncio.ensure_future(bg_loop(backend))
 
 @plugin.on_commands(["stream sub"])
-async def _(msg, ctx):
+async def __(msg, ctx):
     subscribers.append(msg.receiver_id)
     await ctx.reply("OK")
 
 
 @plugin.on_commands(["stream unsub"])
-async def _(msg, ctx):
+async def __(msg, ctx):
     subscribers.remove(msg.receiver_id)
     await ctx.reply("OK")

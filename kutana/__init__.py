@@ -14,10 +14,12 @@ from .handler import HandlerResponse
 from .exceptions import RequestException
 from .loaders import load_plugins, load_plugins_from_file
 from .helpers import get_path
+from .storages import MemoryStorage
 
 
 __all__ = [
     "Kutana", "Plugin", "Backend", "Update", "Message", "Attachment",
     "UpdateType", "HandlerResponse", "RequestException", "Context",
+    "MemoryStorage",
     "load_plugins", "load_plugins_from_file", "get_path",
 ]

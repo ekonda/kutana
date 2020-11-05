@@ -1,3 +1,4 @@
+import asyncio
 from kutana import Kutana, Context
 from kutana.backends import Debug
 
@@ -15,7 +16,10 @@ def make_kutana_no_run(backend_source=None):
     async def _handle_update(update):
         ctx = await Context.create(
             app=app,
-            config={"prefixes": (".",), "ignore_initial_spaces": True},
+            config={
+                "prefixes": (".",),
+                "ignore_initial_spaces": True
+            },
             update=update,
             backend=debug
         )
@@ -39,3 +43,7 @@ def make_kutana(messages):
     app.add_backend(debug)
 
     return app, debug
+
+
+def sync(coro):
+    return asyncio.get_event_loop().run_until_complete(coro)

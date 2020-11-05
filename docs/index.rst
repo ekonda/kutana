@@ -59,7 +59,7 @@ be put into `plugins` folder).
     plugin = Plugin(name="Echo", description="Reply with send message")
 
     @plugin.on_commands(["echo"])
-    async def _(msg, ctx):
+    async def __(msg, ctx):
         await ctx.reply("{}".format(ctx.body), attachments=msg.attachments)
 
 Handlers for messages receive :class:`kutana.update.Message` and
@@ -93,14 +93,13 @@ Attachments are files that can have types. If type is unique to backends -
 you still can use them, but you will need to manager their uploads,
 parsing, e.t.c. on your own.
 
-Below you can find exmaple handler that will read and send three types
-of attachments. Type "graffiti" is not present in vkontakte's backend,
-so it can be seen as demonstartion of how to work with "custom" types.
+Below you can find example handler that will read and send three types
+of attachments.
 
 .. code-block:: python
 
     @plugin.on_commands(["documents"])
-    async def _(msg, ctx):
+    async def __(msg, ctx):
         path_to_pizza = get_path(__file__, "assets/pizza.png")
         path_to_audio = get_path(__file__, "assets/audio.ogg")
 

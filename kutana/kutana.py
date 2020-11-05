@@ -1,6 +1,8 @@
 import asyncio
 from sortedcontainers import SortedList
 from .handler import HandlerResponse as hr
+from .storages import MemoryStorage
+from .storage import OptimisticLockException
 from .context import Context
 from .logger import logger
 
@@ -20,10 +22,12 @@ class Kutana:
     def __init__(
         self,
         concurrent_handlers_count=512,
+        storage=None,
         loop=None,
     ):
         self._plugins = []
         self._backends = []
+        self._storages = {"default": MemoryStorage()}
 
         self._loop = loop or asyncio.new_event_loop()
 
@@ -43,6 +47,9 @@ class Kutana:
         """Return application's asyncio loop."""
         # TODO: Replace with property
         return self._loop
+
+    def get_storage(self, name):
+        return self._storages.get(name)
 
     def add_plugin(self, plugin):
         """Add plugin to the application."""
@@ -84,6 +91,8 @@ class Kutana:
             asyncio.ensure_future(acquire_updates(backend), loop=self._loop)
 
         for plugin in self._plugins:
+            plugin.app = self
+
             if plugin._on_start:
                 await plugin._on_start(self)
 
@@ -138,6 +147,8 @@ class Kutana:
             return await self._handle_update(update, ctx)
         except asyncio.CancelledError:
             pass
+        except OptimisticLockException as exc:
+            logger.debug("Optimistic lock exception: %s", exc)
         except Exception as exc:
             logger.exception("Exception while handling the update")
 

@@ -2,7 +2,7 @@ import pytest
 from kutana import (
     Plugin, Message, Update, UpdateType, Attachment, HandlerResponse as hr,
 )
-from testing_tools import make_kutana_no_run
+from testing_tools import sync, make_kutana_no_run
 
 
 def test_get_set():
@@ -18,11 +18,9 @@ def test_failed_get():
         pl.bruh
 
 
-def test_failed_on_commands():
+def test_clever_on_commands():
     pl = Plugin("")
-
-    with pytest.raises(ValueError):
-        pl.on_commands("bruh")
+    pl.on_commands("bruh")
 
 
 def test_matches():
@@ -31,11 +29,11 @@ def test_matches():
     pl = Plugin("")
 
     @pl.on_match(r"\d.\d")
-    async def _(msg, ctx):
+    async def __(msg, ctx):
         await ctx.reply(ctx.match.group(0))
 
     @pl.on_match(r"(a|b|c).[a-z]")
-    async def _(msg, ctx):
+    async def __(msg, ctx):
         await ctx.reply(ctx.match.group(0))
         await ctx.reply(ctx.match.group(1))
 
@@ -56,7 +54,7 @@ def test_any_message():
     pl = Plugin("")
 
     @pl.on_messages()
-    async def _(msg, ctx):
+    async def __(msg, ctx):
         await ctx.reply(msg.text)
 
     app.add_plugin(pl)
@@ -75,11 +73,11 @@ def test_any_unprocessed_message():
     pl = Plugin("")
 
     @pl.on_commands(["abc"])
-    async def _(msg, ctx):
+    async def __(msg, ctx):
         await ctx.reply(msg.text)
 
     @pl.on_unprocessed_messages()
-    async def _(msg, ctx):
+    async def __(msg, ctx):
         await ctx.reply(msg.text * 2)
 
     app.add_plugin(pl)
@@ -100,7 +98,7 @@ def test_any_update():
     received = []
 
     @pl.on_updates()
-    async def _(upd, ctx):
+    async def __(upd, ctx):
         received.append(upd.raw)
 
     app.add_plugin(pl)
@@ -121,13 +119,13 @@ def test_any_unprocessed_update():
     received = []
 
     @pl.on_updates()
-    async def _(upd, ctx):
+    async def __(upd, ctx):
         if upd.raw == 'a':
             return hr.SKIPPED
         received.append(upd.raw)
 
     @pl.on_unprocessed_updates()
-    async def _(upd, ctx):
+    async def __(upd, ctx):
         received.append(upd.raw * 2)
 
     app.add_plugin(pl)
@@ -148,15 +146,15 @@ def test_router_priority():
     received = []
 
     @pl.on_updates(router_priority=10)
-    async def _(upd, ctx):
+    async def __(upd, ctx):
         received.append(upd.raw * 2)
 
     @pl.on_unprocessed_updates(priority=1, router_priority=10)
-    async def _(upd, ctx):
+    async def __(upd, ctx):
         received.append(upd.raw * 3)
 
     @pl.on_updates(router_priority=20)
-    async def _(upd, ctx):
+    async def __(upd, ctx):
         if upd.raw == 'a':
             return hr.SKIPPED
         received.append(upd.raw)
@@ -177,7 +175,7 @@ def test_commands():
     pl = Plugin("")
 
     @pl.on_commands(["echo", "ec"])
-    async def _(msg, ctx):
+    async def __(msg, ctx):
         await ctx.reply(msg.text)
 
     app.add_plugin(pl)
@@ -206,7 +204,7 @@ def test_commands_with_spaces():
     pl = Plugin("")
 
     @pl.on_commands(["echo", "ec"])
-    async def _(msg, ctx):
+    async def __(msg, ctx):
         await ctx.reply(msg.text)
 
     app.add_plugin(pl)
@@ -226,7 +224,7 @@ def test_command_full_body():
     pl = Plugin("")
 
     @pl.on_commands(["echo"])
-    async def _(msg, ctx):
+    async def __(msg, ctx):
         await ctx.reply(ctx.body)
 
     app.add_plugin(pl)
@@ -243,7 +241,7 @@ def test_attachments():
     pl = Plugin("")
 
     @pl.on_attachments(["image", "voice"])
-    async def _(msg, ctx):
+    async def __(msg, ctx):
         await ctx.reply(msg.text)
 
     app.add_plugin(pl)
@@ -270,9 +268,9 @@ def test_attachments():
 def test_plugins_multiple_hooks():
     pl = Plugin("")
 
-    pl.on_start()(1)
+    pl.on_start()(lambda: 1)
     with pytest.raises(RuntimeError):
-        pl.on_start()(1)
+        pl.on_start()(lambda: 1)
 
     pl.on_before()(1)
     with pytest.raises(RuntimeError):
@@ -289,3 +287,107 @@ def test_plugins_multiple_hooks():
     pl.on_exception()(1)
     with pytest.raises(RuntimeError):
         pl.on_exception()(1)
+
+
+def test_on_start():
+    pl1 = Plugin("API")
+    @pl1.on_start()
+    async def __():
+        return 1
+    assert sync(pl1._on_start(1))
+
+    pl2 = Plugin("Old API")
+    @pl2.on_start()
+    async def __(app):
+        return app
+    assert sync(pl2._on_start(1))
+
+
+def test_storage():
+    app, __, __ = make_kutana_no_run()
+
+    pl = Plugin("", storage={})
+    pl.app = app
+    assert pl.storage == {}
+
+    pl = Plugin("", storage='default')
+    pl.app = app
+    assert pl.storage == app._storages['default']
+
+    pl = Plugin("", storage='unknown')
+    pl.app = app
+    assert pl.storage is None
+
+
+def test_sender_states():
+    app, debug, hu = make_kutana_no_run()
+
+    pl = Plugin("")
+    pl.app = app
+
+    @pl.on_commands(["a"])
+    @pl.expect_sender(state="")
+    async def __(msg, ctx):
+        await ctx.sender.update({"state": "state"})
+        await ctx.reply("ok:a")
+
+    @pl.on_commands(["b"])
+    @pl.expect_sender(state="state")
+    async def __(msg, ctx):
+        await ctx.sender.update({"state": ""})
+        await ctx.reply("ok:b")
+
+    @pl.on_commands(["a"])
+    @pl.expect_sender(state="other_state")
+    async def __(msg, ctx):
+        await ctx.sender.update({"state": ""})
+        await ctx.reply("ok:b")
+
+    app.add_plugin(pl)
+
+    hu(Message(None, UpdateType.MSG, ".a", (), 1, 0, 0, 0))
+    hu(Message(None, UpdateType.MSG, ".b", (), 1, 0, 0, 0))
+    hu(Message(None, UpdateType.MSG, ".b", (), 1, 0, 0, 0))
+    hu(Message(None, UpdateType.MSG, ".a", (), 1, 0, 0, 0))
+
+    assert len(debug.answers[1]) == 3
+    assert debug.answers[1].count(("ok:a", (), {})) == 2
+    assert debug.answers[1].count(("ok:b", (), {})) == 1
+    assert debug.answers[1][-1] == ("ok:a", (), {})
+
+
+def test_receiver_states():
+    app, debug, hu = make_kutana_no_run()
+
+    pl = Plugin("")
+    pl.app = app
+
+    @pl.on_commands(["a"])
+    @pl.expect_receiver(state="")
+    async def __(msg, ctx):
+        await ctx.receiver.update({"state": "state"})
+        await ctx.reply("ok:a")
+
+    @pl.on_commands(["b"])
+    @pl.expect_receiver(state="state")
+    async def __(msg, ctx):
+        await ctx.receiver.update({"state": ""})
+        await ctx.reply("ok:b")
+
+    @pl.on_commands(["a"])
+    @pl.expect_receiver(state="other_state")
+    async def __(msg, ctx):
+        await ctx.receiver.update({"state": ""})
+        await ctx.reply("ok:b")
+
+    app.add_plugin(pl)
+
+    hu(Message(None, UpdateType.MSG, ".a", (), 1, 0, 0, 0))
+    hu(Message(None, UpdateType.MSG, ".b", (), 1, 0, 0, 0))
+    hu(Message(None, UpdateType.MSG, ".b", (), 1, 0, 0, 0))
+    hu(Message(None, UpdateType.MSG, ".a", (), 1, 0, 0, 0))
+
+    assert len(debug.answers[1]) == 3
+    assert debug.answers[1].count(("ok:a", (), {})) == 2
+    assert debug.answers[1].count(("ok:b", (), {})) == 1
+    assert debug.answers[1][-1] == ("ok:a", (), {})

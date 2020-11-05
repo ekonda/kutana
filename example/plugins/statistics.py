@@ -13,7 +13,7 @@ plugin = Plugin(
 
 
 @plugin.on_messages(priority=5)
-async def _(msg, ctx):
+async def __(msg, ctx):
     words_count = statistics.get(msg.sender_id, 0)
 
     new_words_count = words_count + len(msg.text.split())
@@ -24,7 +24,7 @@ async def _(msg, ctx):
 
 
 @plugin.on_commands(["statistics"])
-async def _(msg, ctx):
+async def __(msg, ctx):
     await ctx.reply(
         "You wrote: {} words.".format(statistics.get(msg.sender_id, 0))
     )

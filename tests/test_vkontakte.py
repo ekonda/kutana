@@ -665,7 +665,7 @@ def test_happy_path(mock_post):
     echo_plugin = Plugin("echo")
 
     @echo_plugin.on_commands(["echo", "ec"])
-    async def _(message, ctx):
+    async def __(message, ctx):
         assert ctx.resolve_screen_name
         assert ctx.reply
 

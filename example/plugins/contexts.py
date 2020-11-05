@@ -8,7 +8,7 @@ plugin1 = Plugin(name="Contexts [Provider]")
 
 
 @plugin1.on_commands(["contexts"], priority=5)
-async def _(msg, ctx):
+async def __(msg, ctx):
     # Do or produce something and save it to context.
     ctx.var = "val"
 
@@ -20,7 +20,7 @@ plugin2 = Plugin(name="Contexts")
 
 
 @plugin2.on_commands(["contexts"])
-async def _(msg, ctx):
+async def __(msg, ctx):
     await ctx.reply('ctx.var == "{}"'.format(
         ctx.var  # Use value saved in context by other plugin
     ))

@@ -65,6 +65,8 @@ class Vkontakte(Backend):
             group_officers_edit=0, user_block=0, user_unblock=0
         )
 
+        self._tasks = []
+
     @classmethod
     def get_identity(cls):
         return "vkontakte"
@@ -436,7 +438,10 @@ class Vkontakte(Backend):
             self.group_id,
         )
 
-        asyncio.ensure_future(self._execute_loop(app.get_loop()), loop=app.get_loop())
+        self._tasks.append(asyncio.ensure_future(
+            self._execute_loop(app.get_loop()),
+            loop=app.get_loop()
+        ))
 
     async def send_message(self, target_id, message, attachments=(), **kwargs):
         """
@@ -463,5 +468,8 @@ class Vkontakte(Backend):
         return await self._request(method, kwargs, _timeout)
 
     async def on_shutdown(self, app):
+        for task in self._tasks:
+            task.cancel()
+
         if self.session and self._is_session_local:
             await self.session.close()

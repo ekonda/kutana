@@ -1,7 +1,10 @@
 import re
+import inspect
 import warnings
+import functools
 from .handler import Handler, HandlerResponse
 from .update import UpdateType
+from .helpers import ensure_list
 from .backends.vkontakte import VkontaktePluginExtension
 from .routers import (
     CommandsRouter, AttachmentsRouter, ListRouter, AnyMessageRouter,
@@ -17,11 +20,13 @@ class Plugin:
     :param description: Description of the plugin
     """
 
-    def __init__(self, name, description=""):
+    def __init__(self, name, description="", storage="default"):
+        self.app = None
         self.name = name
         self.description = description
 
         self._routers = []
+        self._storage = storage
 
         self._on_start = None
         self._on_before = None
@@ -49,6 +54,12 @@ class Plugin:
         else:
             router.add_handler(handler)
 
+    @property
+    def storage(self):
+        if isinstance(self._storage, str):
+            return self.app.get_storage(self._storage)
+        return self._storage
+
     def on_start(self):
         """
         Decorator for registering coroutine to be called when application
@@ -57,7 +68,22 @@ class Plugin:
         def decorator(func):
             if self._on_start is not None:
                 raise RuntimeError("Hook 'on_start' already set")
-            self._on_start = func
+
+            async def _on_start(app):
+                args, *__ = inspect.getfullargspec(func)
+
+                if args:
+                    warnings.warn(
+                        '"on_start" with arguments is deprecated, you can '
+                        'access "app" with "plugin.app"',
+                        DeprecationWarning
+                    )
+                    return await func(app)
+                else:
+                    return await func()
+
+            self._on_start = _on_start
+
             return func
         return decorator
 
@@ -151,8 +177,7 @@ class Plugin:
         coroutines are not executed further.
         """
 
-        if not isinstance(commands, (list, tuple)):
-            raise ValueError("`commands` argument must be list or tuple")
+        commands = ensure_list(commands)
 
         def decorator(func):
             for command in commands:
@@ -180,6 +205,8 @@ class Plugin:
         See :class:`kutana.plugin.Plugin.on_commands` for details
         about 'priority' and 'router_priority'.
         """
+
+        types = ensure_list(types)
 
         def decorator(func):
             for atype in types:
@@ -322,3 +349,77 @@ class Plugin:
         """
 
         return self._make_decorator(AnyUpdateRouter, priority, router_priority)
+
+    def expect_sender(self, state=None, localized=False):
+        """
+        This decorator does following things:
+
+        - It adds 'sender' to the context. Object that contains data you
+            previously saved to it. You can treat it as object or dict
+            with data. In order to save your changes, you should await
+            'save' method (or use 'update').
+
+        - If you specified 'state', this will skip all users that don't have
+            specified value in 'state' field.
+
+        - If you 'localized' is true, state will be limited only to current
+            receiver.
+
+        NOTE:
+            If you will attempt to update state, but between reading and
+            writing (updating) someone already updated it 'OptimisticLockException'
+            will be raised. By default this exceptions are ignored!
+        """
+
+        def decorator(func):
+            @functools.wraps(func)
+            async def wrapper(upd, ctx, *args, **kwargs):
+                sender = await self.storage.get(ctx.sender_key)
+
+                if not sender or "state" not in sender:
+                    sender = self.storage.make_document(
+                        {"state": "", "_version": None}, ctx.sender_key
+                    )
+
+                if state is not None and sender["state"] != state:
+                    return HandlerResponse.SKIPPED
+
+                ctx.sender = sender
+
+                return await func(upd, ctx, *args, **kwargs)
+            return wrapper
+        return decorator
+
+    def expect_receiver(self, state=None):
+        """
+        This decorator does following things:
+
+        - It adds 'receiver' to the context. Object that contains data you
+            previously saved to it. You can treat it as object or dict
+            with data. In order to save your changes, you should await
+            'save' method (or use 'update').
+
+        NOTE:
+            If you will attempt to update state, but between reading and
+            writing (updating) someone already updated it - 'OptimisticLockException'
+            will be raised. By default this exceptions are ignored!
+        """
+
+        def decorator(func):
+            @functools.wraps(func)
+            async def wrapper(upd, ctx, *args, **kwargs):
+                receiver = await self.storage.get(ctx.receiver_key)
+
+                if not receiver or "state" not in receiver:
+                    receiver = self.storage.make_document(
+                        {"state": "", "_version": None}, ctx.receiver_key
+                    )
+
+                if state is not None and receiver["state"] != state:
+                    return HandlerResponse.SKIPPED
+
+                ctx.receiver = receiver
+
+                return await func(upd, ctx, *args, **kwargs)
+            return wrapper
+        return decorator

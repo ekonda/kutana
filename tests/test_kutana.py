@@ -1,7 +1,9 @@
 import asyncio
 import pytest
+from asynctest.mock import patch
 from kutana import Kutana, Plugin
 from kutana.storage import OptimisticLockException
+from kutana.storages import MemoryStorage
 from kutana.backends import Debug
 from testing_tools import make_kutana
 
@@ -65,6 +67,58 @@ def test_same_plugins_and_backends():
         app.add_backend(backend)
 
     assert app.get_backends() == [backend]
+
+def test_incorrect_values():
+    app = Kutana()
+
+    with pytest.raises(ValueError):
+        app.add_backend(None)
+
+    with pytest.raises(ValueError):
+        app.set_storage('permanent', None)
+
+    with pytest.raises(ValueError):
+        app.add_plugin(None)
+
+
+
+def test_storages():
+    app = Kutana()
+
+    app.set_storage('permanent', MemoryStorage())
+
+    assert app.get_storage('default')
+    assert app.get_storage('permanent')
+    assert not app.get_storage('temporary')
+
+
+def test_not_active_backend():
+    app = Kutana()
+    app.add_backend(Debug([], name="backend1", active=False))
+
+    async def test():
+        with patch('asyncio.ensure_future') as ensure_future:
+            await app._on_start(None)
+            ensure_future.assert_not_called
+
+    asyncio.get_event_loop().run_until_complete(test())
+
+
+def test_get_backend():
+    app = Kutana()
+    app.add_backend(Debug([], name="backend1"))
+    app.add_backend(Debug([], name="backend2"))
+
+    assert app.get_backend("backend1").name == "backend1"
+    assert app.get_backend("backend2").name == "backend2"
+    assert app.get_backend("backend3") is None
+
+
+def test_add_backend():
+    app = Kutana()
+
+    with pytest.raises(ValueError):
+        app.add_backend(None)
 
 
 def test_start_and_shutdown_hooks():

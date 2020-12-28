@@ -28,8 +28,11 @@ class Vkontakte(Backend):
         session=None,
         requests_per_second=19,
         api_version="5.122",
-        api_url="https://api.vk.com"
+        api_url="https://api.vk.com",
+        **kwargs,
     ):
+        super().__init__(**kwargs)
+
         if not token:
             raise ValueError("No `token` specified")
 

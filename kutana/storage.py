@@ -80,7 +80,7 @@ class Document:
 
 class Storage:
     async def init(self):
-        raise NotImplementedError
+        pass
 
     def make_document(self, values, key):
         return Document({**values, "_version": None}, key=key, storage=self)

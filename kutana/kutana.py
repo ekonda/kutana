@@ -2,8 +2,10 @@ import asyncio
 from sortedcontainers import SortedList
 from .handler import HandlerResponse as hr
 from .storages import MemoryStorage
-from .storage import OptimisticLockException
+from .storage import OptimisticLockException, Storage
+from .backend import Backend
 from .context import Context
+from .plugin import Plugin
 from .logger import logger
 
 
@@ -22,12 +24,12 @@ class Kutana:
     def __init__(
         self,
         concurrent_handlers_count=512,
-        storage=None,
+        default_storage=None,
         loop=None,
     ):
         self._plugins = []
         self._backends = []
-        self._storages = {"default": MemoryStorage()}
+        self._storages = {"default": default_storage or MemoryStorage()}
 
         self._loop = loop or asyncio.new_event_loop()
 
@@ -48,11 +50,18 @@ class Kutana:
         # TODO: Replace with property
         return self._loop
 
-    def get_storage(self, name):
+    def set_storage(self, name, storage):
+        if not isinstance(storage, Storage):
+            raise ValueError(f'Provided value is not a storage: {storage}')
+        self._storages[name] = storage
+
+    def get_storage(self, name="default"):
         return self._storages.get(name)
 
     def add_plugin(self, plugin):
         """Add plugin to the application."""
+        if not isinstance(plugin, Plugin):
+            raise ValueError(f'Provided value is not a plugin: {plugin}')
         if plugin in self._plugins:
             raise RuntimeError("Plugin already added")
         self._plugins.append(plugin)
@@ -68,16 +77,31 @@ class Kutana:
 
     def add_backend(self, backend):
         """Add backend to the application."""
+        if not isinstance(backend, Backend):
+            raise ValueError(f'Provided value is not a backend: {backend}')
         if backend in self._backends:
             raise RuntimeError("Backend already added")
         self._backends.append(backend)
+
+    def get_backend(self, name):
+        """Return first backend with specified name or None."""
+        for backend in self._backends:
+            if backend.name == name:
+                return backend
+        return None
 
     def get_backends(self):
         return self._backends
 
     async def _on_start(self, queue):
+        for storage in self._storages.values():
+            await storage.init()
+
         for backend in self._backends:
             await backend.on_start(self)
+
+            if not backend.active:
+                continue
 
             async def acquire_updates(backend):  # don't forget to capture backend
                 async def submit_update(update):

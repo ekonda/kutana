@@ -10,6 +10,11 @@
   - Renamed `perform_api_call` to `execute_request`
   - Renamed `perform_updates_request` to `acquire_updates`
   - Renamed `perform_send` to `execute_send`
+  - Added `default_storage` option to Kutana
+  - Added `active` attribute for backends; if it's False,
+      kutana will not process updates from this backend
+  - Added `name` attribute to backends
+  - Added `get_backend` method for getting backends by name
   - Added stripping of mentions for the telegram bot
   - Added `VkontakteCallback`; `Vkontakte` is now
       alias for `VkontakteLongpoll`

@@ -3,6 +3,7 @@ import argparse
 import yaml
 from kutana import Kutana, load_plugins, logger
 from kutana.backends import Vkontakte, VkontakteCallback, Telegram
+from kutana.storages import MemoryStorage, MongoDBStorage
 
 
 parser = argparse.ArgumentParser("kutana", description="Run kutana application instance using provided config.")
@@ -47,17 +48,32 @@ def run():
 
     # Add each backend from config
     for backend in config.get("backends"):
+        kwargs = {k: v for k, v in backend.items() if k != "kind"}
+
         if backend["kind"] == "vk" and "address" in backend:
-            app.add_backend(VkontakteCallback(
-                token=backend["token"],
-                address=backend["address"]
-            ))
+            app.add_backend(VkontakteCallback(**kwargs))
 
         elif backend["kind"] == "vk":
-            app.add_backend(Vkontakte(token=backend["token"]))
+            app.add_backend(Vkontakte(**kwargs))
 
         elif backend["kind"] == "tg":
-            app.add_backend(Telegram(token=backend["token"]))
+            app.add_backend(Telegram(**kwargs))
+
+        else:
+            logger.logger.warning(f"Unknown backend kind: {backend['kind']}")
+
+    # Add each storage from config
+    for name, storage in config.get("storages").items():
+        kwargs = {k: v for k, v in storage.items() if k != "kind"}
+
+        if storage["kind"] == "memory":
+            app.set_storage(name, MemoryStorage(**kwargs))
+
+        elif storage["kind"] == "mongodb":
+            app.set_storage(name, MongoDBStorage(**kwargs))
+
+        else:
+            logger.logger.warning(f"Unknown storage kind: {storage['kind']}")
 
     # Load and register plugins
     app.add_plugins(load_plugins(args.plugins))

@@ -4,3 +4,7 @@ backends:
     token: <token-for-vk-here>
   - kind: tg
     token: <token-for-tg-here>
+storages:
+  default:
+    kind: mongodb
+    mongodb_uri: localhost

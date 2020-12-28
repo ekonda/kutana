@@ -1,4 +1,12 @@
 class Backend:
+    def __init__(self, name=None, active=True):
+        self.name = name
+        self._active = active
+
+    @property
+    def active(self):
+        return self._active
+
     async def on_start(self, app):
         pass
 

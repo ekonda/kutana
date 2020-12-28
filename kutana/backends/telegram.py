@@ -14,8 +14,11 @@ class Telegram(Backend):
         messages_per_second=29,
         session=None,
         proxy=None,
-        api_url="https://api.telegram.org"
+        api_url="https://api.telegram.org",
+        **kwargs,
     ):
+        super().__init__(**kwargs)
+
         if not token:
             raise ValueError("No `token` specified")
 

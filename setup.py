@@ -28,7 +28,8 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     install_requires=[
         "sortedcontainers>=2.1.0",
-        "aiohttp>=3.6.1"
+        "aiohttp>=3.6.1",
+        "motor>=3.11"
     ],
     python_requires=">=3.6",
     classifiers=[

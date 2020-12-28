@@ -4,7 +4,9 @@ from ..update import Message, ReceiverType, UpdateType
 
 
 class Debug(Backend):
-    def __init__(self, messages=None, on_complete=None, save_replies=True):
+    def __init__(self, messages=None, on_complete=None, save_replies=True, **kwargs):
+        super().__init__(**kwargs)
+
         if isinstance(messages, GeneratorType):  # pragma: no cover
             self.messages = messages
         else:

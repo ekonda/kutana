@@ -1,5 +1,5 @@
 import random
-from .storage import Storage, OptimisticLockException
+from ..storage import Storage, OptimisticLockException
 
 
 class MemoryStorage(Storage):

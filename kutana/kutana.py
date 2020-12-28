@@ -52,7 +52,7 @@ class Kutana:
 
     def set_storage(self, name, storage):
         if not isinstance(storage, Storage):
-            raise ValueError(f'Provided value is not a storage: {storage}')
+            raise ValueError(f"Provided value is not a storage: {storage}")
         self._storages[name] = storage
 
     def get_storage(self, name="default"):
@@ -61,7 +61,7 @@ class Kutana:
     def add_plugin(self, plugin):
         """Add plugin to the application."""
         if not isinstance(plugin, Plugin):
-            raise ValueError(f'Provided value is not a plugin: {plugin}')
+            raise ValueError(f"Provided value is not a plugin: {plugin}")
         if plugin in self._plugins:
             raise RuntimeError("Plugin already added")
         self._plugins.append(plugin)
@@ -78,7 +78,7 @@ class Kutana:
     def add_backend(self, backend):
         """Add backend to the application."""
         if not isinstance(backend, Backend):
-            raise ValueError(f'Provided value is not a backend: {backend}')
+            raise ValueError(f"Provided value is not a backend: {backend}")
         if backend in self._backends:
             raise RuntimeError("Backend already added")
         self._backends.append(backend)

@@ -1,4 +1,5 @@
 import asyncio
+import functools
 import pytest
 import pymongo
 from asynctest.mock import CoroutineMock, Mock, patch
@@ -6,21 +7,23 @@ from kutana.storage import OptimisticLockException
 from kutana.storages import MongoDBStorage
 
 
-def make_mongodb_storage():
-    with patch("kutana.storages.mongodb.AsyncIOMotorClient") as mc:
-        collection = Mock()
-        collection.update_one = CoroutineMock()
-        collection.create_index = CoroutineMock()
-        collection.find_one = CoroutineMock()
-        collection.delete_one = CoroutineMock()
-        mc.return_value = {"kutana": {"storage": collection}}
-        return MongoDBStorage("mongo")
+def with_mongodb_storage(coro):
+    @functools.wraps(coro)
+    async def wrapper(*args, **kwargs):
+        with patch("kutana.storages.mongodb.AsyncIOMotorClient") as client:
+            collection = Mock()
+            collection.update_one = CoroutineMock()
+            collection.create_index = CoroutineMock()
+            collection.find_one = CoroutineMock()
+            collection.delete_one = CoroutineMock()
+            client.return_value = {"kutana": {"storage": collection}}
+            return await coro(*args, storage=MongoDBStorage("mongo"), **kwargs)
+    return wrapper
 
 
 def test_mongodb_storage():
-    storage = make_mongodb_storage()
-
-    async def test():
+    @with_mongodb_storage
+    async def test(storage):
         # Init storage
         await storage.init()
         storage.collection.create_index.assert_awaited()
@@ -53,10 +56,12 @@ def test_mongodb_storage():
 
 
 def test_mongodb_storage_conflict():
-    storage = make_mongodb_storage()
-    storage.collection.update_one.side_effect = pymongo.errors.DuplicateKeyError('error')
+    @with_mongodb_storage
+    async def test(storage):
+        await storage.init()
 
-    async def test():
+        storage.collection.update_one.side_effect = pymongo.errors.DuplicateKeyError('error')
+
         with pytest.raises(OptimisticLockException):
             await storage._put("key", {"val1": 1, "val2": 2})
 

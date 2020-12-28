@@ -1,4 +1,3 @@
-import random
 import pymongo
 from motor.motor_asyncio import AsyncIOMotorClient
 from ..storage import Storage, OptimisticLockException
@@ -16,9 +15,9 @@ class MongoDBStorage(Storage):
         self.collection = None
 
     async def init(self):
-        self.client = AsyncIOMotorClient(self._config['host'])
-        self.database = self.client[self._config['database']]
-        self.collection = self.database[self._config['collection']]
+        self.client = AsyncIOMotorClient(self._config["host"])
+        self.database = self.client[self._config["database"]]
+        self.collection = self.database[self._config["collection"]]
         await self.collection.create_index([("_key", pymongo.ASCENDING)], unique=True)
 
     async def _put(self, key, values, version=None):

@@ -52,10 +52,9 @@ python3 -m kutana --config example/config.yml --plugins example/plugins
 Refer to the example [config.yml](https://github.com/ekonda/kutana/tree/master/example/config.example.yml)
 for the configuration details.
 
-## Example `run.py`
+> You can also use `kutana`, if you have properly setup PATH for python's console_scripts.
 
-> Token for Vkontakte is loaded from the file "config.json"
-> and plugins are loaded from folder "plugins/"
+## Example `run.py`
 
 ```py
 import json
@@ -79,6 +78,9 @@ if __name__ == "__main__":
     # Run application
     app.run()
 ```
+
+> Token for Vkontakte is loaded from the file "config.json"
+> and plugins are loaded from folder "plugins/"
 
 ## Example plugin (`plugins/echo.py`)
 

@@ -31,6 +31,11 @@ setuptools.setup(
         "aiohttp>=3.6",
         "motor>=2.3"
     ],
+    entry_points={
+        'console_scripts': [
+            'snek = kutana.cli:run',
+        ],
+    },
     python_requires=">=3.6",
     classifiers=[
         "Programming Language :: Python :: 3",

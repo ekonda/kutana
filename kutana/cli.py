@@ -1,3 +1,4 @@
+import os
 import logging
 import argparse
 import yaml
@@ -37,6 +38,10 @@ def run():
         logger.set_logger_level(logging.DEBUG)
 
     # Import configuration
+    if not os.path.isfile(args.config):
+        logger.logger.error(f"Couldn't open confiuration file: {args.config}")
+        exit(1)
+
     with open(args.config) as fh:
         config = yaml.safe_load(fh)
 

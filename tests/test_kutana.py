@@ -1,6 +1,6 @@
 import asyncio
 import pytest
-from asynctest.mock import patch
+from asynctest.mock import MagicMock, patch
 from kutana import Kutana, Plugin
 from kutana.storage import OptimisticLockException
 from kutana.storages import MemoryStorage
@@ -259,19 +259,17 @@ def test_handler_with_exception():
 
 
 def test_kutana_shutdown():
-    app = Kutana()
+    for exception in [Exception, KeyboardInterrupt]:
+        app = Kutana()
 
-    async def trigger():
-        raise KeyboardInterrupt
+        _shutdown = app._shutdown
+        async def checker():
+            checker._called +=1
+            await _shutdown()
+        checker._called = 0
 
-    _shutdown = app._shutdown
-    async def checker():
-        checker._called = True
-        await _shutdown()
-    checker._called = False
+        app._main_loop = MagicMock(side_effect=exception)
+        app._shutdown = checker
+        app.run()
 
-    app._main_loop = trigger
-    app._shutdown = checker
-    app.run()
-
-    assert checker._called == True
+        assert checker._called == 1

@@ -33,7 +33,7 @@ setuptools.setup(
     ],
     entry_points={
         'console_scripts': [
-            'snek = kutana.cli:run',
+            'kutana = kutana.cli:run',
         ],
     },
     python_requires=">=3.6",

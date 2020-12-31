@@ -120,6 +120,13 @@ class Kutana:
             if plugin._on_start:
                 await plugin._on_start(self)
 
+    async def _main_loop_wrapper(self):
+        try:
+            await self._main_loop()
+        except Exception:
+            self.stop()
+            raise
+
     async def _main_loop(self):
         queue = asyncio.Queue(
             maxsize=self._concurrent_handlers_count,
@@ -233,7 +240,7 @@ class Kutana:
         logger.info("Starting application...")
 
         try:
-            asyncio.ensure_future(self._main_loop(), loop=self._loop)
+            asyncio.ensure_future(self._main_loop_wrapper(), loop=self._loop)
             self._loop.run_forever()
         except KeyboardInterrupt:
             asyncio.ensure_future(self._shutdown(), loop=self._loop)

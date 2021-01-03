@@ -1,5 +1,6 @@
 *.py.nocommit
 config.yml
+.DS_Store
 
 # VScode
 .vscode/

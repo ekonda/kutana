@@ -123,6 +123,8 @@ class Kutana:
     async def _main_loop_wrapper(self):
         try:
             await self._main_loop()
+        except asyncio.CancelledError:
+            pass
         except Exception:
             self.stop()
             raise

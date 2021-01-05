@@ -21,18 +21,11 @@ to use plugins with different backends.
 python -m pip install kutana
 ```
 
-## Usage
+## Running
 
-- Create `Kutana` application and add managers.
-- Register your plugins in the executor. You can import plugin from folders
-    with function `load_plugins`. Files should be a valid python modules with
-    available `plugin` field with your plugin (`Plugin`) or field `plugins`
-    with list of instances of `Plugin` class.
-- Start the application.
+### From CLI
 
-## Running from CLI
-
-Following command with populate application's config, add specified backends and
+Following command will populate application's config, add specified backends and
 load plugins from specified folder.
 
 ```bash
@@ -52,9 +45,7 @@ python3 -m kutana --config example/config.yml --plugins example/plugins
 Refer to the example [config.yml](https://github.com/ekonda/kutana/tree/master/example/config.example.yml)
 for the configuration details.
 
-> You can also use `kutana`, if you have properly setup PATH for python's console_scripts.
-
-## Example `run.py`
+### From python
 
 ```py
 import json

@@ -4,9 +4,10 @@ import pytest
 import pymongo
 from asynctest.mock import CoroutineMock, Mock, patch
 from kutana.storage import OptimisticLockException
-from kutana.storages import MongoDBStorage
+from kutana.storages import MongoDBStorage, SqliteStorage
 
 
+# --- Test mongodb storage using mocks ---
 def with_mongodb_storage(coro):
     @functools.wraps(coro)
     async def wrapper(*args, **kwargs):
@@ -64,5 +65,28 @@ def test_mongodb_storage_conflict():
 
         with pytest.raises(OptimisticLockException):
             await storage._put("key", {"val1": 1, "val2": 2})
+
+    asyncio.get_event_loop().run_until_complete(test())
+
+
+# --- Test sqlite storage using in-memory database ---
+def with_sqlite_storage(coro):
+    @functools.wraps(coro)
+    async def wrapper(*args, **kwargs):
+        return await coro(*args, storage=SqliteStorage(":memory:"), **kwargs)
+    return wrapper
+
+
+def test_sqlite_storage():
+    @with_sqlite_storage
+    async def test(storage):
+        await storage.init()
+        assert await storage._put("key", {"val1": 1, "val2": 2}) == 1
+        assert await storage._put("key", {"val1": 1, "val2": 2}, version=1) == 2
+        with pytest.raises(OptimisticLockException):
+            await storage._put("key", {"val1": 1, "val2": 3}, version=1)
+        assert await storage._get("key") == {"val1": 1, "val2": 2, "_version": 2}
+        await storage._delete("key")
+        assert await storage._get("key") is None
 
     asyncio.get_event_loop().run_until_complete(test())

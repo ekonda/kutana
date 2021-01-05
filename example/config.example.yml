@@ -6,5 +6,5 @@ backends:
     token: <token-for-tg-here>
 storages:
   default:
-    kind: mongodb
-    mongodb_uri: localhost
+    kind: sqlite
+    path: kutana.sqlite3

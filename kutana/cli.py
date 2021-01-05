@@ -4,7 +4,7 @@ import argparse
 import yaml
 from kutana import Kutana, load_plugins, logger
 from kutana.backends import Vkontakte, VkontakteCallback, Telegram
-from kutana.storages import MemoryStorage, MongoDBStorage
+from kutana.storages import MemoryStorage, MongoDBStorage, SqliteStorage
 
 
 parser = argparse.ArgumentParser("kutana", description="Run kutana application instance using provided config.")
@@ -23,6 +23,40 @@ parser.add_argument(
 )
 
 
+def add_backends(app, backends):
+    for backend in (backends or []):
+        kwargs = {k: v for k, v in backend.items() if k != "kind"}
+
+        if backend["kind"] == "vk" and "address" in backend:
+            app.add_backend(VkontakteCallback(**kwargs))
+
+        elif backend["kind"] == "vk":
+            app.add_backend(Vkontakte(**kwargs))
+
+        elif backend["kind"] == "tg":
+            app.add_backend(Telegram(**kwargs))
+
+        else:
+            logger.logger.warning(f"Unknown backend kind: {backend['kind']}")
+
+
+def add_storages(app, storages):
+    for name, storage in (storages or {}).items():
+        kwargs = {k: v for k, v in storage.items() if k != "kind"}
+
+        if storage["kind"] == "memory":
+            app.set_storage(name, MemoryStorage(**kwargs))
+
+        elif storage["kind"] == "mongodb":
+            app.set_storage(name, MongoDBStorage(**kwargs))
+
+        elif storage["kind"] == "sqlite":
+            app.set_storage(name, SqliteStorage(**kwargs))
+
+        else:
+            logger.logger.warning(f"Unknown storage kind: {storage['kind']}")
+
+
 def run():
     """
     This function runs kutana application using provided
@@ -32,8 +66,10 @@ def run():
     your application.
     """
 
+    # Parse provided arguments
     args = parser.parse_args()
 
+    # Setup logger
     if args.debug:
         logger.set_logger_level(logging.DEBUG)
 
@@ -52,33 +88,10 @@ def run():
     app.config.update(config)
 
     # Add each backend from config
-    for backend in config.get("backends"):
-        kwargs = {k: v for k, v in backend.items() if k != "kind"}
-
-        if backend["kind"] == "vk" and "address" in backend:
-            app.add_backend(VkontakteCallback(**kwargs))
-
-        elif backend["kind"] == "vk":
-            app.add_backend(Vkontakte(**kwargs))
-
-        elif backend["kind"] == "tg":
-            app.add_backend(Telegram(**kwargs))
-
-        else:
-            logger.logger.warning(f"Unknown backend kind: {backend['kind']}")
+    add_backends(app, config.get("backends"))
 
     # Add each storage from config
-    for name, storage in config.get("storages").items():
-        kwargs = {k: v for k, v in storage.items() if k != "kind"}
-
-        if storage["kind"] == "memory":
-            app.set_storage(name, MemoryStorage(**kwargs))
-
-        elif storage["kind"] == "mongodb":
-            app.set_storage(name, MongoDBStorage(**kwargs))
-
-        else:
-            logger.logger.warning(f"Unknown storage kind: {storage['kind']}")
+    add_storages(app, config.get("storages"))
 
     # Load and register plugins
     app.add_plugins(load_plugins(args.plugins))

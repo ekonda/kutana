@@ -34,7 +34,7 @@ class MemoryStorage(Storage):
 
         # update value
         new_version = (version or 0) + 1
-        self._storage[key] = {**values, "_version": (version or 0) + 1}
+        self._storage[key] = {**values, "_version": new_version}
         return new_version
 
     async def _get(self, key):

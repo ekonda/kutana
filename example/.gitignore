@@ -1,2 +1,10 @@
 config.json
 configuration.json
+
+__pycache__
+*.tmp
+*.pyc
+*.log
+*.db
+*.sqlite
+*.sqlite3

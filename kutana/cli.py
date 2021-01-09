@@ -24,8 +24,12 @@ parser.add_argument(
 
 
 def add_backends(app, backends):
-    for backend in (backends or []):
+    for backend in backends or []:
         kwargs = {k: v for k, v in backend.items() if k != "kind"}
+        name = kwargs.get("name")
+
+        if name and app.get_backend(name):
+            logger.logger.warning(f"Duplicated backend name: {name}")
 
         if backend["kind"] == "vk" and "address" in backend:
             app.add_backend(VkontakteCallback(**kwargs))
@@ -41,8 +45,12 @@ def add_backends(app, backends):
 
 
 def add_storages(app, storages):
-    for name, storage in (storages or {}).items():
-        kwargs = {k: v for k, v in storage.items() if k != "kind"}
+    for storage in storages or []:
+        kwargs = {k: v for k, v in storage.items() if k not in ("kind", "name")}
+        name = storage.get("name", "default")
+
+        if name != "default" and app.get_storage(name):
+            logger.logger.warning(f"Duplicated storage name: {name}")
 
         if storage["kind"] == "memory":
             app.set_storage(name, MemoryStorage(**kwargs))
@@ -93,7 +101,7 @@ def run():
     # Add each storage from config
     add_storages(app, config.get("storages"))
 
-    # Load and register plugins
+    # Load and register plugins from provided path
     app.add_plugins(load_plugins(args.plugins))
 
     # Run application

@@ -5,6 +5,6 @@ backends:
   - kind: tg
     token: <token-for-tg-here>
 storages:
-  default:
+  - name: default
     kind: sqlite
     path: kutana.sqlite3

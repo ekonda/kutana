@@ -1,0 +1,72 @@
+# example/plugins/documents.py:13:21
+- msgid: Image
+  msgstr: Изображение
+
+# example/plugins/documents.py:19:21
+- msgid: Document
+  msgstr: Документ
+
+# example/plugins/documents.py:25:21
+- msgid: Audio message
+  msgstr: Аудио сообщение
+
+# example/plugins/documents.py:4:22
+- msgid: Attachments
+  msgstr: Вложение
+
+# example/plugins/documents.py:4:52
+- msgid: Sends some attachments (.attachments)
+  msgstr: Отправляет немного вложений (.attachments)
+
+# example/plugins/echo.py:4:22
+- msgid: Echo
+  msgstr: Эхо
+
+# example/plugins/echo.py:4:45
+- msgid: Sends your messages back (.echo)
+  msgstr: Отправляет полученные сообщения обратно (.echo)
+
+# example/plugins/metrics.py:7:22
+- msgid: Metrics
+  msgstr: Метрики
+
+# example/plugins/metrics.py:7:48
+- msgid: Sends some information (.metrics)
+  msgstr: Отправляет некоторую информацию (.metrics)
+
+# example/plugins/plugins.py:4:22
+# example/plugins/plugins.py:19:21
+- msgid: Plugins
+  msgstr: Плагины
+
+# example/plugins/plugins.py:4:48
+- msgid: Sends installed plugins (.plugins)
+  msgstr: Показать установленные плагины (.plugins)
+
+# example/plugins/waiter.py:15:21
+- msgid: Now I'm waiting!
+  msgstr: Теперь я жду!
+
+# example/plugins/waiter.py:22:21
+- msgid: I'm already waiting for {} seconds!
+  msgstr:
+  - Я уже жду {} секунду
+  - Я уже жду {} секунды
+  - Я уже жду {} секунд
+
+# example/plugins/waiter.py:30:25
+- msgid: Now I forgot you!
+  msgstr: Теперь я забыл тебя!
+
+# example/plugins/waiter.py:32:25
+- msgid: Who are you?
+  msgstr: Кто ты?
+
+# example/plugins/waiter.py:5:17
+- msgid: Waiter
+  msgstr: Ждун
+
+# example/plugins/waiter.py:5:42
+- msgid: Waits for you if you ask it to (.wait, .forget)
+  msgstr: Ждёт вас, если его попросить (.wait, .forget)
+

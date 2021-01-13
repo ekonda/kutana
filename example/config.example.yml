@@ -1,4 +1,5 @@
 prefixes: ['.', '!', '/']
+language: ru
 backends:
   - kind: vk
     token: <token-for-vk-here>

@@ -3,6 +3,7 @@ import logging
 import argparse
 import yaml
 from kutana import Kutana, load_plugins, logger
+from kutana.i18n import load_translations, set_default_language
 from kutana.backends import Vkontakte, VkontakteCallback, Telegram
 from kutana.storages import MemoryStorage, MongoDBStorage, SqliteStorage
 
@@ -15,6 +16,10 @@ parser.add_argument(
 parser.add_argument(
     "--plugins", dest="plugins", type=str,
     default="plugins", help="folder with plugins to load (default: plugins)",
+)
+parser.add_argument(
+    "--translations", dest="translations", type=str,
+    default="", help="folder with translations to load (default: none)",
 )
 parser.add_argument(
     "--debug", dest="debug", action="store_const",
@@ -95,6 +100,10 @@ def run():
     # Update configuration
     app.config.update(config)
 
+    # Setup i18n
+    set_default_language(config.get("language", "en"))
+    load_translations(args.translations)
+
     # Add each backend from config
     add_backends(app, config.get("backends"))
 
@@ -106,3 +115,7 @@ def run():
 
     # Run application
     app.run()
+
+
+if __name__ == "__main__":
+    run()

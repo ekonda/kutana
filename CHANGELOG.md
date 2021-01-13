@@ -3,22 +3,25 @@
 > Changes to public API are marked as `^`. Possible changes
 > to public API are marked as `^?`.
 
-- v4.4.0 - WIP
+- v5.0.0 - WIP
   - ^ Removed `Storage`, `set_state`, `group_state`, `user_state`,
       `storage`.
-  - ^ Greatly reduced support for graffiti
-  - Renamed `perform_api_call` to `execute_request`
-  - Renamed `perform_updates_request` to `acquire_updates`
-  - Renamed `perform_send` to `execute_send`
-  - Added `default_storage` option to Kutana
+  - ^ Greatly reduced support for graffiti.
+  - Renamed `perform_api_call` to `execute_request`.
+  - Renamed `perform_updates_request` to `acquire_updates`.
+  - Renamed `perform_send` to `execute_send`.
+  - Added `i18n` submodule for translating strings in
+      plugins. Added section describing it to the docs.
+  - Added `default_storage` option to Kutana.
   - Added `active` attribute for backends; if it's False,
-      kutana will not process updates from this backend
-  - Added `name` attribute to backends
-  - Added `get_backend` method for getting backends by name
-  - Added stripping of mentions for the telegram bot
+      kutana will not process updates from this backend.
+  - Added `name` attribute to backends.
+  - Added `get_backend` method for getting backends by name.
+  - Added stripping of mentions for the telegram bot.
   - Added `VkontakteCallback`; `Vkontakte` is now
-      alias for `VkontakteLongpoll`
-  - Updated "stream" plugin to be more adequate
+      alias for `VkontakteLongpoll`.
+  - Updated "stream" plugin to be more adequate.
+  - Updated example to be more manageable.
 
 - v4.3.0
   - Added router for vkontakte's chat actions + tests

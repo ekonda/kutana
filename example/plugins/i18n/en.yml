@@ -1,0 +1,5 @@
+# example/plugins/waiter.py:24:21
+- msgid: I'm already waiting for {} seconds!
+  msgstr:
+    - I'm already waiting for {} second!
+    - I'm already waiting for {} seconds!

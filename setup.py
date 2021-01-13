@@ -34,6 +34,7 @@ setuptools.setup(
     entry_points={
         'console_scripts': [
             'kutana = kutana.cli:run',
+            'kutana-i18n = kutana.i18n.collector:run',
         ],
     },
     python_requires=">=3.6",

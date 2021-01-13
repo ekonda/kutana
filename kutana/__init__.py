@@ -15,6 +15,7 @@ from .exceptions import RequestException
 from .loaders import load_plugins, load_plugins_from_file
 from .helpers import get_path
 from .storages import MemoryStorage
+from .i18n import t, set_default_language, load_translations, clear_translations
 
 
 __all__ = [
@@ -22,4 +23,5 @@ __all__ = [
     "UpdateType", "HandlerResponse", "RequestException", "Context",
     "MemoryStorage",
     "load_plugins", "load_plugins_from_file", "get_path",
+    "t", "set_default_language", "load_translations", "clear_translations",
 ]

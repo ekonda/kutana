@@ -1,10 +1,10 @@
-from kutana import Plugin
-import psutil
-import time
 import os
+import time
+import psutil
+from kutana import Plugin, t
 
 
-plugin = Plugin(name="Metrics", description="Send some information")
+plugin = Plugin(name=t("Metrics"), description=t("Sends some information (.metrics)"))
 
 
 @plugin.on_commands(["metrics"])

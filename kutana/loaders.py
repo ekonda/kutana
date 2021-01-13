@@ -2,6 +2,7 @@ import importlib.util
 import os
 import re
 
+from .i18n import load_translations
 from .logger import logger
 from .plugin import Plugin
 
@@ -52,18 +53,21 @@ def load_plugins_from_file(path, verbose=False):
 
 def load_plugins(folder, verbose=False):
     """
-    Import all plugins from target folder recursively.
+    Import all plugins from target folder recursively. This
+    also loads translations from "i18n" subfolders.
 
     :param folder: path to target folder
     :returns: list of loaded plugins
     """
+
+    load_translations(os.path.join(folder, "i18n"))
 
     plugins_list = []
 
     for name in os.listdir(folder):
         path = os.path.join(folder, name)
 
-        if os.path.isdir(path):
+        if os.path.isdir(path) and name != "i18n":
             plugins_list += load_plugins(path, verbose=verbose)
 
         elif re.match(r"^[^_].*\.py$", name):

@@ -5,6 +5,9 @@ all: run
 run:
 	python3 -m kutana --config example/config.yml --plugins example/plugins
 
+collectmessages:
+	python3 kutana/i18n/cli.py collect -c example -s example/plugins/i18n/ru.yml
+
 docs:
 	python3 -m pip install sphinx recommonmark
 	sphinx-apidoc --separate -o docs/src/ . $(PWD)/setup.py; cd docs; \

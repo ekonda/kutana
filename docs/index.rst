@@ -22,13 +22,50 @@ different backends (like vk.com, telegram.org etc.).
 
 Refer to `example
 <https://github.com/ekonda/kutana/tree/master/example/>`_ folder for
-the showcase of the engine abilities.
+the showcase of the library abilities.
 
 Workflow
 --------
 
-In order to use kutana, you should initialize engine, add your backends
-and plugins. After that you can run your application.
+You can use kutana from CLI or from your python code. The CLI variant is
+preferable, because it does many things you expect without excessive
+boilerplace.
+
+From CLI
+^^^^^^^^
+
+.. code-block:: bash
+
+    python3 -m kutana --config example/config.yml --plugins example/plugins
+
+    # usage: python3 -m kutana [-h] [--config CONFIG] [--plugins PLUGINS] [--debug]
+
+    # Run kutana application instance using provided config.
+
+    # optional arguments:
+    #   -h, --help         show this help message and exit
+    #   --config CONFIG    file with config in yaml format (default: config.yml
+    #   --plugins PLUGINS  folder with plugins to load (default: plugins)
+    #   --debug            set logging level to debug
+
+Example configuration:
+
+.. code-block:: yaml
+
+    prefixes: ['.', '!', '/']
+    language: ru
+    backends:
+    - kind: vk
+        token: <token-for-vk-here>
+    - kind: tg
+        token: <token-for-tg-here>
+    storages:
+    - name: default
+        kind: sqlite
+        path: kutana.sqlite3
+
+From python
+^^^^^^^^^^^
 
 Below you can find the most simple `run.py` file for kutana application,
 that uses one Vkontakte account and loads plugins from folder `plugins/`.
@@ -46,7 +83,7 @@ that uses one Vkontakte account and loads plugins from folder `plugins/`.
 Plugins
 -------
 
-Main functionality for your applications are providee by plugins:
+Main functionality for your applications are provided by plugins:
 they can add commands, process and preprocess messages, e.t.c.
 
 Below your can find example of simple plugin `echo.py` (that should
@@ -54,13 +91,13 @@ be put into `plugins` folder).
 
 .. code-block:: python
 
-    from kutana import Plugin
+    from kutana import Plugin, t
 
-    plugin = Plugin(name="Echo", description="Reply with send message")
+    plugin = Plugin(name=t("Echo"), description=t("Sends your messages back (.echo)"))
 
     @plugin.on_commands(["echo"])
     async def __(msg, ctx):
-        await ctx.reply("{}".format(ctx.body), attachments=msg.attachments)
+        await ctx.reply("{}".format(ctx.body or '(/)'), attachments=msg.attachments, disable_mentions=0)
 
 Handlers for messages receive :class:`kutana.update.Message` and
 :class:`kutana.context.Context` as arguments. You can find description of
@@ -113,11 +150,50 @@ repository and we'll update documentation!
 API Requests
 ^^^^^^^^^^^^
 
-In order to perform a request to your service, your should use
+In order to perform a request to your backends, your should use
 :meth:`kutana.context.Context.request` method. It accepts method that you
 want to use and any keyword arguments that should be processable by your
 backend. You can check what backend context belongs to by accessing it's
 `backend` attribute.
+
+Internationalization
+^^^^^^^^^^^^^^^^^^^^
+
+Kutana uses simple format for translations in form of ".yml" files,
+containing list of objects describing each translated string in
+following format:
+
+.. code-block:: yaml
+
+    - msgctx: 'New user's greeting'
+      msgid: 'Hello'
+      msgstr: 'Привет'
+
+When translated string is a subject to pluralization, you must provide
+list of strings intead of string in field "msgstr". Currently only
+pluralization supported for following languages: "ru", "uk", "en".
+
+Support for different languages will be implemented in the future.
+Currently you add your language into inner classes of
+:class:`kutana.i18n.pluralization.Pluralization`.
+
+Translations for strings used in library and plugins are loaded from
+following places (with corresponding order):
+
+- Default translations
+- <current-working-directory>/i18n/\*.yml
+- <translations-directory>/\*.yml
+- <plugins-directory>/i18n/\*.yml
+
+Where "translations-directory" is directory specified in CLI arguments of the
+module. You can use :meth:`kutana.i18n.load_translations` to load translations
+from your desired location.
+
+Where "plugins-directory" is any directory that was traversed in search of
+plugins using CLI interface or "load_plugins" method directly.
+
+"kutana-i18n" command can be used to collect message from sources. If your
+messages is not detected, create example and post to to github issues.
 
 -------------------------------------------------------------------------------
 

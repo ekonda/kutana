@@ -1,6 +1,7 @@
 # Required requirements
 sortedcontainers
 aiohttp
+pyyaml
 motor
 
 # Optional requirements

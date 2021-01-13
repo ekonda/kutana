@@ -29,7 +29,8 @@ setuptools.setup(
     install_requires=[
         "sortedcontainers>=2.1",
         "aiohttp>=3.6",
-        "motor>=2.3"
+        "motor>=2.3",
+        "pyyaml>=5.3"
     ],
     entry_points={
         'console_scripts': [

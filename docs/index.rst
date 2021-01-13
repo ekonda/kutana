@@ -103,11 +103,11 @@ Handlers for messages receive :class:`kutana.update.Message` and
 :class:`kutana.context.Context` as arguments. You can find description of
 their methods for these classes in Full API.
 
-You can find descriptions of all possible "on_*" methods for adding your
-callbacks in :class:`kutana.plugin.Plugin` class.
+You can find descriptions of all possible "on_" methods for adding
+your callbacks in :class:`kutana.plugin.Plugin` class.
 
-Order of "on_*" methods
-^^^^^^^^^^^^^^^^^^^^^^^
+Order of "on_" methods
+^^^^^^^^^^^^^^^^^^^^^^
 Default order of processors:
 
 - on_messages, on_updates: 9
@@ -165,9 +165,9 @@ following format:
 
 .. code-block:: yaml
 
-    - msgctx: 'New user's greeting'
-      msgid: 'Hello'
-      msgstr: 'Привет'
+    - msgctx: New user's greeting
+      msgid: Hello
+      msgstr: Привет
 
 When translated string is a subject to pluralization, you must provide
 list of strings intead of string in field "msgstr". Currently only
@@ -193,7 +193,8 @@ Where "plugins-directory" is any directory that was traversed in search of
 plugins using CLI interface or "load_plugins" method directly.
 
 "kutana-i18n" command can be used to collect message from sources. If your
-messages is not detected, create example and post to to github issues.
+messages is not detected, create an issue in the repository and we'll check
+it out.
 
 -------------------------------------------------------------------------------
 

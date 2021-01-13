@@ -70,7 +70,7 @@ class AnyMessageRouter(ListRouter):
         super().__init__(priority=priority)
 
     def _check_update(self, update, ctx):
-        return update.type == UpdateType.MSG and update.text.strip()
+        return update.type == UpdateType.MSG
 
 
 class AnyUpdateRouter(ListRouter):

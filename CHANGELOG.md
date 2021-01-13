@@ -22,6 +22,8 @@
       alias for `VkontakteLongpoll`.
   - Updated "stream" plugin to be more adequate.
   - Updated example to be more manageable.
+  - Fixed `on_unprocessed_messages` not working with empty
+      messages.
 
 - v4.3.0
   - Added router for vkontakte's chat actions + tests

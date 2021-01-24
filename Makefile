@@ -2,6 +2,9 @@
 
 all: run
 
+install:
+	python3 -m pip install .
+
 run:
 	python3 -m kutana --config example/config.yml --plugins example/plugins
 

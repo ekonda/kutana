@@ -76,9 +76,9 @@ if __name__ == "__main__":
 ## Example plugin (`plugins/echo.py`)
 
 ```py
-from kutana import Plugin
+from kutana import Plugin, t
 
-plugin = Plugin(name="Echo")
+plugin = Plugin(name=t("Echo"))
 
 @plugin.on_commands(["echo"])
 async def __(msg, ctx):

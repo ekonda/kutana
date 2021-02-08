@@ -24,6 +24,8 @@
       alias for `VkontakteLongpoll`.
   - Updated "stream" plugin to be more adequate.
   - Updated example to be more manageable.
+  - Updated `vk.on_payloads` to check objects not strictly (see #57
+      for details).
   - Fixed `on_unprocessed_messages` not working with empty
       messages.
 

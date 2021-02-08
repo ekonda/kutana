@@ -20,7 +20,7 @@ class Plugin:
     :param description: Description of the plugin
     """
 
-    def __init__(self, name, description="", storage="default"):
+    def __init__(self, name, description="", storage="default", **kwargs):
         self.app = None
         self.name = name
         self.description = description
@@ -33,6 +33,10 @@ class Plugin:
         self._on_after = None
         self._on_exception = None
         self._on_shutdown = None
+
+        # Set provided attributes to this instance
+        for k, v in kwargs.items():
+            setattr(self, k, v)
 
     def _get_or_add_router(self, router_cls, priority=None):
         for router in self._routers:

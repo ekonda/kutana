@@ -12,6 +12,8 @@
   - Renamed `perform_send` to `execute_send`.
   - Added `i18n` submodule for translating strings in
       plugins. Added section describing it to the docs.
+  - Added options to provide attributes to plugins through
+      constructor.
   - Added `default_storage` option to Kutana.
   - Added `active` attribute for backends; if it's False,
       kutana will not process updates from this backend.

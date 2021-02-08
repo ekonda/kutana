@@ -3,6 +3,21 @@ import random
 import os.path
 
 
+def uniq_by(arr, key=None):
+    if not key:
+        def key(element):
+            return element
+    return list({key(element): element for element in arr}.values())
+
+
+def pick(obj, keys):
+    new_obj = {}
+    for key in keys:
+        if key in obj:
+            new_obj[key] = obj[key]
+    return new_obj
+
+
 def get_random_string(length=16):
     return "".join(random.choices(string.ascii_letters + string.digits, k=length))
 

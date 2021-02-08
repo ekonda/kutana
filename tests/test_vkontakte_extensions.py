@@ -156,3 +156,25 @@ def test_on_message_actions_types():
     assert len(debug.answers[1]) == 2
     assert debug.answers[1][0] == ("http://example.com/50", (), {})
     assert debug.answers[1][1] == ("example1@mail.com", (), {})
+
+
+def test_on_payloads_exact():
+    app, debug, hu = make_kutana_no_run(backend_source="vkontakte")
+
+    pl = Plugin("")
+
+    @pl.vk.on_payloads([{"command": "echo"}])
+    async def __(msg, ctx):
+        await ctx.reply(ctx.payload["text"])
+
+    app.add_plugin(pl)
+
+    raw1 = make_message_update('{"command": "echo", "text": "hello"}')
+    raw2 = make_message_update('{"command": "echo", "text": "sup"}')
+
+    hu(Message(raw1, UpdateType.MSG, "hey1", (), 1, 0, 0, 0))
+    hu(Message(raw2, UpdateType.MSG, "hey2", (), 1, 0, 0, 0))
+
+    assert len(debug.answers[1]) == 2
+    assert debug.answers[1][0] == ("hello", (), {})
+    assert debug.answers[1][1] == ("sup", (), {})

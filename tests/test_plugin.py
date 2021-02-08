@@ -6,9 +6,10 @@ from testing_tools import sync, make_kutana_no_run
 
 
 def test_get_set():
-    pl = Plugin("")
-    pl.attr = lambda: "hey"
-    assert pl.attr() == "hey"
+    pl = Plugin("", attr1='value')
+    pl.attr2 = lambda: "hey"
+    assert pl.attr1 == "value"
+    assert pl.attr2() == "hey"
 
 
 def test_failed_get():

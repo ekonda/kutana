@@ -3,7 +3,7 @@
 > Changes to public API are marked as `^`. Possible changes
 > to public API are marked as `^?`.
 
-- v5.0.0 - WIP
+- v5.0.0
   - ^ Removed `Storage`, `set_state`, `group_state`, `user_state`,
       `storage`.
   - ^ Greatly reduced support for graffiti.

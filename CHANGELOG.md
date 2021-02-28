@@ -22,6 +22,11 @@
   - Added stripping of mentions for the telegram bot.
   - Added `VkontakteCallback`; `Vkontakte` is now
       alias for `VkontakteLongpoll`.
+  - Added proxy for `HandlerResponse.COMPLETE` and `HandlerResponse.SKIPPED`
+      to the context.
+  - Updated `on_before`, `on_after`, `on_start`, `on_exception` and
+      `on_shutdown` to accept priority argument and now multiple
+      handlers can be used.
   - Updated "stream" plugin to be more adequate.
   - Updated example to be more manageable.
   - Updated `vk.on_payloads` to check objects not strictly (see #57

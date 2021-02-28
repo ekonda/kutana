@@ -129,7 +129,7 @@ def test_start_and_shutdown_hooks():
     pl = Plugin("")
 
     @pl.on_start()
-    async def __(app):
+    async def __():
         called.append("start")
 
     @pl.on_messages()
@@ -137,7 +137,7 @@ def test_start_and_shutdown_hooks():
         await ctx.reply("ok")
 
     @pl.on_shutdown()
-    async def __(app):
+    async def __():
         called.append("shutdown")
 
     app.add_plugin(pl)

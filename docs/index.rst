@@ -103,11 +103,11 @@ Handlers for messages receive :class:`kutana.update.Message` and
 :class:`kutana.context.Context` as arguments. You can find description of
 their methods for these classes in Full API.
 
-You can find descriptions of all possible "on_" methods for adding
+You can find descriptions of all possible "on\_" methods for adding
 your callbacks in :class:`kutana.plugin.Plugin` class.
 
-Order of "on_" methods
-^^^^^^^^^^^^^^^^^^^^^^
+Order of "on\_" methods
+^^^^^^^^^^^^^^^^^^^^^^^
 Default order of processors:
 
 - on_messages, on_updates: 9

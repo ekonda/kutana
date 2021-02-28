@@ -27,12 +27,13 @@ class Plugin:
 
         self._routers = []
         self._storage = storage
-
-        self._on_start = None
-        self._on_before = None
-        self._on_after = None
-        self._on_exception = None
-        self._on_shutdown = None
+        self._handlers = {
+            "start": [],
+            "before": [],
+            "after": [],
+            "exception": [],
+            "shutdown": [],
+        }
 
         # Set provided attributes to this instance
         for k, v in kwargs.items():
@@ -64,16 +65,16 @@ class Plugin:
             return self.app.get_storage(self._storage)
         return self._storage
 
-    def on_start(self):
+    def on_start(self, priority=0):
         """
         Decorator for registering coroutine to be called when application
-        starts. It will be passed an application as an argument.
+        starts.
+
+        Priority specifies the order in which handlers are  executed. Handlers
+        with higher priority will be executed first.
         """
         def decorator(func):
-            if self._on_start is not None:
-                raise RuntimeError("Hook 'on_start' already set")
-
-            async def _on_start(app):
+            async def wrapper():
                 args, *__ = inspect.getfullargspec(func)
 
                 if args:
@@ -82,64 +83,68 @@ class Plugin:
                         'access "app" with "plugin.app"',
                         DeprecationWarning
                     )
-                    return await func(app)
+                    return await func(self.app)
                 else:
                     return await func()
 
-            self._on_start = _on_start
+            self._handlers["start"].append(Handler(wrapper, priority))
 
             return func
         return decorator
 
-    def on_before(self):
+    def on_before(self, priority=0):
         """
         Decorator for registering coroutine to be called before an update
         will be processed. It will be passed the update and it's context as
         arguments.
+
+        Priority specifies the order in which handlers are executed. Handlers
+        with higher priority will be executed first.
         """
         def decorator(func):
-            if self._on_before is not None:
-                raise RuntimeError("Hook 'on_before' already set")
-            self._on_before = func
+            self._handlers["before"].append(Handler(func, priority))
             return func
         return decorator
 
-    def on_after(self):
+    def on_after(self, priority=0):
         """
         Decorator for registering coroutine to be called after an update
         was processed. It will be passed the update, it's context and
         result of processing (:class:`kutana.handler.HandlerResponse`) as
         arguments.
+
+        Priority specifies the order in which handlers are executed. Handlers
+        with higher priority will be executed first.
         """
         def decorator(func):
-            if self._on_after is not None:
-                raise RuntimeError("Hook 'on_after' already set")
-            self._on_after = func
+            self._handlers["after"].append(Handler(func, priority))
             return func
         return decorator
 
-    def on_exception(self):
+    def on_exception(self, priority=0):
         """
         Decorator for registering coroutine to be called when exception was
         raised while processing an update. It will be passed the update,
         it's context and raised exception as arguments.
+
+        Priority specifies the order in which handlers are executed. Handlers
+        with higher priority will be executed first.
         """
         def decorator(func):
-            if self._on_exception is not None:
-                raise RuntimeError("Hook 'on_exception' already set")
-            self._on_exception = func
+            self._handlers["exception"].append(Handler(func, priority))
             return func
         return decorator
 
-    def on_shutdown(self):
+    def on_shutdown(self, priority=0):
         """
         Decorator for registering coroutine to be called when application
         will be stopped. It will be passed application as an argument.
+
+        Priority specifies the order in which handlers are executed. Handlers
+        with higher priority will be executed first.
         """
         def decorator(func):
-            if self._on_shutdown is not None:
-                raise RuntimeError("Hook 'on_shutdown' already set")
-            self._on_shutdown = func
+            self._handlers["shutdown"].append(Handler(func, priority))
             return func
         return decorator
 

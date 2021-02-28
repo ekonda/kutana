@@ -1,3 +1,4 @@
+from unittest.mock import call
 import pytest
 from kutana import (
     Plugin, Message, Update, UpdateType, Attachment, HandlerResponse as hr,
@@ -266,42 +267,49 @@ def test_attachments():
     assert debug.answers[1][3] == ("si", (), {})
 
 
-def test_plugins_multiple_hooks():
-    pl = Plugin("")
-
-    pl.on_start()(lambda: 1)
-    with pytest.raises(RuntimeError):
-        pl.on_start()(lambda: 1)
-
-    pl.on_before()(1)
-    with pytest.raises(RuntimeError):
-        pl.on_before()(1)
-
-    pl.on_after()(1)
-    with pytest.raises(RuntimeError):
-        pl.on_after()(1)
-
-    pl.on_shutdown()(1)
-    with pytest.raises(RuntimeError):
-        pl.on_shutdown()(1)
-
-    pl.on_exception()(1)
-    with pytest.raises(RuntimeError):
-        pl.on_exception()(1)
-
-
 def test_on_start():
-    pl1 = Plugin("API")
-    @pl1.on_start()
+    pl = Plugin("API")
+    pl.app = 2
+
+    @pl.on_start()
     async def __():
         return 1
-    assert sync(pl1._on_start(1))
 
-    pl2 = Plugin("Old API")
-    @pl2.on_start()
+    # Deprecated version
+    @pl.on_start()
     async def __(app):
         return app
-    assert sync(pl2._on_start(1))
+
+    assert sync(pl._handlers['start'][0].handle()) == 1
+    assert sync(pl._handlers['start'][1].handle()) == 2
+
+
+def test_event_handlers_order():
+    app, __, __ = make_kutana_no_run()
+
+    pl = Plugin("", called=[])
+
+    @pl.on_before(priority=5)
+    async def __(upd, ctx):
+        pl.called.append(2)
+
+    @pl.on_before(priority=0)
+    async def __(upd, ctx):
+        pl.called.append(3)
+
+    @pl.on_before(priority=10)
+    async def __(upd, ctx):
+        pl.called.append(1)
+
+    @pl.on_before(priority=-10)
+    async def __(upd, ctx):
+        pl.called.append(4)
+
+    app.add_plugin(pl)
+
+    sync(app._handle_event("before", None, None))
+
+    assert pl.called == [1, 2, 3, 4]
 
 
 def test_storage():

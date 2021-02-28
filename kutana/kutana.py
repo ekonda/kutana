@@ -39,6 +39,7 @@ class Kutana:
         )
 
         self._routers = None
+        self._handlers = None
 
         self.config = {
             "prefixes": (".", "/"),
@@ -97,6 +98,7 @@ class Kutana:
         for storage in self._storages.values():
             await storage.init()
 
+        # Prepare backends and run background update acquiring
         for backend in self._backends:
             await backend.on_start(self)
 
@@ -114,11 +116,12 @@ class Kutana:
 
             asyncio.ensure_future(acquire_updates(backend), loop=self._loop)
 
+        # Prepare plugins
         for plugin in self._plugins:
             plugin.app = self
 
-            if plugin._on_start:
-                await plugin._on_start(self)
+        # Run event listeners
+        await self._handle_event("start")
 
     async def _main_loop_wrapper(self):
         try:
@@ -158,6 +161,23 @@ class Kutana:
 
             task.add_done_callback(lambda t: self._sem.release())
 
+    def _init_handlers(self):
+        self._handlers = {}
+
+        for event in ["start", "before", "after", "exception", "shutdown"]:
+            self._handlers[event] = SortedList([], key=lambda r: -r.priority)
+
+        for plugin in self._plugins:
+            for event, handlers in plugin._handlers.items():
+                self._handlers[event].update(handlers)
+
+    async def _handle_event(self, name, *args, **kwargs):
+        if self._handlers is None:
+            self._init_handlers()
+
+        for handler in self._handlers.get(name):
+            await handler.handle(*args, **kwargs)
+
     def _init_routers(self):
         self._routers = SortedList([], key=lambda r: -r.priority)
 
@@ -184,18 +204,13 @@ class Kutana:
             logger.debug("Optimistic lock exception: %s", exc)
         except Exception as exc:
             logger.exception("Exception while handling the update")
-
-            for plugin in self._plugins:
-                if plugin._on_exception:
-                    await plugin._on_exception(update, ctx, exc)
+            await self._handle_event("exception", update, ctx, exc)
 
     async def _handle_update(self, update, ctx):
         if self._routers is None:
             self._init_routers()
 
-        for plugin in self._plugins:
-            if plugin._on_before:
-                await plugin._on_before(update, ctx)
+        await self._handle_event("before", update, ctx)
 
         for router in self._routers:
             if await router.handle(update, ctx) != hr.SKIPPED:
@@ -204,9 +219,7 @@ class Kutana:
         else:
             ctx._result = hr.SKIPPED
 
-        for plugin in self._plugins:
-            if plugin._on_after:
-                await plugin._on_after(update, ctx, ctx._result)
+        await self._handle_event("after", update, ctx, ctx._result)
 
         return ctx._result
 
@@ -219,9 +232,7 @@ class Kutana:
         for backend in self._backends:
             tasks.append(backend.on_shutdown(self))
 
-        for plugin in self._plugins:
-            if plugin._on_shutdown:
-                tasks.append(plugin._on_shutdown(self))
+        tasks.append(self._handle_event("shutdown"))
 
         await asyncio.gather(*tasks, loop=self._loop, return_exceptions=True)
 

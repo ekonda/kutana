@@ -1,5 +1,6 @@
 import types
-from .update import UpdateType as ut, ReceiverType as rt
+from .handler import HandlerResponse
+from .update import UpdateType, ReceiverType
 
 
 class Context:
@@ -20,6 +21,9 @@ class Context:
         self.backend = backend
         self.config = config
 
+        self.COMPLETE = HandlerResponse.COMPLETE
+        self.SKIPPED = HandlerResponse.SKIPPED
+
         self.sender_key = None
         self.receiver_key = None
         self.default_target_id = None
@@ -35,8 +39,8 @@ class Context:
             backend=backend,
         )
 
-        if update.type == ut.MSG:
-            if update.receiver_type == rt.MULTI:
+        if update.type == UpdateType.MSG:
+            if update.receiver_type == ReceiverType.MULTI:
                 ctx.default_target_id = update.receiver_id
             else:
                 ctx.default_target_id = update.sender_id

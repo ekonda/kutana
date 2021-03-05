@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 
 """
-:copyright: (c) 2019 by Michael Krukov
+:copyright: (c) 2021 by Michael Krukov
 :license: MIT, see LICENSE for more details.
 """
 
 import setuptools
 
 
-VERSION = "5.0.0"
+VERSION = "5.0.1"
 
 
 with open("README.md", "r") as fh:

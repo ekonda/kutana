@@ -92,7 +92,7 @@ class Vkontakte(Backend):
 
         data = await self._get_response(method, kwargs)
 
-        if not data.get("response"):
+        if data.get("response") is None:
             raise RequestException(self, (method, {**kwargs}), data)
 
         return data["response"]

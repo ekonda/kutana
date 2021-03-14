@@ -316,7 +316,7 @@ class Plugin:
                 router_priority=router_priority,
             )
 
-            return wrapper
+            return func
 
         return decorator
 

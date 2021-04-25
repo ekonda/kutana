@@ -183,7 +183,7 @@ class Kutana:
 
         def _add_router(new_router):
             for router in self._routers:
-                if router.alike(new_router):
+                if router.can_merge(new_router):
                     router.merge(new_router)
                     return
 

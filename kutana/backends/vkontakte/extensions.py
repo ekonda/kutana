@@ -14,13 +14,21 @@ class PayloadRouter(MapRouter):
         super().__init__(priority=priority)
         self.possible_key_sets = []
 
+    def merge(self, other):
+        super().merge(other)
+
+        self.possible_key_sets = uniq_by([
+            *self.possible_key_sets,
+            *other.possible_key_sets,
+        ], self._to_hashable)
+
     def _update_key_sets(self, obj):
         if not isinstance(obj, dict):
             return
 
         self.possible_key_sets = uniq_by([
             *self.possible_key_sets,
-            list(sorted(obj.keys()))
+            list(sorted(obj.keys())),
         ], self._to_hashable)
 
     def _to_hashable(self, obj):

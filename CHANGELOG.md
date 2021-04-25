@@ -3,6 +3,10 @@
 > Changes to public API are marked as `^`. Possible changes
 > to public API are marked as `^?`.
 
+- v5.0.4
+  - Fixed issue with incorrect merge of multiple `PayloadRouter`.
+  - Renamed `alike` method to `can_merge` in routers.
+
 - v5.0.0
   - ^ Removed `Storage`, `set_state`, `group_state`, `user_state`,
       `storage`.

@@ -1,8 +1,8 @@
 import pytest
-from kutana import Context
 from kutana.handler import Handler
-from kutana.router import Router, ListRouter, MapRouter
+from kutana.router import ListRouter, MapRouter
 from kutana.routers import AnyMessageRouter
+from kutana.backends.vkontakte.extensions import PayloadRouter
 
 
 def test_exception_on_wrong_merge():
@@ -71,6 +71,22 @@ def test_router_subclass_merge():
     assert len(mr3._handlers) == 1
     assert len(mr4._handlers) == 3
     assert set(map(lambda h: h.handle, mr4._handlers)) == {5, 1, 2}
+
+
+def test_vk_extension_payload_router():
+    mr1 = PayloadRouter()
+    mr1._update_key_sets('bad')
+    mr1._update_key_sets({'a': 1, 'b': 2})
+    mr1._update_key_sets({'c': 1, 'd': 2})
+    assert mr1.possible_key_sets == [['a', 'b'], ['c', 'd']]
+
+    mr2 = PayloadRouter()
+    mr2._update_key_sets({'e': 1})
+    assert mr2.possible_key_sets == [['e']]
+
+    mr1.merge(mr2)
+
+    assert mr1.possible_key_sets == [['a', 'b'], ['c', 'd'], ['e']]
 
 
 def test_router_merge_priority():

@@ -4,7 +4,7 @@ import pytest
 from asynctest import CoroutineMock, patch
 from kutana import Kutana, Plugin, RequestException, Attachment
 from kutana.backends import Telegram
-from test_telegram_data import MESSAGES, ATTACHMENTS
+from test_telegram_data import MESSAGES, UPDATES, ATTACHMENTS
 
 
 def test_no_token():
@@ -176,6 +176,8 @@ def test_happy_path():
         MESSAGES["/echo chat"],
         MESSAGES[".echo@bot chat"],
         MESSAGES["_image"],
+        UPDATES["callback_query_1"],
+        UPDATES["callback_query_2"],
     ]
 
     answers = []
@@ -208,6 +210,11 @@ def test_happy_path():
 
     echo_plugin = Plugin("echo")
 
+    @echo_plugin.on_updates()
+    async def __(update, ctx):
+        if update.raw.get('callback_query'):
+            await ctx.reply(ctx.default_target_id)
+
     @echo_plugin.on_commands(["echo", "ec"])
     async def __(message, ctx):
         await ctx.reply(message.text)
@@ -226,9 +233,11 @@ def test_happy_path():
     app.run()
 
     answers.sort()
-    assert len(answers) == 5
+    assert len(answers) == 7
     assert answers[0][0] == "image"
     assert answers[1] == ("msg", ".echo")
     assert answers[2] == ("msg", ".echo chat")
     assert answers[3] == ("msg", "/echo chat")
     assert answers[4] == ("msg", "/echo chat")
+    assert answers[5] == ("msg", "367699112")
+    assert answers[6] == ("msg", "723738643")

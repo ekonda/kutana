@@ -124,6 +124,23 @@ class Telegram(Backend):
                 raw=d,
             )
 
+    def prepare_context(self, ctx):
+        if ctx.update.type == UpdateType.UPD:
+            if ctx.update.raw.get("callback_query"):
+                cq = ctx.update.raw["callback_query"]
+
+                sender_id = cq["message"]["from"]["id"]
+                receiver_id = cq["message"]["chat"]["id"]
+
+                if cq["message"]["chat"]["type"] == "private":
+                    ctx.default_target_id = sender_id
+                else:
+                    ctx.default_target_id = receiver_id
+
+                ctx.sender_key = ctx.get_key_for(sender_id=sender_id)
+                ctx.receiver_key = ctx.get_key_for(receiver_id=receiver_id)
+                ctx.sender_here_key = ctx.get_key_for(sender_id=sender_id, receiver_id=receiver_id)
+
     def _extract_text(self, update):
         entities = update["message"].get("entities", ())
 

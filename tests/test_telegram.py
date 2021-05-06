@@ -240,4 +240,4 @@ def test_happy_path():
     assert answers[3] == ("msg", "/echo chat")
     assert answers[4] == ("msg", "/echo chat")
     assert answers[5] == ("msg", "367699112")
-    assert answers[6] == ("msg", "723738643")
+    assert answers[6] == ("msg", "367699112")

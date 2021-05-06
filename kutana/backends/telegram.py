@@ -129,7 +129,7 @@ class Telegram(Backend):
             if ctx.update.raw.get("callback_query"):
                 cq = ctx.update.raw["callback_query"]
 
-                sender_id = cq["message"]["from"]["id"]
+                sender_id = cq["from"]["id"]
                 receiver_id = cq["message"]["chat"]["id"]
 
                 if cq["message"]["chat"]["type"] == "private":

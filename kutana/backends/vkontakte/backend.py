@@ -211,7 +211,7 @@ class Vkontakte(Backend):
         if t == "photo":
             return Attachment._existing_full(
                 id=id, type="image", title=d["text"], file_name=id,
-                getter=self._make_getter(sorted(d['sizes'], key=lambda x: x['height'] * x['width'], reverse=True)[0]['url']), raw=d,
+                getter=self._make_getter(sorted(d['sizes'], key=lambda x: x['height'] * x['width'])[-1]['url']), raw=d,
             )
 
         elif t == "doc":

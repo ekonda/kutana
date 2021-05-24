@@ -3,6 +3,10 @@
 > Changes to public API are marked as `^`. Possible changes
 > to public API are marked as `^?`.
 
+- v5.0.5
+  - ^(VKontakte) Attachments with type `image` now returns largest image.
+  - Added support for expect_sender for telegram 'callback_query'.
+
 - v5.0.4
   - Fixed issue with incorrect merge of multiple `PayloadRouter`.
   - Renamed `alike` method to `can_merge` in routers.

@@ -209,9 +209,16 @@ class Vkontakte(Backend):
             id = None
 
         if t == "photo":
+            def get_largest_image(sizes):
+                def key(size):
+                    width = size.get("width") or 0
+                    height = size.get("height") or 0
+                    return width * height
+                return sorted(sizes, key=key)[-1]["url"]
+
             return Attachment._existing_full(
                 id=id, type="image", title=d["text"], file_name=id,
-                getter=self._make_getter(d["sizes"][-1]["url"]), raw=d,
+                getter=self._make_getter(get_largest_image(d["sizes"])), raw=d,
             )
 
         elif t == "doc":

@@ -157,7 +157,7 @@ class Plugin:
         self,
         commands,
         priority=0,
-        router_priority=None
+        router_priority=None,
     ):
         """
         Decorator for registering coroutine to be called when

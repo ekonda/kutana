@@ -7,7 +7,7 @@ class UpdateType(Enum):
     UPD = 2
 
 
-Update = namedtuple("Update", ("raw", "type"))
+Update = namedtuple("Update", ("raw", "type", "meta"))
 
 
 class ReceiverType(Enum):
@@ -18,7 +18,7 @@ class ReceiverType(Enum):
 
 Message = namedtuple("Message", (
     "raw", "type", "text", "attachments", "sender_id",
-    "receiver_id", "receiver_type", "date",
+    "receiver_id", "receiver_type", "date", "meta",
 ))
 
 

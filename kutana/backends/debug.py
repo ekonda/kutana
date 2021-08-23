@@ -33,6 +33,7 @@ class Debug(Backend):
             receiver_id=0,
             receiver_type=ReceiverType.SOLO,
             date=0,
+            meta={},
         )
 
     async def acquire_updates(self, submit_update):

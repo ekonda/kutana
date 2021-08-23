@@ -8,6 +8,10 @@
   - (VKontakte) Changed API version from `5.122` to  `5.131`.
   - Added requests capturing to debug backend.
   - Updated `reply` to raise if no `default_target_id` found.
+  - Updated `on_commands` to accept messages without prefix (or
+      with alternative prefixes) if bot was mentioned in
+      message.
+  - Updated logs to not write to file.
 
 - v5.0.5
   - ^(VKontakte) Attachments with type `image` now returns largest image.

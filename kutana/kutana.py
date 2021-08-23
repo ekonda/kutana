@@ -43,7 +43,8 @@ class Kutana:
 
         self.config = {
             "prefixes": (".", "/"),
-            "ignore_initial_spaces": True
+            "mention_prefix": ("", ","),
+            "ignore_initial_spaces": True,
         }
 
     def get_loop(self):

@@ -145,12 +145,13 @@ class Telegram(Backend):
         entities = update["message"].get("entities", ())
 
         if not entities:
-            return update["message"].get("text", "")
+            return update["message"].get("text", ""), {}
 
         text = update["message"].get("text", "")
 
         final_text = ""
         last_index = 0
+        meta = {}
 
         for entity in sorted(entities, key=lambda entity: entity["offset"]):
             if entity["type"] == "bot_command":
@@ -160,16 +161,17 @@ class Telegram(Backend):
 
                 if command.endswith(f"@{self.username}"):
                     final_text += command[:-len(f"@{self.username}")]
+                    meta["bot_mentioned"] = True
                 else:
                     final_text += command
 
                 last_index = new_last_index
 
-        return final_text + text[last_index:]
+        return final_text + text[last_index:], meta
 
     def _make_update(self, raw_update):
         if "message" not in raw_update:
-            return Update(raw_update, UpdateType.UPD)
+            return Update(raw_update, UpdateType.UPD, {})
 
         attachments = []
 
@@ -188,9 +190,10 @@ class Telegram(Backend):
         if raw_update["message"]["chat"]["type"] == "private":
             receiver_type = ReceiverType.SOLO
             text = raw_update["message"].get("text", "")
+            meta = {}
         else:
             receiver_type = ReceiverType.MULTI
-            text = self._extract_text(raw_update)
+            text, meta = self._extract_text(raw_update)
 
         return Message(
             raw=raw_update,
@@ -201,6 +204,7 @@ class Telegram(Backend):
             receiver_id=raw_update["message"]["chat"]["id"],
             receiver_type=receiver_type,
             date=raw_update["message"]["date"],
+            meta=meta,
         )
 
     async def acquire_updates(self, submit_update):

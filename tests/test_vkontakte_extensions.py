@@ -56,8 +56,8 @@ def test_on_payloads():
     raw1 = make_message_update('{"command": "test"}')
     raw2 = make_message_update('{"command": "error"}')
 
-    hu(Message(raw1, UpdateType.MSG, "hey1", (), 1, 0, 0, 0))
-    hu(Message(raw2, UpdateType.MSG, "hey2", (), 1, 0, 0, 0))
+    hu(Message(raw1, UpdateType.MSG, "hey1", (), 1, 0, 0, 0, {}))
+    hu(Message(raw2, UpdateType.MSG, "hey2", (), 1, 0, 0, 0, {}))
 
     assert len(debug.answers[1]) == 1
     assert debug.answers[1][0] == ("hey1", (), {})
@@ -80,13 +80,13 @@ def test_on_payloads_types():
     raw4 = make_message_update('"txt"')
     raw5 = make_message_update("error")
 
-    hu(Message(raw1, UpdateType.MSG, "hey1", (), 1, 0, 0, 0))
-    hu(Message(raw2, UpdateType.MSG, "hey2", (), 1, 0, 0, 0))
-    hu(Message(raw3, UpdateType.MSG, "hey3", (), 1, 0, 0, 0))
-    hu(Message(raw4, UpdateType.MSG, "hey4", (), 1, 0, 0, 0))
-    hu(Message(raw5, UpdateType.MSG, "hey5", (), 1, 0, 0, 0))
+    hu(Message(raw1, UpdateType.MSG, "hey1", (), 1, 0, 0, 0, {}))
+    hu(Message(raw2, UpdateType.MSG, "hey2", (), 1, 0, 0, 0, {}))
+    hu(Message(raw3, UpdateType.MSG, "hey3", (), 1, 0, 0, 0, {}))
+    hu(Message(raw4, UpdateType.MSG, "hey4", (), 1, 0, 0, 0, {}))
+    hu(Message(raw5, UpdateType.MSG, "hey5", (), 1, 0, 0, 0, {}))
 
-    assert hu(Update(None, UpdateType.UPD)) == hr.SKIPPED
+    assert hu(Update(None, UpdateType.UPD, {})) == hr.SKIPPED
 
     assert len(debug.answers[1]) == 2
     assert debug.answers[1][0] == ("hey1", (), {})
@@ -107,8 +107,8 @@ def test_on_message_actions():
     raw1 = make_message_action('chat_invite_user_by_link', 1, None, None, None)
     raw2 = make_message_action('chat_title_update', 1, 'they1', None, None)
 
-    hu(Message(raw1, UpdateType.MSG, 'hey1', (), 1, 0, 0, 0))
-    hu(Message(raw2, UpdateType.MSG, 'hey2', (), 1, 0, 0, 0))
+    hu(Message(raw1, UpdateType.MSG, 'hey1', (), 1, 0, 0, 0, {}))
+    hu(Message(raw2, UpdateType.MSG, 'hey2', (), 1, 0, 0, 0, {}))
 
     assert len(debug.answers[1]) == 1
     assert debug.answers[1][0] == ("they1", (), {})
@@ -145,14 +145,14 @@ def test_on_message_actions_types():
     raw5 = make_message_action('chat_kick_user', -1, None, "example2@mail.com", None)
     raw6 = make_message_update("error")
 
-    hu(Message(raw1, UpdateType.MSG, "hey1", (), 1, 0, 0, 0))
-    hu(Message(raw2, UpdateType.MSG, "hey2", (), 1, 0, 0, 0))
-    hu(Message(raw3, UpdateType.MSG, "hey3", (), 1, 0, 0, 0))
-    hu(Message(raw4, UpdateType.MSG, "hey4", (), 1, 0, 0, 0))
-    hu(Message(raw5, UpdateType.MSG, "hey5", (), 1, 0, 0, 0))
-    hu(Message(raw6, UpdateType.MSG, "hey6", (), 1, 0, 0, 0))
+    hu(Message(raw1, UpdateType.MSG, "hey1", (), 1, 0, 0, 0, {}))
+    hu(Message(raw2, UpdateType.MSG, "hey2", (), 1, 0, 0, 0, {}))
+    hu(Message(raw3, UpdateType.MSG, "hey3", (), 1, 0, 0, 0, {}))
+    hu(Message(raw4, UpdateType.MSG, "hey4", (), 1, 0, 0, 0, {}))
+    hu(Message(raw5, UpdateType.MSG, "hey5", (), 1, 0, 0, 0, {}))
+    hu(Message(raw6, UpdateType.MSG, "hey6", (), 1, 0, 0, 0, {}))
 
-    assert hu(Update(None, UpdateType.UPD)) == hr.SKIPPED
+    assert hu(Update(None, UpdateType.UPD, {})) == hr.SKIPPED
 
     assert len(debug.answers[1]) == 2
     assert debug.answers[1][0] == ("http://example.com/50", (), {})
@@ -173,8 +173,8 @@ def test_on_payloads_exact():
     raw1 = make_message_update('{"command": "echo", "text": "hello"}')
     raw2 = make_message_update('{"command": "echo", "text": "sup"}')
 
-    hu(Message(raw1, UpdateType.MSG, "hey1", (), 1, 0, 0, 0))
-    hu(Message(raw2, UpdateType.MSG, "hey2", (), 1, 0, 0, 0))
+    hu(Message(raw1, UpdateType.MSG, "hey1", (), 1, 0, 0, 0, {}))
+    hu(Message(raw2, UpdateType.MSG, "hey2", (), 1, 0, 0, 0, {}))
 
     assert len(debug.answers[1]) == 2
     assert debug.answers[1][0] == ("hello", (), {})
@@ -202,10 +202,10 @@ def test_on_callback():
 
     app.add_plugin(pl)
 
-    hu(Update(MESSAGES["inline_callback_1"], UpdateType.UPD))
-    hu(Update(MESSAGES["inline_callback_2"], UpdateType.UPD))
-    hu(Update(MESSAGES["inline_callback_val"], UpdateType.UPD))
-    hu(Message(make_message_update({"val": 1}), UpdateType.MSG, "hey3", (), 1, 0, 0, 0))
+    hu(Update(MESSAGES["inline_callback_1"], UpdateType.UPD, {}))
+    hu(Update(MESSAGES["inline_callback_2"], UpdateType.UPD, {}))
+    hu(Update(MESSAGES["inline_callback_val"], UpdateType.UPD, {}))
+    hu(Message(make_message_update({"val": 1}), UpdateType.MSG, "hey3", (), 1, 0, 0, 0, {}))
 
     assert debug.requests == [
         ("messages.sendMessageEventAnswer", {
@@ -244,8 +244,8 @@ def test_ignore_non_vkontakte():
     raw1 = make_message_update('{"command": "echo", "text": "hello"}')
     raw2 = MESSAGES["inline_callback_1"]
 
-    hu(Message(raw1, UpdateType.MSG, "hey1", (), 1, 0, 0, 0))
-    hu(Update(raw2, UpdateType.UPD))
+    hu(Message(raw1, UpdateType.MSG, "hey1", (), 1, 0, 0, 0, {}))
+    hu(Update(raw2, UpdateType.UPD, {}))
 
     assert not debug.answers
     assert not debug.requests

@@ -18,6 +18,7 @@ def make_kutana_no_run(backend_source=None):
             app=app,
             config={
                 "prefixes": (".",),
+                "mention_prefix": ("",),
                 "ignore_initial_spaces": True
             },
             update=update,

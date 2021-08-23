@@ -30,6 +30,7 @@ class Terminal(Backend):
             receiver_id=1,
             receiver_type=ReceiverType.SOLO,
             date=time.time(),
+            meta={},
         )
 
     async def acquire_updates(self, submit_update):

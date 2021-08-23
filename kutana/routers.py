@@ -4,24 +4,35 @@ from .update import UpdateType
 
 
 class CommandsRouter(MapRouter):
-    __slots__ = ("_cache",)
+    __slots__ = ("_pattern", "_pattern_when_mentioned")
 
     def __init__(self, priority=6):
         """Base priority is 6."""
         super().__init__(priority=priority)
-        self._cache = None
+        self._pattern = None
+        self._pattern_when_mentioned = None
 
     def _populate_cache(self, ctx):
-        commands = list(self._handlers.keys())
-        prefixes = ctx.config["prefixes"]
-        ignore_initial_spaces = ctx.config["ignore_initial_spaces"]
-
-        self._cache = re.compile(
-            pattern=r"{spaces_pattern}({prefix}){spaces_pattern}({command})(?:$|\s([\s\S]*))".format(
-                prefix="|".join(re.escape(p) for p in prefixes),
-                command="|".join(re.escape(c) for c in commands),
-                spaces_pattern=r"\s*" if ignore_initial_spaces else "",
+        kwargs = {
+            "prefix": "|".join(
+                re.escape(prefix) for prefix in ctx.config["prefixes"]
             ),
+            "mention_prefix": "|".join(
+                re.escape(prefix) for prefix in [*ctx.config["prefixes"], *ctx.config["mention_prefix"]]
+            ),
+            "command": "|".join(
+                re.escape(command) for command in list(self._handlers.keys())
+            ),
+            "spaces": r"\s*" if ctx.config["ignore_initial_spaces"] else "",
+        }
+
+        self._pattern = re.compile(
+            pattern=r"{spaces}({prefix}){spaces}({command})(?:$|\s([\s\S]*))".format(**kwargs),
+            flags=re.IGNORECASE,
+        )
+
+        self._pattern_when_mentioned = re.compile(
+            pattern=r"{spaces}({prefix}{mention_prefix}){spaces}({command})(?:$|\s([\s\S]*))".format(**kwargs),
             flags=re.IGNORECASE,
         )
 
@@ -32,10 +43,13 @@ class CommandsRouter(MapRouter):
         if update.type != UpdateType.MSG:
             return ()
 
-        if self._cache is None:
+        if self._pattern is None:
             self._populate_cache(ctx)
 
-        match = self._cache.match(update.text)
+        if update.meta.get("bot_mentioned"):
+            match = self._pattern_when_mentioned.match(update.text)
+        else:
+            match = self._pattern.match(update.text)
 
         if match is None:
             return ()

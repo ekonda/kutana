@@ -265,11 +265,12 @@ class Vkontakte(Backend):
         raw_update_object = raw_update["object"]
 
         if raw_update_type != "message_new":
-            return Update(raw_update, UpdateType.UPD)
+            return Update(raw_update, UpdateType.UPD, {})
 
         raw_message = raw_update_object["message"]
 
         message_text = raw_message["text"]
+        meta = {}
 
         if raw_message["peer_id"] > 2000000000:
             receiver_type = ReceiverType.MULTI
@@ -282,6 +283,7 @@ class Vkontakte(Backend):
                 )
 
                 if match.group(1) in possible_ids:
+                    meta["bot_mentioned"] = True
                     return ""
                 else:
                     return match.group(0)
@@ -305,6 +307,7 @@ class Vkontakte(Backend):
             receiver_id=raw_message["peer_id"],
             receiver_type=receiver_type,
             date=raw_message["date"],
+            meta=meta,
         )
 
     async def _upload_file_to_vk(self, upload_url, data):

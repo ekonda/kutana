@@ -3,6 +3,12 @@
 > Changes to public API are marked as `^`. Possible changes
 > to public API are marked as `^?`.
 
+- v5.1.0
+  - (VKontakte) Added decorator `@plugin.vk.on_callbacks` (closes #58).
+  - (VKontakte) Changed API version from `5.122` to  `5.131`.
+  - Added requests capturing to debug backend.
+  - Updated `reply` to raise if no `default_target_id` found.
+
 - v5.0.5
   - ^(VKontakte) Attachments with type `image` now returns largest image.
   - Added support for expect_sender for telegram 'callback_query'.

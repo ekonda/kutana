@@ -667,7 +667,6 @@ def test_happy_path(mock_post):
     async def __(message, ctx):
         assert ctx.resolve_screen_name
         assert ctx.reply
-
         await ctx.reply(message.text, attachments=message.attachments)
 
     app.add_plugin(echo_plugin)

@@ -54,10 +54,10 @@ class Plugin:
 
     def _add_handler_for_router(self, router, handler, handler_key=None, router_priority=None):
         router = self._get_or_add_router(router, priority=router_priority)
-        if handler_key:
-            router.add_handler(handler, handler_key)
-        else:
+        if handler_key is None:
             router.add_handler(handler)
+        else:
+            router.add_handler(handler, handler_key)
 
     @property
     def storage(self):

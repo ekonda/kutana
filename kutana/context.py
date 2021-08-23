@@ -121,6 +121,9 @@ class Context:
         If message is too long - it will be splitted.
         """
 
+        if self.default_target_id is None:
+            raise RuntimeError("Target for reply is not found")
+
         return await self.send_message(
             self.default_target_id,
             message,

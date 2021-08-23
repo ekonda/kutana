@@ -8,7 +8,17 @@ def test_reply_non_str():
     ctx = Context(backend=MagicMock(execute_send=CoroutineMock()))
     ctx.default_target_id = 1
     asyncio.get_event_loop().run_until_complete(ctx.reply(123))
-    ctx.backend.execute_send.assert_called_with(1, '123', (), {})
+    ctx.backend.execute_send.assert_called_with(1, "123", (), {})
+
+
+def test_reply_no_default_target():
+    ctx = Context(backend=MagicMock(execute_send=CoroutineMock()))
+    ctx.default_target_id = None
+
+    with pytest.raises(RuntimeError):
+        asyncio.get_event_loop().run_until_complete(ctx.reply("hey"))
+
+    ctx.backend.execute_send.assert_not_called()
 
 
 def test_context():

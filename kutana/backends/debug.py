@@ -19,6 +19,7 @@ class Debug(Backend):
         self.answers_count = 0
 
         self.responses = []
+        self.requests = []
 
         self.on_complete = on_complete
 
@@ -59,6 +60,9 @@ class Debug(Backend):
         self.answers_count += 1
 
         self.check_if_complete()
+
+    async def execute_request(self, method, kwargs):
+        self.requests.append((method, kwargs))
 
     def check_if_complete(self):
         if self.messages or not self.on_complete:

@@ -1,7 +1,8 @@
 import pytest
 from kutana import (
-    Plugin, Message, Update, UpdateType, Attachment, HandlerResponse as hr,
+    Plugin, Message, Update, UpdateType, HandlerResponse as hr,
 )
+from test_vkontakte_data import MESSAGES
 from testing_tools import make_kutana_no_run
 
 
@@ -178,3 +179,73 @@ def test_on_payloads_exact():
     assert len(debug.answers[1]) == 2
     assert debug.answers[1][0] == ("hello", (), {})
     assert debug.answers[1][1] == ("sup", (), {})
+
+
+def test_on_callback():
+    app, debug, hu = make_kutana_no_run(backend_source="vkontakte")
+
+    pl = Plugin("")
+
+    @pl.vk.on_callbacks([{"val": 1}])
+    async def __(upd, ctx):
+        await ctx.send_message_event_answer({
+            "type": "show_snackbar",
+            "text": "hey hey hey",
+        })
+
+    @pl.vk.on_callbacks(['val'])
+    async def __(upd, ctx):
+        await ctx.send_message_event_answer({
+            "type": "show_snackbar",
+            "text": "val val val",
+        })
+
+    app.add_plugin(pl)
+
+    hu(Update(MESSAGES["inline_callback_1"], UpdateType.UPD))
+    hu(Update(MESSAGES["inline_callback_2"], UpdateType.UPD))
+    hu(Update(MESSAGES["inline_callback_val"], UpdateType.UPD))
+    hu(Message(make_message_update({"val": 1}), UpdateType.MSG, "hey3", (), 1, 0, 0, 0))
+
+    assert debug.requests == [
+        ("messages.sendMessageEventAnswer", {
+            'event_data': '{"type": "show_snackbar", "text": "hey hey hey"}',
+            'event_id': '3159dc190b1g',
+            'user_id': 87641997,
+            'peer_id': 87641997,
+        }),
+        ("messages.sendMessageEventAnswer", {
+            'event_data': '{"type": "show_snackbar", "text": "val val val"}',
+            'event_id': '3159dc190b1g',
+            'user_id': 87641997,
+            'peer_id': 87641997,
+        }),
+    ]
+
+
+def test_ignore_non_vkontakte():
+    app, debug, hu = make_kutana_no_run()
+
+    pl = Plugin("")
+
+    @pl.vk.on_payloads([{"command": "echo"}])
+    async def __(msg, ctx):
+        await ctx.reply(ctx.payload["text"])
+
+    @pl.vk.on_callbacks([{"val": 1}])
+    async def __(upd, ctx):
+        await ctx.send_message_event_answer({
+            "type": "show_snackbar",
+            "text": "hey hey hey",
+        })
+
+    app.add_plugin(pl)
+
+    raw1 = make_message_update('{"command": "echo", "text": "hello"}')
+    raw2 = MESSAGES["inline_callback_1"]
+
+    hu(Message(raw1, UpdateType.MSG, "hey1", (), 1, 0, 0, 0))
+    hu(Update(raw2, UpdateType.UPD))
+
+    assert not debug.answers
+    assert not debug.requests

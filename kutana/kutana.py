@@ -12,12 +12,12 @@ from .logger import logger
 # Find proper methods for different python versions
 if hasattr(asyncio.Task, "all_tasks"):  # pragma: no cover
     _all_tasks = asyncio.Task.all_tasks
-else:
+else:  # pragma: no cover
     _all_tasks = asyncio.all_tasks
 
 if hasattr(asyncio.Task, "current_task"):  # pragma: no cover
     _current_task = asyncio.Task.current_task
-else:
+else:  # pragma: no cover
     _current_task = asyncio.current_task
 
 

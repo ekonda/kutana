@@ -7,6 +7,7 @@
   - (VKontakte) Added decorator `@plugin.vk.on_callbacks` (closes #58).
   - (VKontakte) Changed API version from `5.122` to  `5.131`.
   - Added requests capturing to debug backend.
+  - Fixed support for python versions >= 3.9.
   - Updated `reply` to raise if no `default_target_id` found.
   - Updated `on_commands` to accept messages without prefix (or
       with alternative prefixes) if bot was mentioned in

@@ -13,8 +13,8 @@ collectmessages:
 
 docs:
 	python3 -m pip install sphinx recommonmark
-	sphinx-apidoc --separate -o docs/src/ . $(PWD)/setup.py; cd docs; \
-		make clean; make html
+	sphinx-apidoc --separate -o docs/src/ . $(PWD)/setup.py; \
+		cd docs; make clean; make html
 
 test:
 	python3 -m coverage run -m --include=kutana/* pytest

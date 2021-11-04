@@ -10,7 +10,7 @@
   - Updated `reply` to raise if no `default_target_id` found.
   - Updated `on_commands` to accept messages without prefix (or
       with alternative prefixes) if bot was mentioned in
-      message.
+      message (in private and in group chats).
   - Updated logs to not write to file.
 
 - v5.0.5

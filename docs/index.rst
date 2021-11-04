@@ -67,8 +67,8 @@ Example configuration:
 From python
 ^^^^^^^^^^^
 
-Below you can find the most simple `run.py` file for kutana application,
-that uses one Vkontakte account and loads plugins from folder `plugins/`.
+Below you can find the most simple ``run.py`` file for kutana application,
+that uses one Vkontakte account and loads plugins from folder ``plugins/``.
 
 .. code-block:: python
 
@@ -86,8 +86,8 @@ Plugins
 Main functionality for your applications are provided by plugins:
 they can add commands, process and preprocess messages, e.t.c.
 
-Below your can find example of simple plugin `echo.py` (that should
-be put into `plugins` folder).
+Below your can find example of simple plugin ``echo.py`` (that should
+be put into ``plugins`` folder).
 
 .. code-block:: python
 
@@ -99,12 +99,12 @@ be put into `plugins` folder).
     async def __(msg, ctx):
         await ctx.reply("{}".format(ctx.body or '(/)'), attachments=msg.attachments, disable_mentions=0)
 
-Handlers for messages receive :class:`kutana.update.Message` and
-:class:`kutana.context.Context` as arguments. You can find description of
+Handlers for messages receive :py:class:`kutana.update.Message` and
+:py:class:`kutana.context.Context` as arguments. You can find description of
 their methods for these classes in Full API.
 
 You can find descriptions of all possible "on\_" methods for adding
-your callbacks in :class:`kutana.plugin.Plugin` class.
+your callbacks in :py:class:`kutana.plugin.Plugin` class.
 
 Order of "on\_" methods
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -123,15 +123,15 @@ Attachments
 Interactions with backends are highly unified, because we want you to have
 no problems creating plugins that will work nicely with multiple backends.
 
-You can manage your attachments throught class :class:`kutana.update.Attachment`.
-new attachments can be created using :meth:`kutana.update.Attachment.new`.
+You can manage your attachments throught class :py:class:`kutana.update.Attachment`.
+new attachments can be created using :py:meth:`kutana.update.Attachment.new`.
 
 Attachments are files that can have types. If type is unique to backends -
 you still can use them, but you will need to manager their uploads,
 parsing, e.t.c. on your own.
 
 Existing attachments (that already uploaded for example) can be created using
-:meth:`kutana.update.Attachment.existing`. Many backends capable of forwarding
+:py:meth:`kutana.update.Attachment.existing`. Many backends capable of forwarding
 raw strings (supported by your service) while sending messages.
 
 Available built-in attachment types:
@@ -151,10 +151,10 @@ API Requests
 ^^^^^^^^^^^^
 
 In order to perform a request to your backends, your should use
-:meth:`kutana.context.Context.request` method. It accepts method that you
+:py:meth:`kutana.context.Context.request` method. It accepts method that you
 want to use and any keyword arguments that should be processable by your
 backend. You can check what backend context belongs to by accessing it's
-`backend` attribute.
+``backend`` attribute.
 
 Internationalization
 ^^^^^^^^^^^^^^^^^^^^
@@ -175,7 +175,7 @@ pluralization supported for following languages: "ru", "uk", "en".
 
 Support for different languages will be implemented in the future.
 Currently you add your language into inner classes of
-:class:`kutana.i18n.pluralization.Pluralization`.
+:py:class:`kutana.i18n.pluralization.Pluralization`.
 
 Translations for strings used in library and plugins are loaded from
 following places (with corresponding order):
@@ -186,7 +186,7 @@ following places (with corresponding order):
 - <plugins-directory>/i18n/\*.yml
 
 Where "translations-directory" is directory specified in CLI arguments of the
-module. You can use :meth:`kutana.i18n.load_translations` to load translations
+module. You can use :py:meth:`kutana.i18n.load_translations` to load translations
 from your desired location.
 
 Where "plugins-directory" is any directory that was traversed in search of

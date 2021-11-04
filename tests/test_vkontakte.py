@@ -607,8 +607,9 @@ def test_happy_path(mock_post):
         MESSAGES["not_message"],
         MESSAGES["message"],
         MESSAGES[".echo"],
+        MESSAGES[".echo with mention"],
         MESSAGES[".echo chat"],
-        MESSAGES[".echo wa"],
+        MESSAGES[".echo with attachment"],
     ]
 
     answers = []
@@ -684,8 +685,12 @@ def test_happy_path(mock_post):
     assert len(updated_longpoll) == 2
 
     answers.sort()
-    assert len(answers) == 3
-    assert '{"message": ".echo chat [michaelkrukov|Михаил]",' in answers[0]
-    assert '{"message": ".echo wa",' in answers[1]
-    assert 'attachment": ""' not in answers[1]
-    assert '{"message": ".echo",' in answers[2]
+    assert len(answers) == 4
+    assert '{"message": ", .echo with mention [michaelkrukov|Михаил]",' in answers[0]
+    assert '{"message": ".echo chat [michaelkrukov|Михаил]",' in answers[1]
+    assert (
+        '{"message": ".echo with attachment",' in answers[2] and
+        'attachment": "' in answers[2] and
+        'attachment": ""' not in answers[2]
+    )
+    assert '{"message": ".echo",' in answers[3]

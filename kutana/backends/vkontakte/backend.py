@@ -268,40 +268,41 @@ class Vkontakte(Backend):
             return Update(raw_update, UpdateType.UPD, {})
 
         raw_message = raw_update_object["message"]
-
-        message_text = raw_message["text"]
+        message = raw_message["text"]
         meta = {}
 
-        if raw_message["peer_id"] > 2000000000:
-            receiver_type = ReceiverType.MULTI
+        # Cut out mentions (and note if it was there)
+        possible_ids = (
+            f"club{self.group_id}",
+            f"public{self.group_id}",
+            self.group_screen_name,
+        )
 
-            def sub(match):
-                possible_ids = (
-                    f"club{self.group_id}",
-                    f"public{self.group_id}",
-                    self.group_screen_name,
-                )
+        def sub(match):
+            if match.group(1) in possible_ids:
+                meta["bot_mentioned"] = True
+                return ""
+            else:
+                return match.group(0)
 
-                if match.group(1) in possible_ids:
-                    meta["bot_mentioned"] = True
-                    return ""
-                else:
-                    return match.group(0)
+        message = re.sub(r"\[(.+?)\|.+?\]", sub, message).lstrip()
 
-            message_text = re.sub(r"\[(.+?)\|.+?\]", sub, message_text)
-            message_text = message_text.lstrip()
-        else:
-            receiver_type = ReceiverType.SOLO
-
+        # Collect attachments
         attachments = []
 
         for attachment in raw_message.get("attachments") or ():
             attachments.append(self._make_attachment(attachment))
 
+        # Decide receiver_type
+        if raw_message["peer_id"] > 2000000000:
+            receiver_type = ReceiverType.MULTI
+        else:
+            receiver_type = ReceiverType.SOLO
+
         return Message(
             raw=raw_update,
             type=UpdateType.MSG,
-            text=message_text,
+            text=message,
             attachments=attachments,
             sender_id=raw_message["from_id"],
             receiver_id=raw_message["peer_id"],

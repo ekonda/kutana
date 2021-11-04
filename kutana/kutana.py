@@ -9,6 +9,18 @@ from .plugin import Plugin
 from .logger import logger
 
 
+# Find proper methods for different python versions
+if hasattr(asyncio.Task, "all_tasks"):  # pragma: no cover
+    _all_tasks = asyncio.Task.all_tasks
+else:
+    _all_tasks = asyncio.all_tasks
+
+if hasattr(asyncio.Task, "current_task"):  # pragma: no cover
+    _current_task = asyncio.Task.current_task
+else:
+    _current_task = asyncio.current_task
+
+
 class Kutana:
     """
     Main class for kutana application
@@ -240,8 +252,8 @@ class Kutana:
         # Cancel everything else
         tasks = []
 
-        for task in asyncio.Task.all_tasks(loop=self._loop):
-            if task is not asyncio.Task.current_task():
+        for task in _all_tasks(loop=self._loop):
+            if task is not _current_task():
                 task.cancel()
                 tasks.append(task)
 

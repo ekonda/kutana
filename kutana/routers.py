@@ -32,7 +32,7 @@ class CommandsRouter(MapRouter):
         )
 
         self._pattern_when_mentioned = re.compile(
-            pattern=r"{spaces}({prefix}{mention_prefix}){spaces}({command})(?:$|\s([\s\S]*))".format(**kwargs),
+            pattern=r"{spaces}({mention_prefix}){spaces}(?:{prefix})?{spaces}({command})(?:$|\s([\s\S]*))".format(**kwargs),
             flags=re.IGNORECASE,
         )
 

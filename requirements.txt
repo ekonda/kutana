@@ -1,20 +1,19 @@
 # Required requirements
-sortedcontainers
 aiohttp
-pyyaml
 motor
+pyyaml
+sortedcontainers
 
 # Optional requirements
-psutil
-
-uvloop;platform_system!='Windows'
-cchardet;platform_system!='Windows'
 aiodns;platform_system!='Windows'
+cchardet;platform_system!='Windows'
+psutil
+uvloop;platform_system!='Windows'
 
 # Development requirements
-recommonmark
+asynctest
+coverage
 flake8
 flake8-quotes
 pytest
-asynctest
-coverage
+recommonmark

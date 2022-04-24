@@ -17,11 +17,11 @@ docs:
 		cd docs; make clean; make html
 
 test:
-	python3 -m coverage run -m --include=kutana/* pytest
+	python3 -m coverage run -m --include=kutana/* pytest tests/
 	python3 -m coverage report -m --fail-under=100
 
 test-debug:
-	PYTHONASYNCIODEBUG=1 python3 -m coverage run -m --include=kutana/* pytest
+	PYTHONASYNCIODEBUG=1 python3 -m coverage run -m --include=kutana/* pytest tests/
 	python3 -m coverage report -m --fail-under=100
 
 lint:

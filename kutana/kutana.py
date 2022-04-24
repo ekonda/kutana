@@ -46,9 +46,7 @@ class Kutana:
         self._loop = loop or asyncio.new_event_loop()
 
         self._concurrent_handlers_count = concurrent_handlers_count
-        self._sem = asyncio.Semaphore(
-            value=concurrent_handlers_count, loop=self._loop
-        )
+        self._sem = asyncio.Semaphore(value=concurrent_handlers_count)
 
         self._routers = None
         self._handlers = None

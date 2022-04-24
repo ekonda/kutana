@@ -88,7 +88,7 @@ class VkontakteCallback(Vkontakte):
         await super().on_start(app)
 
         # Setup queue
-        self.updates_queue = asyncio.Queue(self._queue_limit, loop=app.get_loop())
+        self.updates_queue = asyncio.Queue(self._queue_limit)
 
         # Start web server
         await self.start_server()

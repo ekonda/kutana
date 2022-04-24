@@ -314,7 +314,7 @@ class Telegram(Backend):
 
         self.username = me["username"]
 
-        self.api_messages_lock = asyncio.Lock(loop=app.get_loop())
+        self.api_messages_lock = asyncio.Lock()
 
     async def send_message(self, target_id, message, attachments=(), **kwargs):
         """

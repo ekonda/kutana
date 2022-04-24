@@ -9,7 +9,7 @@
     - (Internal) Added `pick_by` to helpers.
     - (Telegram) Added support for `title` parameter in attachments (closes #66).
   - Fixes
-    - ^? (Core) Removed loop argument in kutana's semaphore.
+    - ^? (Core) Removed loop arguments for Lock, Queue e.t.c.
     - (Examples) "Document" now sends as actual document.
     - (i18n) `collect_from` option is now used.
     - (Telegram) `api_url` option is now used.

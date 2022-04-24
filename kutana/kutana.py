@@ -144,10 +144,7 @@ class Kutana:
             raise
 
     async def _main_loop(self):
-        queue = asyncio.Queue(
-            maxsize=self._concurrent_handlers_count,
-            loop=self._loop
-        )
+        queue = asyncio.Queue(maxsize=self._concurrent_handlers_count)
 
         await self._on_start(queue)
 
@@ -245,7 +242,7 @@ class Kutana:
 
         tasks.append(self._handle_event("shutdown"))
 
-        await asyncio.gather(*tasks, loop=self._loop, return_exceptions=True)
+        await asyncio.gather(*tasks, return_exceptions=True)
 
         # Cancel everything else
         tasks = []
@@ -255,7 +252,7 @@ class Kutana:
                 task.cancel()
                 tasks.append(task)
 
-        await asyncio.gather(*tasks, loop=self._loop, return_exceptions=True)
+        await asyncio.gather(*tasks, return_exceptions=True)
 
         self._loop.stop()
 

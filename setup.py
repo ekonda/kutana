@@ -8,7 +8,7 @@
 import setuptools
 
 
-VERSION = "5.1.0"
+VERSION = "5.2.0"
 
 
 with open("README.md", "r") as fh:
@@ -20,7 +20,15 @@ setuptools.setup(
     version=VERSION,
     author="Michael Krukov",
     author_email="krukov.michael@ya.ru",
-    keywords=["library", "social-networks", "messengers", "bots", "asyncio"],
+    keywords=[
+        "asyncio",
+        "bots",
+        "library",
+        "messengers",
+        "social-networks",
+        "telegram",
+        "vkontake",
+    ],
     description="The library for developing systems for messengers and social networks",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -35,7 +43,7 @@ setuptools.setup(
     entry_points={
         'console_scripts': [
             'kutana = kutana.cli:run',
-            'kutana-i18n = kutana.i18n.collector:run',
+            'kutana-i18n = kutana.i18n.cli:run',
         ],
     },
     python_requires=">=3.6",

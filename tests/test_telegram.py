@@ -122,6 +122,9 @@ def test_upload_attachments():
         attachment = Attachment.new(b"file", type="voice")
         await telegram.execute_send(1, "", attachment, {})
 
+        with pytest.raises(ValueError):
+            await telegram.execute_send(1, "", [1337], {})
+
         assert len(requests) == 3
 
         assert requests[0] == ("sendPhoto", {

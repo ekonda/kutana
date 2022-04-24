@@ -1,5 +1,5 @@
 import os
-from kutana.helpers import get_path, get_random_string, pick, uniq_by
+from kutana.helpers import get_path, get_random_string, pick, pick_by, uniq_by
 
 
 def test_get_random_string():
@@ -17,6 +17,12 @@ def test_pick():
     assert pick({'a': 1, 'b': 2}, ['a'])  == {'a': 1}
     assert pick({'a': 1, 'b': 2}, ['b'])  == {'b': 2}
     assert pick({'a': 1, 'b': 2}, [])  == {}
+
+
+def test_pick_by():
+    assert pick_by({'a': 1, 'b': '', 'c': 3})  == {'a': 1, 'c': 3}
+    assert pick_by({'a': 1, 'b': '', 'c': 3}, lambda k, v: k == 'b' or v == 3)  == {'b': '', 'c': 3}
+    assert pick_by({'a': 1, 'b': 2}, lambda *_: False)  == {}
 
 
 def test_uniq_by():

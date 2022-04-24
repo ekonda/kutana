@@ -8,13 +8,13 @@ plugin = Plugin(name=t("Attachments"), description=t("Sends some attachments (.a
 async def __(msg, ctx):
     # Image
     with open(get_path(__file__, "assets/pizza.png"), "rb") as fh:
-        image = Attachment.new(fh.read(), "pizza.png")
+        image = Attachment.new(fh.read(), "pizza.png", title="Pizza")
 
     await ctx.reply(t("Image"), attachments=image)
 
     # Document
     with open(get_path(__file__, "assets/pizza.png"), "rb") as fh:
-        doc = Attachment.new(fh.read(), "pizza.png")
+        doc = Attachment.new(fh.read(), "pizza.png", type="doc")
 
     await ctx.reply(t("Document"), attachments=doc)
 

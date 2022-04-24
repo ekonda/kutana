@@ -79,7 +79,7 @@ def collect(path, target):
                     "$where": [],
                 }
 
-    for dirpath, __, filenames in os.walk(os.getcwd()):
+    for dirpath, __, filenames in os.walk(path):
         for filename in filenames:
             if not filename.endswith(".py"):
                 continue

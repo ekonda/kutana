@@ -34,12 +34,12 @@
 - msgid: Sends some information (.metrics)
   msgstr: Отправляет некоторую информацию (.metrics)
 
-# example/plugins/plugins.py:4:22
-# example/plugins/plugins.py:19:21
+# example/plugins/plugins.py:5:10
+# example/plugins/plugins.py:20:21
 - msgid: Plugins
   msgstr: Плагины
 
-# example/plugins/plugins.py:4:48
+# example/plugins/plugins.py:6:17
 - msgid: Sends installed plugins (.plugins)
   msgstr: Показать установленные плагины (.plugins)
 

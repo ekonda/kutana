@@ -28,7 +28,12 @@ ATTACHMENT_TYPES = (
 
 
 AttachmentData = namedtuple("AttachmentData", (
-    "id", "type", "title", "file", "file_name", "file_getter",
+    "id",
+    "type",
+    "title",
+    "file",
+    "file_name",
+    "file_getter",
     "raw",
 ))
 

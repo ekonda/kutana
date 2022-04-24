@@ -3,6 +3,10 @@ import random
 import os.path
 
 
+def second_arg(_, value):
+    return value
+
+
 def uniq_by(arr, key=None):
     if not key:
         def key(element):
@@ -15,6 +19,15 @@ def pick(obj, keys):
     for key in keys:
         if key in obj:
             new_obj[key] = obj[key]
+    return new_obj
+
+
+def pick_by(obj, predicate=None):
+    predicate = predicate or second_arg
+    new_obj = {}
+    for key, value in obj.items():
+        if predicate(key, value):
+            new_obj[key] = value
     return new_obj
 
 

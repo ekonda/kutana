@@ -1,10 +1,26 @@
 import asyncio
 import aiohttp
 import json
+from ..helpers import pick_by
 from ..backend import Backend
 from ..update import Message, ReceiverType, Update, UpdateType, Attachment
 from ..exceptions import RequestException
 from ..logger import logger
+
+
+SUPPORTED_ATTACHMENT_TYPES = (
+    "audio",
+    "document",
+    "photo",
+    "sticker",
+    "video",
+    "voice",
+)
+
+ATTACHMENT_TYPE_ALIASES = {
+    "doc": "document",
+    "image": "photo",
+}
 
 
 class Telegram(Backend):
@@ -33,8 +49,9 @@ class Telegram(Backend):
         self.api_messages_pause = 1 / messages_per_second
         self.api_messages_lock = None
 
-        self.api_url = f"https://api.telegram.org/bot{token}/{{}}"
-        self.file_url = f"https://api.telegram.org/file/bot{token}/{{}}"
+        api_url = api_url.rstrip("/")
+        self.api_url = f"{api_url}/bot{token}/{{}}"
+        self.file_url = f"{api_url}/file/bot{token}/{{}}"
 
     async def _request(self, method, kwargs={}):
         if not self.session:
@@ -245,32 +262,36 @@ class Telegram(Backend):
             if isinstance(attachments, (int, str, Attachment)):
                 attachments = (attachments,)
 
-            new_attachments = []
+            for attachment in attachments:
+                if not isinstance(attachment, Attachment):
+                    raise ValueError(f'Unexpected attachment: "{attachment}"')
 
-            for a in attachments:
-                if isinstance(a, Attachment):
-                    attach_type = {
-                        "doc": "document",
-                        "image": "photo",
-                    }.get(a.type, a.type)
-
-                    if a.uploaded:
-                        new_attachments.append((attach_type, str(a.id)))
-                    else:
-                        new_attachments.append((attach_type, a.file))
-
-            for atype, acontent in new_attachments:
-                if atype not in (
-                    "document", "photo", "audio", "video", "voice", "sticker"
-                ):
-                    raise ValueError(f"Can't upload attachment '{atype}'")
-
-                result.append(
-                    await self._request(
-                        "send" + atype.capitalize(),
-                        {"chat_id": chat_id, atype: acontent}
-                    )
+                attachment_type = ATTACHMENT_TYPE_ALIASES.get(
+                    attachment.type,
+                    attachment.type,
                 )
+
+                send_method = f"send{attachment_type.capitalize()}"
+
+                if attachment.uploaded:
+                    result.append(await self._request(send_method, pick_by({
+                        "chat_id": chat_id,
+                        attachment_type: str(attachment.id),
+                        "caption": attachment.title,
+                    })))
+
+                    await asyncio.sleep(self.api_messages_pause)
+
+                    continue
+
+                if attachment_type not in SUPPORTED_ATTACHMENT_TYPES:
+                    raise ValueError(f"Can't upload attachment '{attachment_type}'")
+
+                result.append(await self._request(send_method, pick_by({
+                    "chat_id": chat_id,
+                    attachment_type: attachment.file,
+                    "caption": attachment.title,
+                })))
 
                 await asyncio.sleep(self.api_messages_pause)
 

@@ -3,6 +3,16 @@
 > Changes to public API are marked as `^`. Possible changes
 > to public API are marked as `^?`.
 
+- v5.2.0
+  - Features
+    - ^ (Telegram) Unsupported attachments now raise exceptions.
+    - (Internal) Added `pick_by` to helpers.
+    - (Telegram) Added support for `title` parameter in attachments (closes #66).
+  - Fixes
+    - (Examples) "Document" now sends as actual document.
+    - (i18n) `collect_from` option is now used.
+    - (Telegram) `api_url` option is now used.
+
 - v5.1.0
   - (VKontakte) Added decorator `@plugin.vk.on_callbacks` (closes #58).
   - (VKontakte) Changed API version from `5.122` to  `5.131`.

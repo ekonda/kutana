@@ -359,7 +359,7 @@ class Plugin:
 
         return self._make_decorator(AnyUpdateRouter, priority, router_priority)
 
-    def expect_sender(self, state=None, localized=False):
+    def expect_sender(self, state=None):
         """
         This decorator does following things:
 

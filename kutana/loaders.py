@@ -33,7 +33,8 @@ def load_plugins_from_file(path, verbose=False):
     :returns: loaded module or None if no plugin found
     """
 
-    mod = import_module(path, path)
+    name = path.split(".py")[0].replace("/", ".")
+    mod = import_module(name, path)
 
     plugins = []
 

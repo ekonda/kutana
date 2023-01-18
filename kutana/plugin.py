@@ -1,4 +1,5 @@
 import re
+import asyncio
 import inspect
 import warnings
 import functools
@@ -431,4 +432,24 @@ class Plugin:
 
                 return await func(upd, ctx, *args, **kwargs)
             return wrapper
+        return decorator
+
+    def schedule(self, delay):
+        """
+        Decorator for registering coroutine to be called
+        every `delay` seconds
+
+        NOTE:
+            Coroutine must not take any arguments
+        """
+
+        def decorator(func):
+            async def wrapper():
+                while True:
+                    await func()
+                    await asyncio.sleep(delay)
+
+            @self.on_start()
+            async def _():
+                asyncio.create_task(wrapper())
         return decorator

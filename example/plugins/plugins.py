@@ -1,22 +1,30 @@
-from kutana import Plugin, t
-
+from kutana import Plugin
 
 plugin = Plugin(
-    name=t("Plugins"),
-    description=t("Sends installed plugins (.plugins)"),
-    plugins=[],
+    name="Plugins",
+    description="Lists installed plugins (.plugins)",
 )
 
 
+MESSAGE = ""
+
+
 @plugin.on_start()
-async def __(app):
-    for pl in app.get_plugins():
-        if isinstance(pl, Plugin) and not pl.name.startswith("$"):
-            plugin.plugins.append(pl)
+async def _():
+    global MESSAGE
+
+    MESSAGE = "Plugins:"
+
+    for other in plugin.app.plugins:
+        if not isinstance(other, Plugin):
+            continue
+
+        if hasattr(other, "name") and other.name.startswith("_"):
+            continue
+
+        MESSAGE += "\n- {} - {}".format(other.name, other.description)
 
 
 @plugin.on_commands(["plugins"])
-async def __(msg, ctx):
-    await ctx.reply(t("Plugins") + ":\n" + "\n".join(
-        "- {} - {}".format(pl.name, pl.description) for pl in plugin.plugins
-    ))
+async def _(msg, ctx):
+    await ctx.reply(MESSAGE)

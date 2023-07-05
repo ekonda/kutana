@@ -1,12 +1,10 @@
-from collections import namedtuple
-from enum import Enum
+class Symbol:
+    def __init__(self, name: str):
+        self.name = name
+
+    def __repr__(self):
+        return f"<Symbol({self.name})>"
 
 
-class HandlerResponse(Enum):
-    COMPLETE = 1
-    SKIPPED = 2
-
-
-Handler = namedtuple("Handler", [
-    "handle", "priority",
-])
+PROCESSED = Symbol("PROCESSED")
+SKIPPED = Symbol("SKIPPED")

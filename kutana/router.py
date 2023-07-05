@@ -1,99 +1,142 @@
-from sortedcontainers import SortedList
-from .handler import HandlerResponse as hr
+import re
+from typing import List, Dict, Optional
+
+from .context import Context
+from .handler import PROCESSED, SKIPPED
+from .update import Message
 
 
 class Router:
-    __slots__ = ("priority",)
-
-    def __init__(self, priority=0):
+    def __init__(self, priority: Optional[int] = 0):
         self.priority = priority
 
-    def _key(self, handler):
-        """Key for sorting handlers."""
-        return -handler.priority
-
-    def can_merge(self, other):
-        return type(self) is type(other) and self.priority == other.priority
-
-    def _assert_routers_can_merge(self, other_router):
-        if type(other_router) is not type(self):
-            raise RuntimeError("Can't merge routers with different classes")
-
-        if other_router.priority != self.priority:
-            raise RuntimeError("Can't merge routers with different priorities")
-
-    def _check_update(self, update, ctx):
-        """Should update be processed?"""
-        return True
-
-    def merge(self, other_router):
+    def add_handler(self, handler):
         raise NotImplementedError
 
-    async def handle(self, update, ctx):
+    async def handle(self, update, context):
+        raise NotImplementedError
+
+    @staticmethod
+    def _assert_can_merge(router, source):
+        if type(source) != type(router):
+            raise ValueError(f'Mixed routers are passed to "merge" ({source} != {router})')
+
+        if source.priority is None:
+            raise ValueError(f'Router with None priority passed to "merge" (it already was merged) ({source})')
+
+    @classmethod
+    def merge(cls, source_routers):
         raise NotImplementedError
 
 
 class ListRouter(Router):
-    __slots__ = ("_handlers",)
-
-    def __init__(self, priority=0):
+    def __init__(self, priority: Optional[int] = 0):
         super().__init__(priority)
-        self._handlers = SortedList([], key=self._key)
+        self._handlers = []
 
     def add_handler(self, handler):
-        self._handlers.add(handler)
+        self._handlers.append(handler)
 
-    def merge(self, other_router):
-        self._assert_routers_can_merge(other_router)
-        self._handlers.update(other_router._handlers)
-
-    async def handle(self, update, ctx):
-        if not self._check_update(update, ctx):
-            return hr.SKIPPED
-
+    async def handle(self, update, context):
         for handler in self._handlers:
-            if await handler.handle(update, ctx) != hr.SKIPPED:
-                return hr.COMPLETE
+            if isinstance(handler, Router):
+                handler = handler.handle
 
-        return hr.SKIPPED
+            if await handler(update, context) != SKIPPED:
+                return PROCESSED
+
+        return SKIPPED
+
+    @classmethod
+    def merge(cls, source_routers: List["ListRouter"]):
+        router = cls(priority=None)
+
+        for source in sorted(source_routers, reverse=True, key=lambda item: item.priority or 0):
+            cls._assert_can_merge(router, source)
+
+            for handler in source._handlers:
+                router.add_handler(handler)
+
+        return router
 
 
 class MapRouter(Router):
-    __slots__ = ("_handlers",)
-
-    def __init__(self, priority=0):
+    def __init__(self, priority: Optional[int] = 0):
         super().__init__(priority)
-        self._handlers = {}
+        self._handlers: Dict[str, List] = {}
 
-    def _get_keys(self, update, ctx):
-        """
-        Returns tuple of strings for determining handlers in `_handlers`
-        dictionary.
-        """
+    def extract_keys(self, context):
         raise NotImplementedError
 
-    def add_handler(self, handler, key):
-        if key in self._handlers:
-            self._handlers[key].add(handler)
-        else:
-            self._handlers[key] = SortedList([handler], key=self._key)
+    def add_handler(self, key, handler):
+        if key not in self._handlers:
+            self._handlers[key] = []
 
-    def merge(self, other_router):
-        self._assert_routers_can_merge(other_router)
+        self._handlers[key].append(handler)
 
-        for key, handlers in other_router._handlers.items():
+    async def handle(self, update, context):
+        for key in self.extract_keys(context):
+            for handler in self._handlers.get(key, ()):
+                if isinstance(handler, Router):
+                    handler = handler.handle
+
+                if await handler(update, context) != SKIPPED:
+                    return PROCESSED
+
+        return SKIPPED
+
+    @staticmethod
+    def _merge_routers(target: "MapRouter", source: "MapRouter"):
+        for key, handlers in source._handlers.items():
             for handler in handlers:
-                self.add_handler(handler, key)
+                target.add_handler(key, handler)
 
-    async def handle(self, update, ctx):
-        keys = self._get_keys(update, ctx)
+    @classmethod
+    def merge(cls, source_routers: List["MapRouter"]):
+        router = cls(priority=None)
 
-        for key in keys:
-            if key not in self._handlers:
-                continue
+        for source in sorted(source_routers, reverse=True, key=lambda item: item.priority or 0):
+            cls._assert_can_merge(router, source)
+            cls._merge_routers(router, source)
 
-            for handler in self._handlers[key]:
-                if await handler.handle(update, ctx) != hr.SKIPPED:
-                    return hr.COMPLETE
+        return router
 
-        return hr.SKIPPED
+
+class CommandsRouter(MapRouter):
+    def add_handler(self, key, handler):
+        return super().add_handler(key.lower(), handler)
+
+    def extract_keys(self, context: Context):
+        if not isinstance(context.update, Message):
+            return ()
+
+        match = re.match(
+            r"\s*({prefix})?\s*({command})(.*)".format(
+                prefix="|".join(
+                    re.escape(prefix) for prefix in context.app.config["prefixes"]
+                ),
+                command="|".join(
+                    re.escape(command) for command in sorted(self._handlers, key=len, reverse=True)
+                ),
+            ),
+            context.update.text,
+            re.IGNORECASE,
+        )
+
+        if match is None:
+            return ()
+
+        context.prefix = match.group(1)
+        context.command = match.group(2)
+        context.body = (match.group(3) or "").strip()
+        context.match = match
+
+        return (context.command.lower(),)
+
+
+class AttachmentsRouter(MapRouter):
+    def extract_keys(self, context: Context):
+        if not isinstance(context.update, Message):
+            return ()
+
+        return tuple(attachment.kind for attachment in context.update.attachments)

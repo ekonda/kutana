@@ -1,123 +1,74 @@
-from collections import namedtuple
+import io
 from enum import Enum
+from typing import Any, Awaitable, Callable, List, NamedTuple, Optional, Union, Tuple
 
 
-class UpdateType(Enum):
-    MSG = 1
-    UPD = 2
+class AttachmentKind(str, Enum):
+    IMAGE = "image"
+    DOCUMENT = "document"
+    VIDEO = "video"
+    AUDIO = "audio"
+    VOICE = "voice"
 
 
-Update = namedtuple("Update", ("raw", "type", "meta"))
+class AttachmentContent(NamedTuple):
+    name: str
+    value: Union[io.IOBase, bytes]
 
 
-class ReceiverType(Enum):
-    SOLO = 1
-    MULTI = 2
-    UNKNOWN = 3
-
-
-Message = namedtuple("Message", (
-    "raw", "type", "text", "attachments", "sender_id",
-    "receiver_id", "receiver_type", "date", "meta",
-))
-
-
-ATTACHMENT_TYPES = (
-    "image", "doc", "sticker", "video", "audio", "voice"
-)
-
-
-AttachmentData = namedtuple("AttachmentData", (
-    "id",
-    "type",
-    "title",
-    "file",
-    "file_name",
-    "file_getter",
-    "raw",
-))
-
-
-class Attachment(AttachmentData):
-    __slots__ = ()
-
-    @classmethod
-    def new(
-        cls, file, file_name="image.png", type="image", title=""
+class Attachment:
+    def __init__(
+        self,
+        id: Optional[Union[str, int, float]] = None,
+        kind: Optional[Union[AttachmentKind, str]] = None,
+        content: Optional[Union[AttachmentContent, Tuple[str, Union[str, bytes]]]] = None,
+        title: Optional[str] = None,
+        raw: Any = None,
+        get_file: Optional[Callable[..., Awaitable]] = None,
     ):
-        """
-        Create a new attachment with provided type, file (contents) and
-        file_name. Also accepts title.
+        if not id and not content:
+            raise ValueError("Attachment at least should have id or content")
 
-        :rtype: kutana.update.Attachment
-        """
+        self.id = id
+        self.kind = kind
+        self.content = content  # named tuple of (name of content, content)
+        self.title = title  # human-friendly description of attachment
+        self.raw: Any = raw
+        self._get_file = get_file
+        self._file = None
 
-        return Attachment(
-            None,
-            type,
-            title,
-            file,
-            file_name,
-            None,
-            None,
-        )
+    async def get_content(self):
+        if self._file is not None:
+            return self._file
 
-    @classmethod
-    def existing(cls, id, type):
-        """
-        Create an attachment that was already uploaded and you have it's ID
-        and type.
+        if self._get_file is None:
+            raise ValueError("Can't get content for this file")
 
-        :rtype: kutana.update.Attachment
-        """
+        file = await self._get_file()
+        self._file = file
+        return file
 
-        return Attachment(
-            id,
-            type,
-            None,
-            None,
-            None,
-            None,
-            "missing",
-        )
 
-    @classmethod
-    def _existing_full(
-        cls, id, type, title, file_name, getter, raw,
+class RecipientKind(str, Enum):
+    GROUP_CHAT = "group_chat"
+    PRIVATE_CHAT = "private_chat"
+
+
+class Message:
+    def __init__(
+        self,
+        sender_id: str,
+        recipient_id: str,
+        recipient_kind: RecipientKind,
+        text: str,
+        attachments: List[Attachment],
+        date: int,
+        raw: Any,
     ):
-        """
-        This method is used internally for creating attachments
-        with concrete data.
-
-        :rtype: kutana.update.Attachment
-        """
-
-        return Attachment(
-            id,
-            type,
-            title,
-            None,
-            file_name,
-            getter,
-            raw,
-        )
-
-    @property
-    def uploaded(self):
-        return self.raw is not None
-
-    async def get_file(self):
-        """
-        Download file stored in attachments if available. Raises
-        ValueError if contents can't be downloaded.
-
-        :rtype: kutana.update.Attachment
-        """
-
-        if self.file is not None:
-            return self.file
-
-        if self.file_getter is not None:
-            return await self.file_getter()
-
-        raise ValueError("No way to get file from attachment")
+        self.sender_id: str = sender_id
+        self.recipient_id: str = recipient_id
+        self.recipient_kind: RecipientKind = recipient_kind
+        self.text: str = text
+        self.attachments: List[Attachment] = attachments
+        self.date: int = date
+        self.raw: Any = raw

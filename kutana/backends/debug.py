@@ -1,73 +1,87 @@
-from types import GeneratorType
+import asyncio
+
 from ..backend import Backend
-from ..update import Message, ReceiverType, UpdateType
+from ..kutana import Kutana
+from ..plugin import Plugin
+from ..update import Message, RecipientKind
 
 
 class Debug(Backend):
-    def __init__(self, messages=None, on_complete=None, save_replies=True, **kwargs):
+    def __init__(self, updates, identity=None, **kwargs):
         super().__init__(**kwargs)
 
-        if isinstance(messages, GeneratorType):  # pragma: no cover
-            self.messages = messages
-        else:
-            self.messages = (m for m in messages)
+        self.updates = [self._make_update(*args) for args in updates]
+        self._update_processed = 0
 
-        self.messages_count = 0
-
-        self.save_replies = save_replies
-        self.answers = {}
-        self.answers_count = 0
-
-        self.responses = []
+        self.messages = []
         self.requests = []
 
-        self.on_complete = on_complete
+        self._identity = identity
 
-    def _make_update(self, data):
+    def get_identity(self):
+        return self._identity
+
+    @classmethod
+    async def handle_updates(cls, plugins, updates, identity=None):
+        # create backend
+        backend = cls(updates, identity=identity)
+
+        # create plugin that will stop applition when needed
+        stopper_plugin = Plugin("_stopper")
+
+        def _update_processed():
+            backend._update_processed += 1
+            if backend._update_processed >= len(backend.updates):
+                future.cancel()
+
+        @stopper_plugin.on_completion()
+        async def _(context):
+            _update_processed()
+
+        @stopper_plugin.on_exception()
+        async def _(context, exception):
+            _update_processed()
+
+        # create application, fill it with plugins and backends
+        app = Kutana()
+
+        app.add_backend(backend)
+
+        app.add_plugin(stopper_plugin)
+
+        for plugin in plugins:
+            app.add_plugin(plugin)
+
+        # run application (save to variable for stopper)
+        future = asyncio.ensure_future(app._run())
+
+        try:
+            await future
+        except asyncio.CancelledError:
+            pass
+        finally:
+            await app._shutdown_wrapper()
+
+        # return used application and backend
+        return app, backend
+
+    def _make_update(self, text, sender_id, recipient_id, attachments, raw=None):
         return Message(
-            raw=None,
-            type=UpdateType.MSG,
-            text=data[0],
-            attachments=(),
-            sender_id=data[1],
-            receiver_id=0,
-            receiver_type=ReceiverType.SOLO,
+            sender_id=sender_id,
+            recipient_id=recipient_id,
+            recipient_kind=RecipientKind.PRIVATE_CHAT,
+            text=text,
+            attachments=attachments,
             date=0,
-            meta={},
+            raw=raw,
         )
 
-    async def acquire_updates(self, submit_update):
-        if not self.messages:
-            return
+    async def acquire_updates(self, queue):
+        while self.updates:
+            await queue.put((self.updates.pop(0), self))
 
-        for _ in range(25):
-            try:
-                message = next(self.messages)
-                self.messages_count += 1
-                await submit_update(self._make_update(message))
-            except StopIteration:
-                self.messages = None
-                break
+    async def send_message(self, target_id, message, attachments, **kwargs):
+        self.messages.append((target_id, str(message), attachments, kwargs))
 
-    async def execute_send(self, target_id, message, attachments, kwargs):
-        if self.save_replies:
-            if target_id not in self.answers:
-                self.answers[target_id] = []
-
-            self.answers[target_id].append(
-                (message, attachments, kwargs)
-            )
-
-        self.answers_count += 1
-
-        self.check_if_complete()
-
-    async def execute_request(self, method, kwargs):
+    async def request(self, method, kwargs):
         self.requests.append((method, kwargs))
-
-    def check_if_complete(self):
-        if self.messages or not self.on_complete:
-            return
-
-        if self.answers_count == self.messages_count:
-            self.on_complete()

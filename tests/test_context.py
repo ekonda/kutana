@@ -1,95 +1,65 @@
-import asyncio
-import pytest
-from asynctest import MagicMock, CoroutineMock
-from kutana import Context
+from unittest.mock import AsyncMock, Mock
+
+from kutana import Context, Message, RecipientKind
 
 
-def test_reply_non_str():
-    ctx = Context(backend=MagicMock(execute_send=CoroutineMock()))
-    ctx.default_target_id = 1
-    asyncio.get_event_loop().run_until_complete(ctx.reply(123))
-    ctx.backend.execute_send.assert_called_with(1, "123", (), {})
+async def test_reply_to_update():
+    update = Message("someone", "michaelkrukov", RecipientKind.PRIVATE_CHAT, "", [], 0, {})
+    context = Context(None, update, AsyncMock())
+
+    await context.reply("Sup")
+    context.backend.send_message.assert_awaited_with("michaelkrukov", "Sup", None)
 
 
-def test_reply_no_default_target():
-    ctx = Context(backend=MagicMock(execute_send=CoroutineMock()))
-    ctx.default_target_id = None
+async def test_reply_to_update_overwrite():
+    context = Context(None, None, AsyncMock())
+    context.recipient_id = "michaelkrukov"
 
-    with pytest.raises(RuntimeError):
-        asyncio.get_event_loop().run_until_complete(ctx.reply("hey"))
-
-    ctx.backend.execute_send.assert_not_called()
+    await context.reply("Sup")
+    context.backend.send_message.assert_awaited_with("michaelkrukov", "Sup", None)
 
 
-def test_context():
-    called = []
+async def test_reply_with_large_text():
+    context = Context(None, None, AsyncMock())
+    context.recipient_id = "michaelkrukov"
 
-    class Backend:
-        async def execute_send(self, target_id, message, attachments, kwargs):
-            called.append(("ps", message))
-
-        async def execute_request(self, method, kwargs):
-            called.append(("pac", method, kwargs))
-
-    ctx = Context(backend=Backend())
-    ctx.default_target_id = 1
-
-    asyncio.get_event_loop().run_until_complete(ctx.reply("hey1"))
-    asyncio.get_event_loop().run_until_complete(ctx.send_message(1, "hey2"))
-    asyncio.get_event_loop().run_until_complete(ctx.request("a", v="hey3"))
-
-    assert called == [
-        ("ps", "hey1"),
-        ("ps", "hey2"),
-        ("pac", "a", {"v": "hey3"}),
-    ]
-
-    called.clear()
-
-    message = "a" * 4096 + "b" * 4096 + "c" * 4096
-
-    asyncio.get_event_loop().run_until_complete(ctx.reply(message))
-
-    assert called == [
-        ("ps", message[:4096]),
-        ("ps", message[4096: 4096 * 2]),
-        ("ps", message[4096 * 2:]),
-    ]
+    await context.reply("a" * 3 * 4096)
+    context.backend.send_message.assert_awaited_with("michaelkrukov", "a" * 4096, None)
 
 
-def test_lont_message_for_kwargs():
-    ctx = Context(backend=CoroutineMock(execute_send=CoroutineMock()))
-    ctx.default_target_id = 1
+async def test_reply_with_kwargs():
+    context = Context(None, None, AsyncMock())
+    context.recipient_id = "michaelkrukov"
 
-    asyncio.get_event_loop().run_until_complete(ctx.reply("a" * (4096 * 2 - 1)))
-
-    ctx.backend.execute_send.assert_any_await(1, "a" * 4096, (), {})
-    ctx.backend.execute_send.assert_any_await(1, "a" * 4095, (), {})
+    await context.reply("Sup", mood="scared")
+    context.backend.send_message.assert_awaited_with("michaelkrukov", "Sup", None, mood="scared")
 
 
-def test_dynamic_attributes():
-    ctx = Context()
+async def test_unique_ids():
+    update = Message("someone", "michaelkrukov", RecipientKind.PRIVATE_CHAT, "", [], 0, {})
+    context = Context(None, update, AsyncMock(get_identity=Mock(return_value="b")))
 
-    ctx.var1 = "val1"
-    ctx.var2 = "val2"
-
-    assert ctx.var1 == "val1"
-    assert ctx.var2 == "val2"
-    assert ctx.get("var3") is None
-    assert ctx.get("var3", "default_value_1") == "default_value_1"
+    assert context.recipient_unique_id == "b:r:michaelkrukov"
+    assert context.sender_unique_id == "b:s:someone"
 
 
-def test_replace_method():
-    calls = []
+async def test_unique_ids_overwrites():
+    context = Context(None, None, AsyncMock(get_identity=Mock(return_value="b")))
+    context.sender_id = "someone"
+    context.recipient_id = "michaelkrukov"
 
-    async def replacement(self, message, attachments=(), **kwargs):
-        calls.append((message, attachments, kwargs))
+    assert context.recipient_unique_id == "b:r:michaelkrukov"
+    assert context.sender_unique_id == "b:s:someone"
 
-    ctx = Context()
-    ctx.replace_method("reply", replacement)
-    asyncio.get_event_loop().run_until_complete(ctx.reply("hey"))
 
-    assert calls == [("hey", (), {})]
+def test_request():
+    context = Context(None, None, Mock())
+    assert context.request == context.backend.request
 
-    with pytest.raises(ValueError):
-        ctx.replace_method("a" * 64, lambda: 0)
+
+def test_custom_attributes():
+    context = Context(None, None, None)
+    context.attribute1 = "value1"
+    context.attribute2 = "value2"
+    assert context.attribute1 == "value1"
+    assert context.attribute2 == "value2"

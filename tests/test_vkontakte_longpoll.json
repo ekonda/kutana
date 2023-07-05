@@ -1,0 +1,145 @@
+[
+  {
+    "url": "https://api.vk.com/method/groups.getById",
+    "params": { "fields": "screen_name" },
+    "response": {
+      "response": [
+        {
+          "id": 654327632,
+          "name": "jahskdkafsdhj",
+          "screen_name": "jahskdkafsdhj",
+          "is_closed": 1,
+          "type": "group",
+          "photo_50": "https://sun1-22.userapi.com/s/v1/if1/ajsdhakjhdskjahdhjgasdjhagsd.jpg?size=50x50&quality=96&crop=394,0,1076,1076&ava=1",
+          "photo_100": "https://sun1-22.userapi.com/s/v1/if1/adsgajdhkajdshajdgjahldjhgjahksd.jpg?size=100x100&quality=96&crop=394,0,1076,1076&ava=1",
+          "photo_200": "https://sun1-22.userapi.com/s/v1/if1/asdjghjaklkdjhjasgkdlkjhagsydku.jpg?size=200x200&quality=96&crop=394,0,1076,1076&ava=1"
+        }
+      ]
+    }
+  },
+  {
+    "url": "https://api.vk.com/method/groups.setLongPollSettings",
+    "params": null,
+    "response": { "response": 1 }
+  },
+  {
+    "url": "https://api.vk.com/method/groups.getLongPollServer",
+    "params": { "group_id": 654327632 },
+    "response": {
+      "response": {
+        "key": "123123123",
+        "server": "https://lp.vk.com/wh654327632",
+        "ts": "1"
+      }
+    }
+  },
+  {
+    "url": "https://lp.vk.com/wh654327632?act=a_check&key=123123123&wait=25&ts=1",
+    "params": {},
+    "response": {
+      "ts": "2",
+      "updates": [
+        {
+          "group_id": 654327632,
+          "type": "message_new",
+          "event_id": "23f1528bb5a4a0b83185feed2090313a8957796a",
+          "v": "5.131",
+          "object": {
+            "message": {
+              "date": 1682778943,
+              "from_id": 87641997,
+              "id": 51163,
+              "out": 0,
+              "attachments": [],
+              "conversation_message_id": 46091,
+              "fwd_messages": [],
+              "important": false,
+              "is_hidden": false,
+              "peer_id": 87641997,
+              "random_id": 0,
+              "text": "/echo 123"
+            },
+            "client_info": {
+              "button_actions": [
+                "text",
+                "vkpay",
+                "open_app",
+                "location",
+                "open_link",
+                "callback",
+                "intent_subscribe",
+                "intent_unsubscribe"
+              ],
+              "keyboard": true,
+              "inline_keyboard": true,
+              "carousel": true,
+              "lang_id": 0
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "url": "https://lp.vk.com/wh654327632?act=a_check&key=123123123&wait=25&ts=2",
+    "params": {},
+    "response": {
+      "ts": "3",
+      "updates": [
+        {
+          "group_id": 654327632,
+          "type": "message_new",
+          "event_id": "99319bb7e45935dd43383ed975df080c87798d27",
+          "v": "5.131",
+          "object": {
+            "message": {
+              "date": 1682779981,
+              "from_id": 87641997,
+              "id": 0,
+              "out": 0,
+              "attachments": [],
+              "conversation_message_id": 2165,
+              "fwd_messages": [],
+              "important": false,
+              "is_hidden": false,
+              "peer_id": 2000000001,
+              "random_id": 0,
+              "text": "/echo 123 [club654327632|Спасибо]"
+            },
+            "client_info": {
+              "button_actions": [
+                "text",
+                "vkpay",
+                "open_app",
+                "location",
+                "open_link",
+                "callback",
+                "intent_subscribe",
+                "intent_unsubscribe"
+              ],
+              "keyboard": true,
+              "inline_keyboard": true,
+              "carousel": true,
+              "lang_id": 0
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "url": "https://lp.vk.com/wh654327632?act=a_check&key=123123123&wait=25&ts=3",
+    "params": {},
+    "response": {
+      "ts": "3",
+      "updates": []
+    }
+  },
+  {
+    "url": "https://api.vk.com/method/execute",
+    "params": null,
+    "response": {
+        "response": [1, 1]
+    }
+  }
+]

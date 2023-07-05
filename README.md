@@ -2,7 +2,6 @@
 
 ![Kutana logo](docs/_static/kutana-logo-512.png)
 
-[![Documentation Status](https://readthedocs.org/projects/kutana/badge/?version=latest)](https://kutana.readthedocs.io/en/latest/?badge=latest)
 [![CodeFactor](https://www.codefactor.io/repository/github/ekonda/kutana/badge)](https://www.codefactor.io/repository/github/ekonda/kutana)
 [![Coverage Status](https://coveralls.io/repos/github/ekonda/kutana/badge.svg?branch=master)](https://coveralls.io/github/ekonda/kutana?branch=master)
 [![Codebeat Badge](https://codebeat.co/badges/fd698be3-d0f9-4e3c-b235-1c3a3cdb98a9)](https://codebeat.co/projects/github-com-ekonda-kutana-master)
@@ -21,6 +20,13 @@ to use plugins with different backends.
 python -m pip install kutana
 ```
 
+## Documentation
+
+You can read the extended description of the library in
+the [docs/index.md](example/config.example.yml) file. At the moment,
+the documentation is not in the best condition. If you would like
+to contribute to its writing, welcome to the issues.
+
 ## Running
 
 ### From CLI
@@ -29,64 +35,60 @@ Following command will populate application's config, add specified backends and
 load plugins from specified folder.
 
 ```bash
-python3 -m kutana --config example/config.yml --plugins example/plugins
+python3 -m kutana run example/config.yml
 
-# usage: python3 -m kutana [-h] [--config CONFIG] [--plugins PLUGINS] [--debug]
-
-# Run kutana application instance using provided config.
-
+# usage: kutana [-h] {init,run} ...
+#
+# helpfull cli utility
+#
+# positional arguments:
+#   {init,run}
+#     init      initiate kutana project
+#     run       run kutana project using provided config (working directory will be changed to the one with config file)
+#
 # optional arguments:
-#   -h, --help         show this help message and exit
-#   --config CONFIG    file with config in yaml format (default: config.yml
-#   --plugins PLUGINS  folder with plugins to load (default: plugins)
-#   --debug            set logging level to debug
+#   -h, --help  show this help message and exit
 ```
 
-Refer to the example [config.yml](https://github.com/ekonda/kutana/tree/master/example/config.example.yml)
+Refer to the example [config.yml](example/config.example.yml)
 for the configuration details.
 
-### From python
+### From code
 
 ```py
-import json
-from kutana import Kutana, load_plugins
-from kutana.backends import Vkontakte
-
-# Import configuration
-with open("config.json") as fh:
-    config = json.load(fh)
+from kutana import Kutana
+from kutana.backends import VkontakteLongpoll
+from kutana.loaders import load_plugins_from_path
 
 # Create application
 app = Kutana()
 
 # Add manager to application
-app.add_backend(Vkontakte(token=config["vk_token"]))
+app.add_backend(VkontakteLongpoll(token="VK-GROUP-TOKEN"))
 
 # Load and register plugins
-app.add_plugins(load_plugins("plugins/"))
+for plugin in load_plugins_from_path("example/plugins/"):
+    app.add_plugin(plugin)
 
 if __name__ == "__main__":
     # Run application
     app.run()
 ```
 
-> Token for Vkontakte is loaded from the file "config.json"
-> and plugins are loaded from folder "plugins/"
-
 ## Example plugin (`plugins/echo.py`)
 
 ```py
-from kutana import Plugin, t
+from kutana import Plugin
 
-plugin = Plugin(name=t("Echo"))
+plugin = Plugin(name="Echo")
 
 @plugin.on_commands(["echo"])
-async def __(msg, ctx):
+async def _(msg, ctx):
     await ctx.reply(ctx.body, attachments=msg.attachments)
 ```
 
 > If your function exists only to be decorated, you can use `_` to avoid
-> unnecessary names. Use `__` if you use something like pydash.
+> unnecessary names.
 
 ## Available backends
 

@@ -1,25 +1,35 @@
-from kutana import Plugin, Attachment, get_path, t
+from kutana import Attachment, Plugin, get_path
+from kutana.update import AttachmentKind
 
-
-plugin = Plugin(name=t("Attachments"), description=t("Sends some attachments (.attachments)"))
+plugin = Plugin(name="Attachments", description="Sends some attachments (.attachments)")
 
 
 @plugin.on_commands(["attachments"])
-async def __(msg, ctx):
+async def _(msg, ctx):
     # Image
     with open(get_path(__file__, "assets/pizza.png"), "rb") as fh:
-        image = Attachment.new(fh.read(), "pizza.png", title="Pizza")
+        image = Attachment(
+            kind=AttachmentKind.IMAGE,
+            content=("pizza.png", fh.read()),
+        )
 
-    await ctx.reply(t("Image"), attachments=image)
+    await ctx.reply("Image", attachments=[image])
 
     # Document
     with open(get_path(__file__, "assets/pizza.png"), "rb") as fh:
-        doc = Attachment.new(fh.read(), "pizza.png", type="doc")
+        doc = Attachment(
+            kind=AttachmentKind.DOCUMENT,
+            content=("pizza.png", fh.read()),
+            title="Pizza",
+        )
 
-    await ctx.reply(t("Document"), attachments=doc)
+    await ctx.reply("Document", attachments=[doc])
 
     # Audio message
     with open(get_path(__file__, "assets/audio.ogg"), "rb") as fh:
-        audio_message = Attachment.new(fh.read(), "audio.ogg", "voice")
+        audio_message = Attachment(
+            kind=AttachmentKind.VOICE,
+            content=("audio.ogg", fh.read()),
+        )
 
-    await ctx.reply(t("Audio message"), attachments=audio_message)
+    await ctx.reply("Audio message", attachments=[audio_message])

@@ -1,15 +1,11 @@
-import re
-import inspect
-import warnings
 import functools
-from .handler import Handler, HandlerResponse
-from .update import UpdateType
-from .helpers import ensure_list
+from typing import List, Any
+
 from .backends.vkontakte import VkontaktePluginExtension
-from .routers import (
-    CommandsRouter, AttachmentsRouter, ListRouter, AnyMessageRouter,
-    AnyUpdateRouter
-)
+from .handler import SKIPPED
+from .router import AttachmentsRouter, CommandsRouter, ListRouter, Router
+from .update import Message
+from .storage import Document
 
 
 class Plugin:
@@ -20,152 +16,86 @@ class Plugin:
     :param description: Description of the plugin
     """
 
-    def __init__(self, name, description="", storage="default", **kwargs):
-        self.app = None
+    def __init__(self, name: str, **kwargs):
+        self.app: Any
+
+        self._hooks = []
+        self._routers: List[Router] = []
+
+        # Set some attributes to this instance
         self.name = name
-        self.description = description
 
-        self._routers = []
-        self._storage = storage
-        self._handlers = {
-            "start": [],
-            "before": [],
-            "after": [],
-            "exception": [],
-            "shutdown": [],
-        }
-
-        # Set provided attributes to this instance
         for k, v in kwargs.items():
             setattr(self, k, v)
 
-    def _get_or_add_router(self, router_cls, priority=None):
-        for router in self._routers:
-            if type(router) == router_cls and (priority is None or priority == router.priority):
-                return router
+        # Setup extensions
+        self.vk = VkontaktePluginExtension(self)
 
-        if priority is None:
-            router = router_cls()
-        else:
-            router = router_cls(priority=priority)
+    def __getattr__(self, name):
+        """Defined for typing"""
+        return super().__getattribute__(name)
 
-        self._routers.append(router)
-        return router
+    def __setattr__(self, name, value):
+        """Defined for typing"""
+        return super().__setattr__(name, value)
 
-    def _add_handler_for_router(self, router, handler, handler_key=None, router_priority=None):
-        router = self._get_or_add_router(router, priority=router_priority)
-        if handler_key is None:
-            router.add_handler(handler)
-        else:
-            router.add_handler(handler, handler_key)
-
-    @property
-    def storage(self):
-        if isinstance(self._storage, str):
-            return self.app.get_storage(self._storage)
-        return self._storage
-
-    def on_start(self, priority=0):
+    def on_start(self):
         """
-        Decorator for registering coroutine to be called when application
-        starts.
-
-        Priority specifies the order in which handlers are  executed. Handlers
-        with higher priority will be executed first.
+        Return decorator for registering coroutines that will be called
+        when application starts.
         """
-        def decorator(func):
-            async def wrapper():
-                args, *__ = inspect.getfullargspec(func)
 
-                if args:
-                    warnings.warn(
-                        '"on_start" with arguments is deprecated, you can '
-                        'access "app" with "plugin.app"',
-                        DeprecationWarning
-                    )
-                    return await func(self.app)
-                else:
-                    return await func()
+        def decorator(coro):
+            self._hooks.append(("start", coro))
+            return coro
 
-            self._handlers["start"].append(Handler(wrapper, priority))
-
-            return func
         return decorator
 
-    def on_before(self, priority=0):
+    def on_completion(self):
         """
-        Decorator for registering coroutine to be called before an update
-        will be processed. It will be passed the update and it's context as
-        arguments.
+        Return decorator for registering coroutines that will be called
+        after update was processed (without exception).
+        """
 
-        Priority specifies the order in which handlers are executed. Handlers
-        with higher priority will be executed first.
-        """
-        def decorator(func):
-            self._handlers["before"].append(Handler(func, priority))
-            return func
+        def decorator(coro):
+            self._hooks.append(("completion", coro))
+            return coro
+
         return decorator
 
-    def on_after(self, priority=0):
+    def on_exception(self):
         """
-        Decorator for registering coroutine to be called after an update
-        was processed. It will be passed the update, it's context and
-        result of processing (:class:`kutana.handler.HandlerResponse`) as
-        arguments.
+        Return decorator for registering coroutine that will be called when
+        exception was raised while processing an update. It will be passed
+        the update's context and raised exception as arguments.
+        """
 
-        Priority specifies the order in which handlers are executed. Handlers
-        with higher priority will be executed first.
-        """
-        def decorator(func):
-            self._handlers["after"].append(Handler(func, priority))
-            return func
+        def decorator(coro):
+            self._hooks.append(("exception", coro))
+            return coro
+
         return decorator
 
-    def on_exception(self, priority=0):
+    def on_shutdown(self):
         """
-        Decorator for registering coroutine to be called when exception was
-        raised while processing an update. It will be passed the update,
-        it's context and raised exception as arguments.
+        Return decorator for registering coroutine that will be called when
+        application is being be stopped.
+        """
+        def decorator(coro):
+            self._hooks.append(("shutdown", coro))
+            return coro
 
-        Priority specifies the order in which handlers are executed. Handlers
-        with higher priority will be executed first.
-        """
-        def decorator(func):
-            self._handlers["exception"].append(Handler(func, priority))
-            return func
         return decorator
-
-    def on_shutdown(self, priority=0):
-        """
-        Decorator for registering coroutine to be called when application
-        will be stopped. It will be passed application as an argument.
-
-        Priority specifies the order in which handlers are executed. Handlers
-        with higher priority will be executed first.
-        """
-        def decorator(func):
-            self._handlers["shutdown"].append(Handler(func, priority))
-            return func
-        return decorator
-
-    # Registrators for updates with specific conditions
-    @property
-    def vk(self) -> VkontaktePluginExtension:
-        return VkontaktePluginExtension(self)
 
     def on_commands(
         self,
         commands,
         priority=0,
-        router_priority=None,
     ):
         """
-        Decorator for registering coroutine to be called when
-        incoming update is message, starts with prefix and one of
-        provided commands.
-
-        If case_insensitive is True, commands will be processed with ignored
-        case.
+        Return decorator for registering handler that will be called
+        when incoming update is a message, starts with prefix
+        and one of provided commands.
 
         Context is automatically populated with following values:
 
@@ -174,261 +104,165 @@ class Plugin:
         - body
         - match
 
-        Priority is a value that used to determine order in which
-        coroutines are executed. Router priority is a value that
-        used to determine the order in which routers is checked
-        for appropriate handler. By default, most of the times,
-        priority is 0, and router_priority is None (default
-        value will be used).
+        Handlers with higher priority are attempted first.
 
-        If coroutine returns anythign but
-        :class:`kutana.handler.HandlerResponse` SKIPPED, other
-        coroutines are not executed further.
+        If handler returns anything but :class:`kutana.handler.SKIPPED`,
+        other handlers are not executed further.
         """
 
-        commands = ensure_list(commands)
-
-        def decorator(func):
+        def decorator(coro):
+            router = CommandsRouter(priority=priority)
             for command in commands:
-                self._add_handler_for_router(
-                    CommandsRouter,
-                    handler=Handler(func, priority),
-                    handler_key=command,
-                    router_priority=router_priority,
-                )
-            return func
+                router.add_handler(command, coro)
+
+            self._routers.append(router)
+
+            return coro
 
         return decorator
 
     def on_attachments(
         self,
-        types,
+        kinds,
         priority=0,
-        router_priority=None
     ):
         """
-        Decorator for registering coroutine to be called when
-        incoming update is message and have at least one
+        Return decorator for registering handler that will be called
+        when incoming update is a message and have at least one
         attachment with one of specified types.
 
         See :class:`kutana.plugin.Plugin.on_commands` for details
-        about 'priority' and 'router_priority'.
+        about 'priority' and return values.
         """
 
-        types = ensure_list(types)
+        def decorator(coro):
+            router = AttachmentsRouter(priority=priority)
+            for kind in kinds:
+                router.add_handler(kind, coro)
 
-        def decorator(func):
-            for atype in types:
-                self._add_handler_for_router(
-                    AttachmentsRouter,
-                    handler=Handler(func, priority),
-                    handler_key=atype,
-                    router_priority=router_priority,
-                )
-            return func
+            self._routers.append(router)
+
+            return coro
 
         return decorator
 
-    def on_any_message(self, *args, **kwargs):
-        warnings.warn(
-            '"on_any_message" is deprecated, use "on_messages" instead',
-            DeprecationWarning
-        )
-        return self.on_messages(*args, **kwargs)
+    def on_messages(self, priority=-1):
+        """
+        Return decorator for registering handler that will be called
+        when incoming update is a message. Handler will always be
+        called unless any other handler with lower priority returned
+        appropriate value.
 
-    def _make_decorator(self, router, priority, router_priority):
-        def decorator(func):
-            self._add_handler_for_router(
-                router,
-                handler=Handler(func, priority),
-                router_priority=router_priority,
-            )
-            return func
+        See :class:`kutana.plugin.Plugin.on_commands` for details
+        about 'priority' and return values.
+        """
+
+        def decorator(coro):
+            router = ListRouter(priority=priority)
+
+            @functools.wraps(coro)
+            async def _coro(update, context):
+                if not isinstance(update, Message):
+                    return SKIPPED
+                return await coro(update, context)
+
+            router.add_handler(_coro)
+
+            self._routers.append(router)
+
+            return coro
 
         return decorator
 
-    def on_messages(self, priority=0, router_priority=None):
+    def on_updates(self, priority=0):
         """
-        Decorator for registering coroutine to be called when
-        incoming update is message. This will always be called.
-        If you want to catch all unprocessed message, you should
-        use :meth:`kutana.plugin.Plugin.on_unprocessed_messages`.
+        Return decorator for registering handler that will be always
+        called (for messages and not messages).
 
         See :class:`kutana.plugin.Plugin.on_commands` for details
-        about 'priority' and 'router_priority'.
+        about 'priority' and return values.
         """
 
-        return self._make_decorator(AnyMessageRouter, priority, router_priority)
+        def decorator(coro):
+            router = ListRouter(priority=priority)
+            router.add_handler(coro)
 
-    def on_any_unprocessed_message(self, *args, **kwargs):
-        warnings.warn(
-            '"on_any_unprocessed_message" is deprecated, use "on_unprocessed_messages" instead',
-            DeprecationWarning
-        )
-        return self.on_unprocessed_messages(*args, **kwargs)
+            self._routers.append(router)
 
-    def on_unprocessed_messages(
-        self,
-        priority=0,
-        router_priority=-3
-    ):
-        """
-        Decorator for registering coroutine to be called when
-        incoming update is message. This will be called if no other
-        coroutine processed update.
-
-        See :class:`kutana.plugin.Plugin.on_commands` for details
-        about 'priority' and 'router_priority'.
-        """
-
-        return self._make_decorator(AnyMessageRouter, priority, router_priority)
-
-    def on_match(self, pattern, priority=0, router_priority=-3):
-        """
-        Decorator for registering coroutine to be called when
-        incoming update is message and it's text is matched by
-        provided pattern.
-
-        Context is automatically populated with following values:
-
-        - match
-
-        See :class:`kutana.plugin.Plugin.on_commands` for details
-        about 'priority' and 'router_priority'.
-        """
-
-        def decorator(func):
-            async def wrapper(update, ctx):
-                if update.type != UpdateType.MSG:
-                    return HandlerResponse.SKIPPED
-
-                match = re.match(pattern, update.text)
-                if not match:
-                    return HandlerResponse.SKIPPED
-
-                ctx.match = match
-
-                return await func(update, ctx)
-
-            self._add_handler_for_router(
-                ListRouter,
-                handler=Handler(wrapper, priority),
-                router_priority=router_priority,
-            )
-
-            return func
+            return coro
 
         return decorator
 
-    def on_any_update(self, *args, **kwargs):
-        warnings.warn(
-            '"on_any_update" is deprecated, use "on_updates" instead',
-            DeprecationWarning
-        )
-        return self.on_updates(self, *args, **kwargs)
-
-    def on_updates(self, priority=0, router_priority=None):
+    def with_storage(self, check_sender=None, check_recipient=None, storage="default"):
         """
-        Decorator for registering coroutine to be called when
-        incoming update is not message. This will always be called.
-        If you want to catch all unprocessed message, you should
-        use :meth:`kutana.plugin.Plugin.on_unprocessed_updates`.
+        This decorator allow plugins to implicitly require access to database.
+        Context is populated with the following fields:
 
-        See :class:`kutana.plugin.Plugin.on_commands` for details
-        about 'priority' and 'router_priority'.
-        """
+        - "storage" - Storage object that can be used to get, update or delete
+            data, stored with specific keys.
+        - "sender" - document with data, previously saved to storage for
+            sender of the message.
+        - "recipient" - document with data, previously saved to storage for
+            recipient of the message.
 
-        return self._make_decorator(AnyUpdateRouter, priority, router_priority)
+        This decorator also accepts arguments `check_sender` and `check_recipient`.
+        You can specify dictionaries that treated as expected values in corresponding
+        data objects. You can use it like `with_storage(check_sender={"state": None})`.
+        You can use specific storage by providing "storage" argument.
 
-    def on_any_unprocessed_update(self, *args, **kwargs):
-        warnings.warn(
-            '"on_any_unprocessed_update" is deprecated, use "on_unprocessed_updates" instead',
-            DeprecationWarning
-        )
-        return self.on_unprocessed_updates(self, *args, **kwargs)
+        Dcoument is an dictionary with additional async methods:
 
-    def on_unprocessed_updates(self, priority=0, router_priority=-3):
-        """
-        Decorator for registering coroutine to be called when
-        incoming update is update. This will be called if no other
-        coroutine processed update.
+        - "save" - save document's data to database.
+        - "update_and_save" - same as "update" and then "save".
+        - "reload" - reload data from database.
+        - "delete" - deletes data from database.
 
-        See :class:`kutana.plugin.Plugin.on_commands` for details
-        about 'priority' and 'router_priority'.
-        """
+        Any attempt to save data to database can raise OptimisticLockException, that
+        means that your code was working at least partially with outdated data. You
+        can either ignore it or retry your operation after reloading data.
 
-        return self._make_decorator(AnyUpdateRouter, priority, router_priority)
+        Example:
 
-    def expect_sender(self, state=None):
-        """
-        This decorator does following things:
+        .. code-block:: python
 
-        - It adds 'sender' to the context. Object that contains data you
-            previously saved to it. You can treat it as object or dict
-            with data. In order to save your changes, you should await
-            'save' method (or use 'update').
+            context.sender.update({"field1": "value1"})  # not yet stored in database
+            await context.sender.save()  # saves data in database
 
-        - If you specified 'state', this will skip all users that don't have
-            specified value in 'state' field.
-
-        - If you 'localized' is true, state will be limited only to current
-            receiver.
-
-        NOTE:
-            If you will attempt to update state, but between reading and
-            writing (updating) someone already updated it 'OptimisticLockException'
-            will be raised. By default this exceptions are ignored!
+            context.sender.update_and_save(field2="value2")  # update data and store it in database
         """
 
-        def decorator(func):
-            @functools.wraps(func)
-            async def wrapper(upd, ctx, *args, **kwargs):
-                sender = await self.storage.get(ctx.sender_key)
+        def _perform_check(data, check):
+            """Return true if handler should be called."""
 
-                if not sender or "state" not in sender:
-                    sender = self.storage.make_document(
-                        {"state": "", "_version": None}, ctx.sender_key
-                    )
+            return not check or all(data.get(k) == v for k, v in check.items())
 
-                if state is not None and sender["state"] != state:
-                    return HandlerResponse.SKIPPED
+        def decorator(coro):
+            @functools.wraps(coro)
+            async def wrapper(update, context):
+                context.storage = self.app.storages[storage]
 
-                ctx.sender = sender
+                if not getattr(context, "sender", None):
+                    context.sender = await context.storage.get(context.sender_unique_id)
+                    if not context.sender:
+                        context.sender = Document(
+                            _storage=context.storage,
+                            _storage_key=context.sender_unique_id,
+                        )
 
-                return await func(upd, ctx, *args, **kwargs)
-            return wrapper
-        return decorator
+                if not _perform_check(context.sender, check_sender):
+                    return SKIPPED
 
-    def expect_receiver(self, state=None):
-        """
-        This decorator does following things:
+                if not getattr(context, "recipient", None):
+                    context.recipient = await context.storage.get(context.recipient_unique_id)
+                    if not context.recipient:
+                        context.recipient = Document(
+                            _storage=context.storage,
+                            _storage_key=context.recipient_unique_id,
+                        )
 
-        - It adds 'receiver' to the context. Object that contains data you
-            previously saved to it. You can treat it as object or dict
-            with data. In order to save your changes, you should await
-            'save' method (or use 'update').
+                if not _perform_check(context.recipient, check_recipient):
+                    return SKIPPED
 
-        NOTE:
-            If you will attempt to update state, but between reading and
-            writing (updating) someone already updated it - 'OptimisticLockException'
-            will be raised. By default this exceptions are ignored!
-        """
-
-        def decorator(func):
-            @functools.wraps(func)
-            async def wrapper(upd, ctx, *args, **kwargs):
-                receiver = await self.storage.get(ctx.receiver_key)
-
-                if not receiver or "state" not in receiver:
-                    receiver = self.storage.make_document(
-                        {"state": "", "_version": None}, ctx.receiver_key
-                    )
-
-                if state is not None and receiver["state"] != state:
-                    return HandlerResponse.SKIPPED
-
-                ctx.receiver = receiver
-
-                return await func(upd, ctx, *args, **kwargs)
+                return await coro(update, context)
             return wrapper
         return decorator

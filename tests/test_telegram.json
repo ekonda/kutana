@@ -1,0 +1,205 @@
+[
+  {
+    "method": "getMe",
+    "kwargs": {},
+    "response": {
+      "id": 345324234,
+      "is_bot": true,
+      "first_name": "213123",
+      "username": "shiudfhjkads_bot",
+      "can_join_groups": true,
+      "can_read_all_group_messages": false,
+      "supports_inline_queries": false
+    }
+  },
+  {
+    "method": "getUpdates",
+    "kwargs": { "timeout": 25, "offset": 0 },
+    "response": [
+      {
+        "update_id": 1,
+        "message": {
+          "message_id": 5275,
+          "from": {
+            "id": 123123123,
+            "is_bot": false,
+            "first_name": "123123",
+            "last_name": "123123",
+            "username": "123123",
+            "language_code": "en"
+          },
+          "chat": {
+            "id": 123123123,
+            "first_name": "123123",
+            "last_name": "123123",
+            "username": "123123",
+            "type": "private"
+          },
+          "date": 1680467742,
+          "text": "/echo",
+          "entities": [{ "offset": 0, "length": 8, "type": "bot_command" }]
+        }
+      }
+    ]
+  },
+  {
+    "method": "getUpdates",
+    "kwargs": { "timeout": 25, "offset": 2 },
+    "response": [
+      {
+        "update_id": 2,
+        "message": {
+          "message_id": 5279,
+          "from": {
+            "id": 123123123,
+            "is_bot": false,
+            "first_name": "123123",
+            "last_name": "123123",
+            "username": "123123",
+            "language_code": "en"
+          },
+          "chat": {
+            "id": 123123123,
+            "first_name": "123123",
+            "last_name": "123123",
+            "username": "123123",
+            "type": "private"
+          },
+          "date": 1680467830,
+          "text": "/echo @shiudfhjkads_bot",
+          "entities": [
+            { "offset": 0, "length": 8, "type": "bot_command" },
+            { "offset": 9, "length": 18, "type": "mention" }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "method": "getUpdates",
+    "kwargs": { "timeout": 25, "offset": 3 },
+    "response": [
+      {
+        "update_id": 3,
+        "message": {
+          "message_id": 5291,
+          "from": {
+            "id": 123123123,
+            "is_bot": false,
+            "first_name": "123123",
+            "last_name": "123123",
+            "username": "123123",
+            "language_code": "en"
+          },
+          "chat": {
+            "id": 123123123,
+            "first_name": "123123",
+            "last_name": "123123",
+            "username": "123123",
+            "type": "private"
+          },
+          "date": 1680467932,
+          "photo": [
+            {
+              "file_id": "gfhSDFSDFSDFfhjgfjdghffkhjgfhjtfjkghfhjgfGHFGDHFGDGFDHHFjtg",
+              "file_unique_id": "AQ5Dw6cxG_KFJEl4",
+              "file_size": 1649,
+              "width": 67,
+              "height": 90
+            },
+            {
+              "file_id": "gfhSDFSDFSDFfhjgfjdghffkhjgfhjtfjkghfhjgfGHFGDHFGDGFDHHFasd",
+              "file_unique_id": "AQ5Dw6cxG_KFJEl4",
+              "file_size": 24444,
+              "width": 240,
+              "height": 320
+            },
+            {
+              "file_id": "gfhSDFSDFSDFfhjgfjdghffkhjgfhjtfjkghfhjgfGHFGDHFGDGFDHHFfgt",
+              "file_unique_id": "AQ5Dw6cxG_KFJEl4",
+              "file_size": 117049,
+              "width": 600,
+              "height": 800
+            },
+            {
+              "file_id": "gfhSDFSDFSDFfhjgfjdghffkhjgfhjtfjkghfhjgfGHFGDHFGDGFDHHFrre",
+              "file_unique_id": "AQ5Dw6cxG_KFJEl4-",
+              "file_size": 191833,
+              "width": 960,
+              "height": 1280
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "method": "getUpdates",
+    "kwargs": {
+      "offset": 4,
+      "timeout": 25
+    },
+    "response": []
+  },
+
+  {
+    "method": "sendMessage",
+    "kwargs": {
+      "chat_id": 123123123,
+      "text": "/echo"
+    },
+    "response": {}
+  },
+  {
+    "method": "sendMessage",
+    "kwargs": {
+      "chat_id": 123123123,
+      "text": "/echo @shiudfhjkads_bot"
+    },
+    "response": {}
+  },
+  {
+    "method": "sendPhoto",
+    "kwargs": {
+      "chat_id": 123123123,
+      "photo": "gfhSDFSDFSDFfhjgfjdghffkhjgfhjtfjkghfhjgfGHFGDHFGDGFDHHFjtg"
+    },
+    "response": {}
+  },
+  {
+    "method": "sendAudio",
+    "kwargs": {
+      "chat_id": 123123123,
+      "audio": "123",
+      "caption": "song.mp3"
+    },
+    "response": {}
+  },
+  {
+    "method": "sendVideo",
+    "kwargs": {
+      "chat_id": 123123123,
+      "video": "123",
+      "caption": "video.mp4"
+    },
+    "response": {}
+  },
+  {
+    "method": "sendDocument",
+    "kwargs": {
+      "chat_id": 123123123,
+      "document": "123",
+      "caption": "file.pdf"
+    },
+    "response": {}
+  },
+  {
+    "method": "sendVoice",
+    "kwargs": {
+      "chat_id": 123123123,
+      "voice": "123",
+      "caption": "voice.ogg"
+    },
+    "response": {}
+  }
+]

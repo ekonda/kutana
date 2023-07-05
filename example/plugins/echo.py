@@ -1,9 +1,10 @@
-from kutana import Plugin, t
+from kutana import Plugin
 
-
-plugin = Plugin(name=t("Echo"), description=t("Sends your messages back (.echo)"))
+plugin = Plugin(name="Echo", description="Sends your messages back (.echo)")
 
 
 @plugin.on_commands(["echo"])
-async def __(msg, ctx):
-    await ctx.reply("{}".format(ctx.body or '(/)'), attachments=msg.attachments, disable_mentions=0)
+async def _(message, context):
+    await context.reply(
+        "{}".format(context.body or "(/)"), attachments=message.attachments
+    )

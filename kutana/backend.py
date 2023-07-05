@@ -1,11 +1,6 @@
 class Backend:
-    def __init__(self, name=None, active=True):
-        self.name = name
-        self._active = active
-
-    @property
-    def active(self):
-        return self._active
+    def get_identity(self):
+        raise NotImplementedError
 
     async def on_start(self, app):
         pass
@@ -13,18 +8,14 @@ class Backend:
     async def on_shutdown(self, app):
         pass
 
-    def prepare_context(self, ctx):
+    async def setup_context(self, context):
         pass
 
-    async def acquire_updates(self, submit_update):
+    async def acquire_updates(self, queue):
         raise NotImplementedError
 
-    async def execute_send(self, target_id, message, attachments, kwargs):
+    async def send_message(self, recipient_id, text=None, attachments=None, **kwargs):
         raise NotImplementedError
 
-    async def execute_request(self, method, kwargs):
+    async def request(self, method, kwargs):
         raise NotImplementedError
-
-    @classmethod
-    def get_identity(cls):
-        return cls.__name__.lower()

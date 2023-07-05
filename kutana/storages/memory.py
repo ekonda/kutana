@@ -1,5 +1,8 @@
 import random
-from ..storage import Storage, OptimisticLockException
+from typing import Optional
+from threading import Lock
+
+from ..storage import OptimisticLockException, Document, Storage
 
 
 class MemoryStorage(Storage):
@@ -13,32 +16,46 @@ class MemoryStorage(Storage):
     """
 
     def __init__(self, keys_limit=1_000_000):
-        self.keys_limit = keys_limit
+        self._keys_limit = keys_limit
         self._storage = {}
+        self._lock = Lock()
 
-    async def _put(self, key, values, version=None):
-        # handle keys overflow
-        if len(self._storage) >= self.keys_limit:
-            for key in random.sample(list(self._storage.keys()), k=int(self.keys_limit * 0.3)):
-                self._storage.pop(key)
+    def _get_document(self, data, key) -> Optional[Document]:
+        if data:
+            return Document(data, _storage=self, _storage_key=key)
+        return data
 
-        # use optimistic locking
-        if version is None and key in self._storage:
-            raise OptimisticLockException("Values for this key already exists")
+    async def put(self, key, data):
+        with self._lock:
+            # handle keys limit overflow
+            if len(self._storage) >= self._keys_limit:
+                for key in random.sample(list(self._storage.keys()), k=int(self._keys_limit * 0.3)):
+                    self._storage.pop(key)
 
-        if version is not None and key not in self._storage:
-            raise OptimisticLockException("Values for this key was deleted")
+            # use optimistic locking
+            if not data.get("_version") and key in self._storage:
+                raise OptimisticLockException("Data for this key already exists")
 
-        if self._storage.get(key, {}).get("_version") != version:
-            raise OptimisticLockException("Versions differ from expected value")
+            if data.get("_version") and key not in self._storage:
+                raise OptimisticLockException("Data for this key was deleted")
 
-        # update value
-        new_version = (version or 0) + 1
-        self._storage[key] = {**values, "_version": new_version}
-        return new_version
+            if data.get("_version") != self._storage.get(key, {}).get("_version"):
+                raise OptimisticLockException("Data version differ from the expected value")
 
-    async def _get(self, key):
-        return self._storage.get(key, None)
+            # process data and save it
+            document = {
+                **{k: v for k, v in data.items() if v is not None},
+                "_version": (data.get("_version") or 0) + 1,
+            }
 
-    async def _delete(self, key):
-        self._storage.pop(key, None)
+            self._storage[key] = document
+
+            return self._get_document(document, key)
+
+    async def get(self, key):
+        with self._lock:
+            return self._get_document(self._storage.get(key, None), key)
+
+    async def delete(self, key):
+        with self._lock:
+            self._storage.pop(key, None)

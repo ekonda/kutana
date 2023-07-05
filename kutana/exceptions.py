@@ -1,6 +1,7 @@
 class RequestException(Exception):
-    def __init__(self, backend, request, response, error=None):
+    def __init__(self, backend, method, kwargs, response, exception=None):
         self.backend = backend
-        self.request = request
+        self.method = method
+        self.kwargs = kwargs
         self.response = response
-        self.error = error
+        self.exception = exception

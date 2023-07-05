@@ -1,164 +1,181 @@
 import json
-import warnings
-from ...helpers import uniq_by, pick
-from ...handler import Handler
-from ...routers import MapRouter
-from ...update import UpdateType
+
+from ...helpers import pick, uniq_by
+from ...router import MapRouter
+from ...update import Message
 
 
-class PayloadRouter(MapRouter):
-    __slots__ = ("possible_key_sets",)
+class VkontakteChatActionRouter(MapRouter):
+    def extract_keys(self, context):
+        if not isinstance(context.update, Message):
+            return ()
 
-    def __init__(self, priority=7):
-        """Base priority is 7"""
-        super().__init__(priority=priority)
-        self.possible_key_sets = []
+        if context.backend.get_identity() != "vk":
+            return ()
 
-    def merge(self, other):
-        super().merge(other)
+        chat_action = context.update.raw["object"]["message"].get("action")
+        if not chat_action:
+            return ()
 
-        self.possible_key_sets = uniq_by([
-            *self.possible_key_sets,
-            *other.possible_key_sets,
-        ], self._to_hashable)
+        context.chat_action = chat_action
 
-    def _update_key_sets(self, obj):
-        if not isinstance(obj, dict):
+        return (chat_action["type"],)
+
+
+class VkontaktePayloadRouter(MapRouter):
+    def __init__(self, priority=0):
+        super().__init__(priority)
+        self._possible_key_shapes = set()
+
+    def _update_possible_key_shapes(self, key):
+        if not isinstance(key, dict):
             return
 
-        self.possible_key_sets = uniq_by([
-            *self.possible_key_sets,
-            list(sorted(obj.keys())),
-        ], self._to_hashable)
+        self._possible_key_shapes = uniq_by([
+            *self._possible_key_shapes,
+            tuple(sorted(key.keys())),
+        ])
 
-    def _to_hashable(self, obj):
-        if isinstance(obj, dict):
+    def add_handler(self, key, handler):
+        self._update_possible_key_shapes(key)
+        return super().add_handler(self._to_hashable(key), handler)
+
+    @staticmethod
+    def _merge_routers(target, source):
+        super()._merge_routers(target, source)
+        target._possible_key_shapes.update(source._possible_key_shapes)
+
+    def _to_hashable(self, value):
+        if isinstance(value, dict):
             return tuple(
-                (k, self._to_hashable(v)) for k, v in sorted(obj.items())
+                (k, self._to_hashable(v)) for k, v in sorted(value.items())
             )
 
-        if isinstance(obj, list):
-            return tuple(self._to_hashable(o) for o in obj)
+        if isinstance(value, list):
+            return tuple(self._to_hashable(item) for item in value)
 
-        return obj
+        return value
 
-    def _get_keys(self, update, ctx):
-        backend_identity = ctx.backend.get_identity()
+    def extract_keys(self, context):
+        if not isinstance(context.update, Message):
+            return ()
 
-        if update.type != UpdateType.MSG or backend_identity != "vkontakte":
-            return
+        if context.backend.get_identity() != "vk":
+            return ()
 
-        message = update.raw["object"]["message"]
+        raw_payload = context.update.raw["object"]["message"].get("payload")
+        if not raw_payload:
+            return ()
 
         try:
-            payload = json.loads(message.get("payload", ""))
+            payload = json.loads(raw_payload)
         except json.JSONDecodeError:
-            return
-
-        if isinstance(payload, dict):
-            for key_set in self.possible_key_sets:
-                yield self._to_hashable(pick(payload, key_set))
-        else:
-            yield self._to_hashable(payload)
-
-    def add_handler(self, handler, key):
-        self._update_key_sets(key)
-        return super().add_handler(handler, self._to_hashable(key))
-
-
-class CallbackPayloadRouter(PayloadRouter):
-    def _get_keys(self, update, ctx):
-        if ctx.backend.get_identity() != "vkontakte":
-            return
-
-        if update.type != UpdateType.UPD or update.raw["type"] != "message_event":
-            return
-
-        payload = update.raw["object"]["payload"]
-
-        if isinstance(payload, dict):
-            for key_set in self.possible_key_sets:
-                yield self._to_hashable(pick(payload, key_set))
-        else:
-            yield self._to_hashable(payload)
-
-
-class ActionMessageRouter(MapRouter):
-    __slots__ = ()
-
-    def __init__(self, priority=3):
-        """Base priority is 3."""
-        super().__init__(priority)
-
-    def add_handler(self, handler, key):
-        return super().add_handler(handler, key.lower())
-
-    def _get_keys(self, update, ctx):
-        backend_identity = ctx.backend.get_identity()
-
-        if update.type != UpdateType.MSG or backend_identity != "vkontakte":
             return ()
 
-        message = update.raw["object"]["message"]
-        if "action" not in message:
+        context.payload = payload
+
+        if isinstance(payload, dict):
+            return (
+                self._to_hashable(pick(payload, possible_key_shape))
+                for possible_key_shape in self._possible_key_shapes
+            )
+        else:
+            return (self._to_hashable(payload),)
+
+
+class VkontakteCallbackRouter(VkontaktePayloadRouter):
+    def extract_keys(self, context):
+        if isinstance(context.update, Message):
             return ()
 
-        action = message["action"]
+        if context.backend.get_identity() != "vk":
+            return ()
 
-        ctx.action_type = action["type"]
-        ctx.action = action
+        if context.update["type"] != "message_event":
+            return ()
 
-        return (action["type"],)
+        payload = context.update["object"]["payload"]
+
+        context.payload = payload
+
+        async def _send_message_event_answer(event_data, **kwargs):
+            return await context.request("messages.sendMessageEventAnswer", {
+                "event_id": context.update["object"]["event_id"],
+                "user_id": context.update["object"]["user_id"],
+                "peer_id": context.update["object"]["peer_id"],
+                "event_data": json.dumps(event_data),
+                **kwargs,
+            })
+        context.send_message_event_answer = _send_message_event_answer
+
+        if isinstance(payload, dict):
+            return (
+                self._to_hashable(pick(payload, possible_key_shape))
+                for possible_key_shape in self._possible_key_shapes
+            )
+        else:
+            return (self._to_hashable(payload),)
 
 
 class VkontaktePluginExtension:
     def __init__(self, plugin):
-        self.plugin = plugin
+        self._plugin = plugin
 
-    def on_payload(self, *args, **kwargs):
-        warnings.warn(
-            '"on_payload" is deprecated, use "on_payloads" instead',
-            DeprecationWarning
-        )
-        return self.on_payloads(self, *args, **kwargs)
+    def on_chat_actions(
+        self,
+        kinds,
+        priority=0,
+    ):
+        """
+        Return decorator for registering handler that will be called if
+        incoming update is a message with action (only for chats).
+
+        Context is automatically populated with following values:
+
+        - "action" - chat action object.
+
+        See :class:`kutana.plugin.Plugin.on_commands` for details
+        about 'priority' and return values.
+        """
+
+        def decorator(coro):
+            chat_action_router = VkontakteChatActionRouter(priority=priority)
+            for kind in kinds:
+                chat_action_router.add_handler(kind, coro)
+
+            self._plugin._routers.append(chat_action_router)
+
+            return coro
+
+        return decorator
 
     def on_payloads(
         self,
         payloads,
         priority=0,
-        router_priority=None,
     ):
         """
-        Decorator for registering coroutine to be called when
-        incoming update is message and payload have specified
-        content. Excessive fields in objects are ignored. Use
-        strings and numbers for exact matching.
+        Return decorator for registering handler that will be called if
+        incoming update is a message with specified value in payload.
+        Payload is treated as JSON-encoded value. Excessive fields in
+        payload are ignored. Use strings or lists for exact matching.
 
         Context is automatically populated with following values:
 
-        - payload
+        - "payload" - chat action object.
 
         See :class:`kutana.plugin.Plugin.on_commands` for details
-        about 'priority' and 'router_priority'.
+        about 'priority' and return values.
         """
 
-        def decorator(func):
-            async def wrapper(update, ctx):
-                ctx.payload = json.loads(
-                    update.raw["object"]["message"].get("payload", "")
-                )
-
-                return await func(update, ctx)
-
+        def decorator(coro):
+            payload_router = VkontaktePayloadRouter(priority=priority)
             for payload in payloads:
-                self.plugin._add_handler_for_router(
-                    PayloadRouter,
-                    handler=Handler(wrapper, priority),
-                    handler_key=payload,
-                    router_priority=router_priority,
-                )
+                payload_router.add_handler(payload, coro)
 
-            return func
+            self._plugin._routers.append(payload_router)
+
+            return coro
 
         return decorator
 
@@ -166,93 +183,29 @@ class VkontaktePluginExtension:
         self,
         payloads,
         priority=0,
-        router_priority=None,
     ):
         """
-        Decorator for registering coroutine to be called when
-        incoming update is message event and payload have specified
-        content. Excessive fields in objects are ignored. Use
-        strings and numbers for exact matching.
+        Return decorator for registering handler that will be called if
+        incoming update is a message_event with specified value in payload.
+        Excessive fields in payload are ignored. Use strings or lists for
+        exact matching.
 
         Context is automatically populated with following values:
 
-        - payload
-        - message_event (object with fields event_id, user_id and peer_id)
-        - conversation_message_id
-        - sendMessageEventAnswer (helper method for "messages.sendMessageEventAnswer")
-
-        Currently wildcards are not supported. You can always use objects in your
-        buttons, and then "@plugin.vk.on_callbacks([{}])" will catch all callbacks,
-        because provided snippet only checks that payload is dict.
+        - "payload" - callback payload value.
+        - "send_message_event_answer" - helper method for "messages.sendMessageEventAnswer".
 
         See :class:`kutana.plugin.Plugin.on_commands` for details
-        about 'priority' and 'router_priority'.
+        about 'priority' and return values.
         """
 
-        def decorator(func):
-            async def wrapper(update, ctx):
-                obj = update.raw["object"]
-
-                ctx.payload = obj.get("payload")
-
-                ctx.message_event = {
-                    "event_id": obj["event_id"],
-                    "user_id": obj["user_id"],
-                    "peer_id": obj["peer_id"],
-                }
-
-                ctx.conversation_message_id = obj.get("conversation_message_id")
-
-                async def send_message_event_answer(event_data, **kwargs):
-                    return await ctx.request("messages.sendMessageEventAnswer", **{
-                        "event_data": json.dumps(event_data),
-                        **ctx.message_event,
-                        **kwargs,
-                    })
-
-                ctx.send_message_event_answer = send_message_event_answer
-
-                return await func(update, ctx)
-
+        def decorator(coro):
+            callback_router = VkontakteCallbackRouter(priority=priority)
             for payload in payloads:
-                self.plugin._add_handler_for_router(
-                    CallbackPayloadRouter,
-                    handler=Handler(wrapper, priority),
-                    handler_key=payload,
-                    router_priority=router_priority,
-                )
+                callback_router.add_handler(payload, coro)
 
-            return func
+            self._plugin._routers.append(callback_router)
 
-        return decorator
-
-    def on_message_actions(
-            self,
-            action_types,
-            priority=0,
-            router_priority=None,
-    ):
-        """
-        Decorator for registering coroutine to be called when
-        incoming update is message with action (only for conversations).
-
-        Context is automatically populated with following values:
-
-        - action_type
-        - action
-
-        See :class:`kutana.plugin.Plugin.on_commands` for details
-        about 'priority' and 'router_priority'.
-        """
-
-        def decorator(func):
-            for action_type in action_types:
-                self.plugin._add_handler_for_router(
-                    ActionMessageRouter,
-                    handler=Handler(func, priority),
-                    handler_key=action_type,
-                    router_priority=router_priority,
-                )
-            return func
+            return coro
 
         return decorator

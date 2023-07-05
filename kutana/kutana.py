@@ -1,23 +1,24 @@
 import asyncio
-from sortedcontainers import SortedList
-from .handler import HandlerResponse as hr
-from .storages import MemoryStorage
-from .storage import OptimisticLockException, Storage
+import logging
+from itertools import groupby
+from typing import Dict, List
+
 from .backend import Backend
 from .context import Context
 from .plugin import Plugin
-from .logger import logger
-
+from .router import ListRouter, Router
+from .storage import Storage
+from .storages import MemoryStorage
 
 # Find proper methods for different python versions
-if hasattr(asyncio.Task, "all_tasks"):  # pragma: no cover
-    _all_tasks = asyncio.Task.all_tasks
-else:  # pragma: no cover
+if hasattr(asyncio.Task, "all_tasks"):
+    _all_tasks = asyncio.Task.all_tasks  # type: ignore
+else:
     _all_tasks = asyncio.all_tasks
 
-if hasattr(asyncio.Task, "current_task"):  # pragma: no cover
-    _current_task = asyncio.Task.current_task
-else:  # pragma: no cover
+if hasattr(asyncio.Task, "current_task"):
+    _current_task = asyncio.Task.current_task  # type: ignore
+else:
     _current_task = asyncio.current_task
 
 
@@ -36,203 +37,169 @@ class Kutana:
     def __init__(
         self,
         concurrent_handlers_count=512,
-        default_storage=None,
-        loop=None,
     ):
-        self._plugins = []
-        self._backends = []
-        self._storages = {"default": default_storage or MemoryStorage()}
+        self._plugins: List[Plugin] = []
+        self._backends: List[Backend] = []
+        self._storages: Dict[str, Storage] = {"default": MemoryStorage()}
+        self._root_router: Router
 
-        self._loop = loop or asyncio.new_event_loop()
-
-        self._concurrent_handlers_count = concurrent_handlers_count
-        self._sem = asyncio.Semaphore(value=concurrent_handlers_count)
-
-        self._routers = None
-        self._handlers = None
-
-        self.config = {
-            "prefixes": (".", "/"),
-            "mention_prefix": ("", ","),
-            "ignore_initial_spaces": True,
+        self._hooks = {
+            "start": [],
+            "exception": [],
+            "completion": [],
+            "shutdown": [],
         }
 
-    def get_loop(self):
-        """Return application's asyncio loop."""
-        # TODO: Replace with property
-        return self._loop
+        self._concurrent_handlers_count = concurrent_handlers_count
+        self._semaphore = asyncio.Semaphore(value=concurrent_handlers_count)
 
-    def set_storage(self, name, storage):
+        self.config = {
+            "prefixes": ("/",),
+            "mention_prefixes": ("", ","),
+        }
+
+    def _prepare_routers(self):
+        source_routers = []
+
+        for plugin in self._plugins:
+            source_routers.extend(plugin._routers)
+
+        sorted_source_routers = sorted(source_routers, reverse=True, key=lambda router: router.priority)
+
+        root_router = ListRouter()
+
+        for _, outer_group in groupby(sorted_source_routers, key=lambda router: router.priority):
+            for cls, inner_group in groupby(outer_group, key=type):
+                if issubclass(cls, Router):
+                    root_router.add_handler(cls.merge(inner_group))
+
+        self._root_router = root_router
+
+    async def _handle_event(self, event, *args, **kwargs):
+        for handler in self._hooks[event]:
+            try:
+                await handler(*args, **kwargs)
+            except Exception:
+                logging.exception('Error while handling event "%s"', event)
+
+    def add_storage(self, name, storage):
+        """Add storage to the application (replaces previous if needed)."""
         if not isinstance(storage, Storage):
             raise ValueError(f"Provided value is not a storage: {storage}")
         self._storages[name] = storage
 
-    def get_storage(self, name="default"):
-        return self._storages.get(name)
+    @property
+    def storages(self):
+        return self._storages
 
     def add_plugin(self, plugin):
         """Add plugin to the application."""
         if not isinstance(plugin, Plugin):
             raise ValueError(f"Provided value is not a plugin: {plugin}")
+
         if plugin in self._plugins:
             raise RuntimeError("Plugin already added")
+
+        plugin.app = self
         self._plugins.append(plugin)
 
-    def add_plugins(self, plugins):
-        """Add every plugin in passed iterable to the application."""
-        for plugin in plugins:
-            self.add_plugin(plugin)
+        self._prepare_routers()
 
-    def get_plugins(self):
-        """Return list of added plugins."""
+    @property
+    def plugins(self):
         return self._plugins
 
     def add_backend(self, backend):
         """Add backend to the application."""
         if not isinstance(backend, Backend):
             raise ValueError(f"Provided value is not a backend: {backend}")
+
         if backend in self._backends:
             raise RuntimeError("Backend already added")
+
         self._backends.append(backend)
 
-    def get_backend(self, name):
-        """Return first backend with specified name or None."""
-        for backend in self._backends:
-            if backend.name == name:
-                return backend
-        return None
-
-    def get_backends(self):
+    @property
+    def backends(self):
         return self._backends
 
-    async def _on_start(self, queue):
+    async def _run_wrapper(self):
+        try:
+            return await self._run()
+        except KeyboardInterrupt:
+            pass
+        except Exception:
+            logging.exception("Error while running application:")
+
+    async def _run(self):
+        logging.debug("Initiating storages")
+
         for storage in self._storages.values():
             await storage.init()
 
-        # Prepare backends and run background update acquiring
+        logging.debug("Initiating hooks")
+        for plugin in self._plugins:
+            for event, handler in plugin._hooks:
+                self._hooks[event].append(handler)
+
+        logging.debug("Creating queue for acquired updates")
+        queue = asyncio.Queue(maxsize=self._concurrent_handlers_count)
+
+        logging.debug("Preparing backends and starting background updates acquiring")
         for backend in self._backends:
             await backend.on_start(self)
+            asyncio.ensure_future(backend.acquire_updates(queue))
 
-            if not backend.active:
-                continue
-
-            async def acquire_updates(backend):  # don't forget to capture backend
-                async def submit_update(update):
-                    return await queue.put((update, backend))
-
-                while True:
-                    if queue.qsize() < queue.maxsize:
-                        await backend.acquire_updates(submit_update)
-                    await asyncio.sleep(0)
-
-            asyncio.ensure_future(acquire_updates(backend), loop=self._loop)
-
-        # Prepare plugins
-        for plugin in self._plugins:
-            plugin.app = self
-
-        # Run event listeners
+        logging.debug("Handling start event")
         await self._handle_event("start")
 
-    async def _main_loop_wrapper(self):
+        logging.debug("Running processing loop")
         try:
-            await self._main_loop()
+            while True:
+                await self._semaphore.acquire()
+
+                update, backend = await queue.get()
+                context = Context(self, update, backend)
+                await backend.setup_context(context)
+
+                task = asyncio.ensure_future(self._handle_update(context))
+                task.add_done_callback(lambda _: self._semaphore.release())
         except asyncio.CancelledError:
-            pass
+            raise
         except Exception:
             self.stop()
             raise
 
-    async def _main_loop(self):
-        queue = asyncio.Queue(maxsize=self._concurrent_handlers_count)
-
-        await self._on_start(queue)
-
-        while True:
-            await self._sem.acquire()
-
-            update, backend = await queue.get()
-
-            ctx = await Context.create(
-                app=self,
-                config=self.config,
-                update=update,
-                backend=backend,
-            )
-
-            backend.prepare_context(ctx)
-
-            task = asyncio.ensure_future(
-                self._handle_update_with_logger(update, ctx),
-                loop=self._loop
-            )
-
-            task.add_done_callback(lambda t: self._sem.release())
-
-    def _init_handlers(self):
-        self._handlers = {}
-
-        for event in ["start", "before", "after", "exception", "shutdown"]:
-            self._handlers[event] = SortedList([], key=lambda r: -r.priority)
-
-        for plugin in self._plugins:
-            for event, handlers in plugin._handlers.items():
-                self._handlers[event].update(handlers)
-
-    async def _handle_event(self, name, *args, **kwargs):
-        if self._handlers is None:
-            self._init_handlers()
-
-        for handler in self._handlers.get(name):
-            await handler.handle(*args, **kwargs)
-
-    def _init_routers(self):
-        self._routers = SortedList([], key=lambda r: -r.priority)
-
-        def _add_router(new_router):
-            for router in self._routers:
-                if router.can_merge(new_router):
-                    router.merge(new_router)
-                    return
-
-            self._routers.add(new_router)
-
-        for plugin in self._plugins:
-            for router in plugin._routers:
-                _add_router(router)
-
-    async def _handle_update_with_logger(self, update, ctx):
-        logger.debug("Processing update %s", update)
+    async def _handle_update(self, context):
+        logging.debug("Processing update %s", context.update)
 
         try:
-            return await self._handle_update(update, ctx)
+            await self._root_router.handle(context.update, context)
+            await self._handle_event("completion", context)
         except asyncio.CancelledError:
-            pass
-        except OptimisticLockException as exc:
-            logger.debug("Optimistic lock exception: %s", exc)
+            raise
         except Exception as exc:
-            logger.exception("Exception while handling the update")
-            await self._handle_event("exception", update, ctx, exc)
+            logging.exception("Exception while handling the update")
+            await self._handle_event("exception", context, exc)
 
-    async def _handle_update(self, update, ctx):
-        if self._routers is None:
-            self._init_routers()
-
-        await self._handle_event("before", update, ctx)
-
-        for router in self._routers:
-            if await router.handle(update, ctx) != hr.SKIPPED:
-                ctx._result = hr.COMPLETE
-                break
-        else:
-            ctx._result = hr.SKIPPED
-
-        await self._handle_event("after", update, ctx, ctx._result)
-
-        return ctx._result
+    async def _shutdown_wrapper(self):
+        try:
+            return await self._shutdown()
+        except Exception:
+            logging.exception("Error while shutting down application:")
 
     async def _shutdown(self):
-        logger.info("Gracecfully shutting application down...")
+        logging.info("Gracecfully shutting application down...")
+
+        # Cancel everything
+        tasks = []
+
+        for task in _all_tasks():
+            if task is not _current_task():
+                task.cancel()
+                tasks.append(task)
+
+        await asyncio.gather(*tasks, return_exceptions=True)
 
         # Clean up
         tasks = []
@@ -244,32 +211,23 @@ class Kutana:
 
         await asyncio.gather(*tasks, return_exceptions=True)
 
-        # Cancel everything else
-        tasks = []
-
-        for task in _all_tasks(loop=self._loop):
-            if task is not _current_task():
-                task.cancel()
-                tasks.append(task)
-
-        await asyncio.gather(*tasks, return_exceptions=True)
-
-        self._loop.stop()
+        # Stop loop
+        asyncio.get_event_loop().stop()
 
     def run(self):
         """Run the application."""
-        logger.info("Starting application...")
+        logging.info("Starting application...")
 
         try:
-            asyncio.ensure_future(self._main_loop_wrapper(), loop=self._loop)
-            self._loop.run_forever()
+            asyncio.ensure_future(self._run_wrapper())
+            asyncio.get_event_loop().run_forever()
         except KeyboardInterrupt:
-            asyncio.ensure_future(self._shutdown(), loop=self._loop)
-            self._loop.run_forever()
+            asyncio.ensure_future(self._shutdown_wrapper())
+            asyncio.get_event_loop().run_forever()
         finally:
-            self._loop.close()
-            logger.info("Stopped application")
+            asyncio.get_event_loop().close()
+            logging.info("Stopped application")
 
     def stop(self):
         """Stop the application."""
-        return asyncio.ensure_future(self._shutdown(), loop=self._loop)
+        return asyncio.ensure_future(self._shutdown_wrapper())

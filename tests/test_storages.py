@@ -1,92 +1,92 @@
-import asyncio
-import functools
-import pytest
-import pymongo
-from asynctest.mock import CoroutineMock, Mock, patch
-from kutana.storage import OptimisticLockException
-from kutana.storages import MongoDBStorage, SqliteStorage
+from unittest.mock import patch
+
+from pytest import raises
+
+from kutana.storage import DocumentIsDeletedException, OptimisticLockException, Storage
+from kutana.storages import MemoryStorage, MongoDBStorage, SqliteStorage
+from mongomock_motor import AsyncMongoMockClient
 
 
-# --- Test mongodb storage using mocks ---
-def with_mongodb_storage(coro):
-    @functools.wraps(coro)
-    async def wrapper(*args, **kwargs):
-        with patch("kutana.storages.mongodb.AsyncIOMotorClient") as client:
-            collection = Mock()
-            collection.update_one = CoroutineMock()
-            collection.create_index = CoroutineMock()
-            collection.find_one = CoroutineMock()
-            collection.delete_one = CoroutineMock()
-            client.return_value = {"kutana": {"storage": collection}}
-            return await coro(*args, storage=MongoDBStorage("mongo"), **kwargs)
-    return wrapper
+async def _test_storage(storage: Storage):
+    # Save data
+    assert await storage.put("a", {"value": 1})
+    assert await storage.put("b", {"value": 2})
+    assert await storage.put("c", {"value": 3})
+
+    # Load adta
+    assert await storage.get("c") == {"_version": 1, "value": 3}
+    assert await storage.get("b") == {"_version": 1, "value": 2}
+    assert await storage.get("a") == {"_version": 1, "value": 1}
+
+    # Update data
+    doc = await storage.get("c")
+    assert doc
+    await doc.update_and_save({"value_cyr": 19})
+    assert await storage.get("c") == {"_version": 2, "value": 3, "value_cyr": 19}
+
+    # Delelte data
+    assert await storage.delete("c") is None
+    assert await storage.get("c") is None
+
+    # Concurrency (1)
+    d1 = await storage.put("d", {"value": 4})
+    d2 = await storage.get("d")
+    assert d2
+    assert d1 == d2
+
+    await d1.update_and_save({"value_cyr": 0})
+    assert d1 != d2
+
+    await d2.reload()
+    assert d1 == d2
+
+    await d1.delete()
+    with raises(DocumentIsDeletedException):
+        await d2.reload()
+    with raises(DocumentIsDeletedException):
+        await d1.reload()
+    assert d1 == d2
+    assert await storage.get("d") is None
+
+    # Concurrency (2)
+    d1 = await storage.put("d", {"value": 100})
+    d2 = await storage.get("d")
+    assert d2
+    assert d1 == d2
+
+    d1["value_cyr"] = 0
+    await d1.save()
+
+    d2["value_eng"] = d2["value"]
+    with raises(OptimisticLockException):
+        await d2.save()
+    assert d1 != d2
+
+    await d2.reload()
+    assert "value_eng" not in d2
+    d2["value_eng"] = d2["value"]
+    await d2.save()
+
+    assert d1 != d2
+
+    await d1.reload()
+    assert d1 == d2
 
 
-def test_mongodb_storage():
-    @with_mongodb_storage
-    async def test(storage):
-        # Init storage
+async def test_memory_storage():
+    storage = MemoryStorage()
+    await storage.init()
+    await _test_storage(storage)
+
+
+async def test_sqlite_storage(tmp_path):
+    storage = SqliteStorage(tmp_path / "storage.sqlite3")
+    await storage.init()
+    await _test_storage(storage)
+
+
+async def test_mongo_storage():
+    with patch("kutana.storages.mongodb.AsyncIOMotorClient", new=AsyncMongoMockClient):
+        storage = MongoDBStorage("localhost")
         await storage.init()
-        storage.collection.create_index.assert_awaited()
-
-        # Put without version
-        assert await storage._put("key", {"val1": 1, "val2": 2}) == 1
-        storage.collection.update_one.assert_awaited_with(
-            {"_key": "key", "_version": 0},
-            {"$set": {"val1": 1, "val2": 2, "_key": "key", "_version": 1}},
-            upsert=True
-        )
-
-        # Put with version
-        assert await storage._put("key", {"val1": 1, "val2": 2}, version=1) == 2
-        storage.collection.update_one.assert_awaited_with(
-            {"_key": "key", "_version": 1},
-            {"$set": {"val1": 1, "val2": 2, "_key": "key", "_version": 2}},
-            upsert=True
-        )
-
-        # Get value
-        await storage._get("key")
-        storage.collection.find_one.assert_awaited_with({"_key": "key"}, projection={"_key": 0, "_id": 0})
-
-        # Delete value
-        await storage._delete("key")
-        storage.collection.delete_one.assert_awaited_with({"_key": "key"})
-
-    asyncio.get_event_loop().run_until_complete(test())
-
-
-def test_mongodb_storage_conflict():
-    @with_mongodb_storage
-    async def test(storage):
-        await storage.init()
-
-        storage.collection.update_one.side_effect = pymongo.errors.DuplicateKeyError('error')
-
-        with pytest.raises(OptimisticLockException):
-            await storage._put("key", {"val1": 1, "val2": 2})
-
-    asyncio.get_event_loop().run_until_complete(test())
-
-
-# --- Test sqlite storage using in-memory database ---
-def with_sqlite_storage(coro):
-    @functools.wraps(coro)
-    async def wrapper(*args, **kwargs):
-        return await coro(*args, storage=SqliteStorage(":memory:"), **kwargs)
-    return wrapper
-
-
-def test_sqlite_storage():
-    @with_sqlite_storage
-    async def test(storage):
-        await storage.init()
-        assert await storage._put("key", {"val1": 1, "val2": 2}) == 1
-        assert await storage._put("key", {"val1": 1, "val2": 2}, version=1) == 2
-        with pytest.raises(OptimisticLockException):
-            await storage._put("key", {"val1": 1, "val2": 3}, version=1)
-        assert await storage._get("key") == {"val1": 1, "val2": 2, "_version": 2}
-        await storage._delete("key")
-        assert await storage._get("key") is None
-
-    asyncio.get_event_loop().run_until_complete(test())
+        await _test_storage(storage)

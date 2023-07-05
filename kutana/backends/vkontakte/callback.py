@@ -1,13 +1,10 @@
-from urllib.parse import urlparse
 import asyncio
-import re
+import logging
+
 from aiohttp import web
-from .backend import Vkontakte
+
 from ...helpers import get_random_string
-from ...logger import logger
-
-
-DEFAULT_ADDRESS = "0.0.0.0:8080/callback/1"
+from .base import DEFAULT_RECEIVABLE_EVENTS, Vkontakte
 
 
 class VkontakteCallback(Vkontakte):
@@ -15,138 +12,128 @@ class VkontakteCallback(Vkontakte):
         self,
         *args,
         address=None,
-        address_path=None,
+        path="/",
         host="0.0.0.0",
         port=10888,
-        queue_limit=0,
+        updates_queue_maxsize=0,
         callback_settings=None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(*args, **kwargs)
 
-        self.callback_settings = callback_settings or {}
+        self._address = address
+        self._path = path
+        self._host = host
+        self._port = port
+        self._updates_queue_maxsize = updates_queue_maxsize
+        self._callback_settings = callback_settings or {}
 
-        if address:
-            if not re.match(r"^https://", address):
-                address = f"https://{address}"
+        self._app_runner = None
+        self._updates_queue: asyncio.Queue
 
-            self._address = address
-            self._address_path = address_path or urlparse(address).path or "/"
-
-        else:
-            self._address = None
-            self._address_path = address_path or "/"
-
-        self._server_path = self._address_path
-        self._server_host = host
-        self._server_port = port
-        self._server_app_runner = None
-
-        self._queue_limit = queue_limit
-        self.updates_queue = None
-
-    async def handle_request(self, request):
+    async def _handle_request(self, request):
         data = await request.json()
 
-        if data["type"] == "confirmation":
-            resp = await self.request(
+        if data["type"] == "group_change_settings":
+            await self._update_group_data()
+
+        elif data["type"] == "confirmation":
+            response = await self._direct_request(
                 "groups.getCallbackConfirmationCode",
-                group_id=data["group_id"]
+                {"group_id": data["group_id"]},
             )
 
-            return web.Response(body=f"{resp['code']}")
+            return web.Response(body=f"{response['code']}")
 
-        await self.updates_queue.put(self._make_update(data))
+        await self._updates_queue.put(self._make_update(data))
 
         return web.Response(body="ok")
 
-    def make_server_app(self):
+    def _make_server_app(self):
         app = web.Application()
-        app.add_routes([web.post(self._server_path, self.handle_request)])
+        app.add_routes([web.post(self._path, self._handle_request)])
         return app
 
-    async def start_server(self):
-        app = self.make_server_app()
+    async def _start_server(self):
+        app = self._make_server_app()
 
-        self._server_app_runner = web.AppRunner(app)
+        self._app_runner = web.AppRunner(app)
 
-        await self._server_app_runner.setup()
+        await self._app_runner.setup()
 
         site = web.TCPSite(
-            self._server_app_runner,
-            self._server_host,
-            self._server_port
+            self._app_runner,
+            self._host,
+            self._port
         )
 
         await site.start()
 
-    async def stop_server(self):
-        if self._server_app_runner:
-            await self._server_app_runner.cleanup()
+    async def _stop_server(self):
+        if self._app_runner:
+            await self._app_runner.cleanup()
 
     async def on_start(self, app):
         await super().on_start(app)
 
-        # Setup queue
-        self.updates_queue = asyncio.Queue(self._queue_limit)
+        # Prepare queue and start server
+        self._updates_queue = asyncio.Queue(self._updates_queue_maxsize)
 
-        # Start web server
-        await self.start_server()
+        await self._start_server()
 
+        # Notify user if we won't setup group
         if not self._address:
-            logger.warning(
+            logging.warning(
                 "No address provided for VkontakteCallback! You "
                 "will have to setup your group's settings manually."
             )
             return
 
-        # Delete existing servers in group's callback servers
-        servers = await self.request(
+        # Delete other callback servers poiting to our address
+        servers = await self._direct_request(
             "groups.getCallbackServers",
-            group_id=self.group_id
+            {"group_id": self.group["id"]},
         )
-
-        title_num = 1
 
         for server in servers["items"]:
             if server["url"] == self._address:
-                await self.request(
+                await self._direct_request(
                     "groups.deleteCallbackServer",
-                    group_id=self.group_id,
-                    server_id=server["id"],
+                    {
+                        "group_id": self.group["id"],
+                        "server_id": server["id"],
+                    },
                 )
 
-            elif server["title"].startswith("kutana@") and server["title"][7:].isdigit():
-                title_num = max(title_num, int(server["title"][7:]) + 1)
-
-        # Add server to group's callback servers
-        response = await self.request(
+        # Add a new callback server
+        response = await self._direct_request(
             "groups.addCallbackServer",
-            group_id=self.group_id,
-            url=self._address,
-            title=f"kutana@{title_num}",
-            secret_key=get_random_string(),
+            {
+                "group_id": self.group["id"],
+                "url": self._address,
+                "title": get_random_string(),
+                "secret_key": get_random_string(24),
+            }
         )
 
         server_id = response["server_id"]
 
-        # Setup callback server
-        callback_settings = {
-            **self.default_updates_settings,
-            **self.callback_settings,
-        }
-
-        await self.request(
+        # Updated callback server's settings
+        await self._direct_request(
             "groups.setCallbackSettings",
-            group_id=self.group_id,
-            api_version=self.api_version,
-            server_id=server_id,
-            **callback_settings,
+            {
+                "group_id": self.group["id"],
+                "api_version": self.api_version,
+                "server_id": server_id,
+                **DEFAULT_RECEIVABLE_EVENTS,
+                **self._callback_settings,
+            },
         )
 
     async def on_shutdown(self, app):
         await super().on_shutdown(app)
-        await self.stop_server()
+        await self._stop_server()
 
-    async def acquire_updates(self, submit_update):
-        await submit_update(await self.updates_queue.get())
+    async def acquire_updates(self, queue):
+        while True:
+            await queue.put((await self._updates_queue.get(), self))

@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
 
-"""
-:copyright: (c) 2021 by Michael Krukov
-:license: MIT, see LICENSE for more details.
-"""
-
+import os
 import setuptools
 
 
-VERSION = "5.2.0"
+assert os.environ.get("GITHUB_REF_TYPE") == "tag"
+assert os.environ.get("GITHUB_REF_NAME")
+VERSION = os.environ["GITHUB_REF_NAME"]
 
 
 with open("README.md", "r") as fh:
@@ -18,14 +16,11 @@ with open("README.md", "r") as fh:
 setuptools.setup(
     name="kutana",
     version=VERSION,
-    author="Michael Krukov",
-    author_email="krukov.michael@ya.ru",
+    author="Michael Kryukov",
+    author_email="kryukov.ms@ya.ru",
     keywords=[
         "asyncio",
-        "bots",
         "library",
-        "messengers",
-        "social-networks",
         "telegram",
         "vkontake",
     ],
@@ -34,16 +29,10 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/ekonda/kutana",
     packages=setuptools.find_packages(),
-    install_requires=[
-        "sortedcontainers>=2.1",
-        "aiohttp>=3.6",
-        "motor>=2.3",
-        "pyyaml>=5.3"
-    ],
+    install_requires=["aiohttp>=3.6", "motor>=2.3", "pyyaml>=5.3"],
     entry_points={
-        'console_scripts': [
-            'kutana = kutana.cli:run',
-            'kutana-i18n = kutana.i18n.cli:run',
+        "console_scripts": [
+            "kutana = kutana.cli:run",
         ],
     },
     python_requires=">=3.6",

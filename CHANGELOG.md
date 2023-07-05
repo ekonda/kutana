@@ -3,6 +3,32 @@
 > Changes to public API are marked as `^`. Possible changes
 > to public API are marked as `^?`.
 
+- v6.0.0
+  - Notes
+    - This version focuses on removing features that are too hard
+      or meaningless to support. If something you really want was
+      deleted - open issue with discussion.
+  - Added
+    - Example plugins that works with storage.
+    - `decorators.py` module with utility decorators for plugins (experimental).
+  - Features
+    - ^(Core) Changed the way plugins are loaded from paths.
+    - ^(Core) Changed shape of `RequestException`.
+    - ^(Core) Deleted `logger` in `kutana` module.
+    - ^(Core) Reworked storages.
+    - ^(Core) Deleted `expect_sender` and `expect_receiver`, added `with_storage`
+        as functional replacement.
+    - ^(Core) Reworked Attachment, Message, and Update objects.
+    - ^(Core) Reworked context for processors.
+    - ^(Core) Reworked backends implementations.
+    - ^(Core) Reworked plugins and their attributes/methods.
+    - (Utils) Added watchdog to requirements and updated Makefile.
+    - (Core, Telegram, VKontakte) Replaced aiohhtp with httpx everywhere it was possible.
+    - (Core) Added `get` method to storage's document.
+  - Removed
+    - (i18n) `i18n` module deleted, just use `gettext`, if needed.
+    - (docs) Removed docs.
+
 - v5.2.0
   - Features
     - ^ (Telegram) Unsupported attachments now raise exceptions.

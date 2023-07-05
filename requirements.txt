@@ -1,19 +1,17 @@
 # Required requirements
-aiohttp
+httpx
 motor
 pyyaml
-sortedcontainers
 
 # Optional requirements
-aiodns;platform_system!='Windows'
-cchardet;platform_system!='Windows'
 psutil
-uvloop;platform_system!='Windows'
 
 # Development requirements
-asynctest
 coverage
 flake8
 flake8-quotes
+mongomock_motor
 pytest
+pytest-asyncio
 recommonmark
+watchdog

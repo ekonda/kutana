@@ -1,76 +1,95 @@
+import importlib
 import importlib.util
+import logging
 import os
-import re
+import pkgutil
+import sys
 
-from .i18n import load_translations
-from .logger import logger
 from .plugin import Plugin
 
 
-def import_module(name, path):
-    """
-    Import module from specified path with specified name.
-
-    :param name: module's name
-    :param path: path to module's file
-    :returns: imported module
-    """
-
-    spec = importlib.util.spec_from_file_location(name, os.path.abspath(path))
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-
-    return module
-
-
-def load_plugins_from_file(path, verbose=False):
-    """
-    Load plugins from specified path. Plugins can be in module-level
-    variable "plugin" and in module-level variable "plugins" (with list of
-    plugins).
-
-    :param path: path to file with module
-    :returns: loaded module or None if no plugin found
-    """
-
-    mod = import_module(path, path)
-
-    plugins = []
-
-    for pl in [getattr(mod, "plugin", None), *getattr(mod, "plugins", ())]:
-        if isinstance(pl, Plugin):
-            plugins.append(pl)
-
-    if len(plugins) > 1:
-        logger.info('Loaded %d plugins from "%s"', len(plugins), path)
-    elif len(plugins) == 1:
-        logger.info('Loaded plugin from "%s"', path)
-    elif verbose:
-        logger.warning('No plugins found in "%s"', path)
+def _validate_plugins(plugins, package):
+    for plugin in plugins:
+        if not isinstance(plugin, Plugin):
+            raise ValueError(f'Package "{package}" exported {plugin}, which is not an instance of Plugin')
 
     return plugins
 
 
-def load_plugins(folder, verbose=False):
-    """
-    Import all plugins from target folder recursively. This
-    also loads translations from "i18n" subfolders.
+def _extract_plugins(package):
+    if hasattr(package, "plugin"):
+        logging.info('Loaded 1 plugin from "%s" package', package.__name__)
+        return _validate_plugins([package.plugin], package.__name__)
 
-    :param folder: path to target folder
+    if hasattr(package, "plugins"):
+        logging.info('Loaded %d plugin(s) from "%s" package', len(package.plugins), package.__name__)
+        return _validate_plugins(package.plugins, package.__name__)
+
+    logging.debug('No plugins found in "%s" package', package.__name__)
+    return []
+
+
+def _load_package(path):
+    # Acquire finder for provided folder (if provided path is file)
+    # or folder's parent (if provided path is folder)
+    if os.path.isdir(path):
+        parent_path = os.path.join(path, "..")
+    else:
+        parent_path = os.path.dirname(path)
+
+    finder = pkgutil.get_importer(parent_path)
+    if finder is None:
+        raise ValueError(f'Failed to get importer from path "{parent_path}"')
+
+    # Extract module name
+    _, package_name = os.path.split(path)
+    package_name = "".join(package_name.rsplit(".py", 1))
+
+    # Import module using extracted name
+    spec = finder.find_spec(package_name)
+    if spec is None or spec.loader is None:
+        raise ValueError(f'Failed to get spec for "{package_name}" (or spec has no loader)')
+
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[package_name] = module
+    spec.loader.exec_module(module)
+
+    # Return imported module
+    return module
+
+
+def load_plugins_from_module(module):
+    return _extract_plugins(module)
+
+
+def load_plugins_from_path(path):
+    """
+    Return list of plugins loaded from specified path. Modules are
+    loaded recursively, packages are loaded non-recursively. Packages
+    are detected using "__init__.py" file. Path itself can be package.
+    Only plugins in module-level variables "plugin" or "plugins" are
+    loaded.
+
+    :param path: path to target folder
     :returns: list of loaded plugins
     """
 
-    load_translations(os.path.join(folder, "i18n"))
+    entries = os.listdir(path)
 
-    plugins_list = []
+    if "__init__.py" in entries:
+        return _extract_plugins(_load_package(path))
 
-    for name in os.listdir(folder):
-        path = os.path.join(folder, name)
+    plugins = []
 
-        if os.path.isdir(path) and name != "i18n":
-            plugins_list += load_plugins(path, verbose=verbose)
+    for entry in entries:
+        entry_path = os.path.join(path, entry)
 
-        elif re.match(r"^[^_].*\.py$", name):
-            plugins_list += load_plugins_from_file(path, verbose=verbose)
+        if entry.startswith("__"):
+            continue
 
-    return plugins_list
+        if os.path.isdir(entry_path):
+            plugins.extend(load_plugins_from_path(entry_path))
+        elif entry_path.endswith(".py"):
+            plugins.extend(_extract_plugins(_load_package(entry_path)))
+
+    return plugins

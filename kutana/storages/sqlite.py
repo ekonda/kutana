@@ -2,7 +2,8 @@ import json
 import sqlite3
 import threading
 from contextlib import contextmanager
-from ..storage import Storage, OptimisticLockException
+
+from ..storage import OptimisticLockException, Document, Storage
 
 
 def dict_factory(cursor, row):
@@ -20,7 +21,7 @@ class SqliteStorage(Storage):
     def __init__(self, path):
         self._path = path
         self._lock = threading.Lock()
-        self.connection = None
+        self.connection: sqlite3.Connection
 
     async def init(self):
         self.connection = sqlite3.connect(self._path, check_same_thread=False)
@@ -39,41 +40,50 @@ class SqliteStorage(Storage):
 
     @contextmanager
     def cursor(self):
+        with self.connection:
+            yield self.connection.cursor()
+
+    async def put(self, key, data):
         with self._lock:
-            with self.connection:
-                yield self.connection.cursor()
+            old_version = data.get("_version") or 0
+            new_version = old_version + 1
+            new_data = {k: v for k, v in data.items() if v is not None}
+            serialized_data = json.dumps(new_data, ensure_ascii=False)
 
-    async def _put(self, key, values, version=None):
-        old_version = version or 0
-        new_version = old_version + 1
-        dumped_values = json.dumps(values, ensure_ascii=False)
+            try:
+                with self.cursor() as cur:
+                    if old_version:
+                        cur.execute(
+                            "UPDATE kvs SET val = ?, ver = ? WHERE key = ? AND ver = ?",
+                            (serialized_data, new_version, key, old_version)
+                        )
 
-        try:
+                    if not old_version or cur.rowcount < 1:
+                        cur.execute(
+                            "INSERT INTO kvs (key, val, ver) VALUES (?, ?, ?)",
+                            (key, serialized_data, new_version)
+                        )
+            except sqlite3.IntegrityError:
+                raise OptimisticLockException(f"Failed to update data for key {key} (mismatched version)")
+
+            return Document({**new_data, "_version": new_version}, _storage=self, _storage_key=key)
+
+    async def get(self, key):
+        with self._lock:
             with self.cursor() as cur:
-                if version:
-                    cur.execute(
-                        "UPDATE kvs SET val = ?, ver = ? WHERE key = ? AND ver = ?",
-                        (dumped_values, new_version, key, old_version)
-                    )
+                cur.execute("SELECT * FROM kvs WHERE key = ?", (key,))
+                row = cur.fetchone()
 
-                if not version or cur.rowcount < 1:
-                    cur.execute(
-                        "INSERT INTO kvs (key, val, ver) VALUES (?, ?, ?)",
-                        (key, dumped_values, new_version)
-                    )
-        except sqlite3.IntegrityError:
-            raise OptimisticLockException(f"Failed to set values for key {key} (mismatched version)")
+                if not row:
+                    return None
 
-        return new_version
+                return Document(
+                    {**json.loads(row["val"]), "_version": row["ver"]},
+                    _storage=self,
+                    _storage_key=key,
+                )
 
-    async def _get(self, key):
-        with self.cursor() as cur:
-            cur.execute("SELECT * FROM kvs WHERE key = ?", (key,))
-            row = cur.fetchone()
-            if row:
-                return {**json.loads(row["val"]), "_version": row["ver"]}
-            return row
-
-    async def _delete(self, key):
-        with self.cursor() as cur:
-            cur.execute("DELETE FROM kvs WHERE key = ?", (key,))
+    async def delete(self, key):
+        with self._lock:
+            with self.cursor() as cur:
+                cur.execute("DELETE FROM kvs WHERE key = ?", (key,))

@@ -2,6 +2,7 @@
 httpx
 motor
 pyyaml
+aiohttp
 
 # Optional requirements
 psutil

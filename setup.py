@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import os
-import setuptools
 
+import setuptools
 
 assert os.environ.get("GITHUB_REF_TYPE") == "tag"
 assert os.environ.get("GITHUB_REF_NAME")
@@ -29,7 +29,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/ekonda/kutana",
     packages=setuptools.find_packages(),
-    install_requires=["aiohttp>=3.6", "motor>=2.3", "pyyaml>=5.3"],
+    install_requires=["aiohttp>=3.6", "httpx>=0.24.1", "motor>=2.3", "pyyaml>=5.3"],
     entry_points={
         "console_scripts": [
             "kutana = kutana.cli:run",

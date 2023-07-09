@@ -1,11 +1,12 @@
 import functools
-from typing import List, Any
+import re
+from typing import Any, List
 
 from .backends.vkontakte import VkontaktePluginExtension
 from .handler import SKIPPED
 from .router import AttachmentsRouter, CommandsRouter, ListRouter, Router
-from .update import Message
 from .storage import Document
+from .update import Message
 
 
 class Plugin:
@@ -81,6 +82,7 @@ class Plugin:
         Return decorator for registering coroutine that will be called when
         application is being be stopped.
         """
+
         def decorator(coro):
             self._hooks.append(("shutdown", coro))
             return coro
@@ -118,6 +120,49 @@ class Plugin:
             self._routers.append(router)
 
             return coro
+
+        return decorator
+
+    def on_match(self, patterns, priority=0):
+        """
+        Return decorator for registering handler that will be called
+        when incoming update is a message and it's message matches any
+        specified pattern.
+
+        Context is automatically populated with following values:
+
+        - match
+
+        Handlers with higher priority are attempted first.
+
+        If handler returns anything but :class:`kutana.handler.SKIPPED`,
+        other handlers are not executed further.
+        """
+
+        def decorator(func):
+            router = ListRouter(priority=priority)
+
+            @functools.wraps(func)
+            async def _wrapper(update, ctx):
+                if not isinstance(update, Message):
+                    return SKIPPED
+
+                for pattern in patterns:
+                    match = re.match(pattern, update.text)
+                    if match:
+                        break
+                else:
+                    return SKIPPED
+
+                ctx.match = match
+
+                return await func(update, ctx)
+
+            router.add_handler(_wrapper)
+
+            self._routers.append(router)
+
+            return func
 
         return decorator
 
@@ -161,12 +206,12 @@ class Plugin:
             router = ListRouter(priority=priority)
 
             @functools.wraps(coro)
-            async def _coro(update, context):
+            async def _wrapper(update, context):
                 if not isinstance(update, Message):
                     return SKIPPED
                 return await coro(update, context)
 
-            router.add_handler(_coro)
+            router.add_handler(_wrapper)
 
             self._routers.append(router)
 
@@ -253,7 +298,9 @@ class Plugin:
                     return SKIPPED
 
                 if not getattr(context, "recipient", None):
-                    context.recipient = await context.storage.get(context.recipient_unique_id)
+                    context.recipient = await context.storage.get(
+                        context.recipient_unique_id
+                    )
                     if not context.recipient:
                         context.recipient = Document(
                             _storage=context.storage,
@@ -264,5 +311,7 @@ class Plugin:
                     return SKIPPED
 
                 return await coro(update, context)
+
             return wrapper
+
         return decorator

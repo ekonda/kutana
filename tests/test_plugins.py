@@ -65,6 +65,28 @@ async def test_on_commands():
     ]
 
 
+async def test_on_match():
+    pl = Plugin("plugin")
+
+    @pl.on_match([r"^hey(\d)?$"])
+    async def _(upd, ctx):
+        await ctx.reply(f"yeah, {ctx.match.group(1)}")
+
+    _, backend = await Debug.handle_updates(
+        [pl],
+        [
+            ("hey", 1, 9001, []),
+            ("hey10", 1, 9001, []),
+            ("hey5", 1, 9001, []),
+        ],
+    )  # type: ignore
+
+    assert backend.messages == [
+        (9001, "yeah, None", None, {}),
+        (9001, "yeah, 5", None, {}),
+    ]
+
+
 async def test_on_updates():
     pl = Plugin("plugin")
 

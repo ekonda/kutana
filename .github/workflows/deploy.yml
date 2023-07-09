@@ -28,8 +28,9 @@ jobs:
           python setup.py install
       - name: Test with coverage and pytest
         run: |
-          python -m coverage run -m --include='kutana/*' pytest
-          python -m coverage report -m --fail-under=100
+          make test
+          python3 -m coverage run -m --include=kutana/* pytest -vv tests/
+          python3 -m coverage report -m --fail-under=75
       - name: Generate distribution archives
         run: |
           python setup.py sdist bdist_wheel

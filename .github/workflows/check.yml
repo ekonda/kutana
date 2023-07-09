@@ -31,8 +31,7 @@ jobs:
           python -m pip install -r requirements.txt
       - name: Lint with flake8
         run: |
-          flake8 kutana/ --count --select=E9,F63,F7,F82 --show-source --statistics
-          flake8 kutana/ --count --max-complexity=10 --max-line-length=127 --statistics
+          python3 -m flake8 kutana/ --count --max-complexity=10 --ignore=E203 --max-line-length=127 --statistics
       - name: Test with coverage and pytest
         run: |
           python -m coverage run -m --include='kutana/*' pytest

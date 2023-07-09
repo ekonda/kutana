@@ -17,7 +17,7 @@ run:
 
 test:
 	python3 -m coverage run -m --include=kutana/* pytest -vv tests/
-	python3 -m coverage report -m --fail-under=70
+	python3 -m coverage report -m --fail-under=75
 
 lint:
 	python3 -m flake8 kutana/ --count --max-complexity=10 --ignore=E203 --max-line-length=127 --statistics

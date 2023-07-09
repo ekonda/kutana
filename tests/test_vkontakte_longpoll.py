@@ -9,7 +9,7 @@ from kutana.backends.vkontakte import VkontakteLongpoll
 from kutana.update import Attachment, AttachmentKind
 
 # Load updates for simulating requests to telegram
-with open("tests/test_vkontakte_longpoll.json", "r") as fh:
+with open("tests/test_vkontakte_longpoll.json", "r", encoding="UTF-8") as fh:
     VKONTAKTE_LONGPOLL_DATA = json.load(fh)
 
 # Create some plugins for tests
@@ -104,6 +104,12 @@ async def test_vkontakte_longpoll():
         await app._shutdown_wrapper()
 
     # Assert all the needed requests were made
-    assert ("https://api.vk.com/method/groups.getById", {"fields": "screen_name"}) in client.requests
-    assert ("https://lp.vk.com/wh654327632?act=a_check&key=123123123&wait=25&ts=1", {}) in client.requests
+    assert (
+        "https://api.vk.com/method/groups.getById",
+        {"fields": "screen_name"},
+    ) in client.requests
+    assert (
+        "https://lp.vk.com/wh654327632?act=a_check&key=123123123&wait=25&ts=1",
+        {},
+    ) in client.requests
     assert ("https://api.vk.com/method/execute", None) in client.requests

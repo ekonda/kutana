@@ -81,8 +81,10 @@ def run_project(args):  # noqa:C901
     with open(args.path) as fh:
         config = yaml.safe_load(fh)
 
-    # Change the current working directory to one where config is
-    os.chdir(os.path.dirname(args.path))
+    # Change the current working directory to one where config is if needed
+    target_directory = os.path.dirname(args.path)
+    if target_directory:
+        os.chdir(target_directory)
 
     # Change logging level if needed
     if args.debug:

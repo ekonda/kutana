@@ -18,7 +18,7 @@ class Router:
 
     @staticmethod
     def _assert_can_merge(router, source):
-        if type(source) != type(router):
+        if type(source) is not type(router):
             raise ValueError(f'Mixed routers are passed to "merge" ({source} != {router})')
 
         if source.priority is None:

@@ -43,17 +43,17 @@ class MockedAsyncClient(httpx.AsyncClient):
         super().__init__(*args, **kwargs)
         self.requests = []
 
-    async def request(self, method, url, params=None, **kwargs):
+    async def request(self, method, url, data=None, **kwargs):
         await asyncio.sleep(0)
 
         for mock in VKONTAKTE_LONGPOLL_DATA:
             if not url.startswith(mock["url"]):
                 continue
 
-            if mock["params"] and params != mock["params"]:
+            if mock["data"] and data != mock["data"]:
                 continue
 
-            self.requests.append((mock["url"], mock["params"]))
+            self.requests.append((mock["url"], mock["data"]))
 
             return httpx.Response(200, content=json.dumps(mock["response"]))
 

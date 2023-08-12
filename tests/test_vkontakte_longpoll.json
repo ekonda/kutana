@@ -1,7 +1,7 @@
 [
   {
     "url": "https://api.vk.com/method/groups.getById",
-    "params": { "fields": "screen_name" },
+    "data": { "fields": "screen_name" },
     "response": {
       "response": [
         {
@@ -19,12 +19,12 @@
   },
   {
     "url": "https://api.vk.com/method/groups.setLongPollSettings",
-    "params": null,
+    "data": null,
     "response": { "response": 1 }
   },
   {
     "url": "https://api.vk.com/method/groups.getLongPollServer",
-    "params": { "group_id": 654327632 },
+    "data": { "group_id": 654327632 },
     "response": {
       "response": {
         "key": "123123123",
@@ -35,7 +35,7 @@
   },
   {
     "url": "https://lp.vk.com/wh654327632?act=a_check&key=123123123&wait=25&ts=1",
-    "params": {},
+    "data": {},
     "response": {
       "ts": "2",
       "updates": [
@@ -82,7 +82,7 @@
   },
   {
     "url": "https://lp.vk.com/wh654327632?act=a_check&key=123123123&wait=25&ts=2",
-    "params": {},
+    "data": {},
     "response": {
       "ts": "3",
       "updates": [
@@ -129,7 +129,7 @@
   },
   {
     "url": "https://lp.vk.com/wh654327632?act=a_check&key=123123123&wait=25&ts=3",
-    "params": {},
+    "data": {},
     "response": {
       "ts": "3",
       "updates": []
@@ -137,7 +137,7 @@
   },
   {
     "url": "https://api.vk.com/method/execute",
-    "params": null,
+    "data": null,
     "response": {
         "response": [1, 1]
     }

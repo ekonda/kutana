@@ -234,7 +234,7 @@ class Vkontakte(Backend):
         self.requests_queue_handler = asyncio.ensure_future(self._handle_requests_queue())
 
     async def _direct_request(self, method, kwargs):
-        response = await self.client.get(
+        response = await self.client.post(
             self.api_request_url.format(method),
             params={k: v for k, v in kwargs.items() if v is not None},
         )

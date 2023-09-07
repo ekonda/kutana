@@ -305,7 +305,7 @@ class Vkontakte(Backend):
         await self.requests_queue.put((method, kwargs, future))
         return await future
 
-    async def _upload_attachment(self, attachment, peer_id):
+    async def upload_attachment(self, attachment, peer_id):
         if attachment.kind == AttachmentKind.IMAGE:
             upload_data = await self.request(
                 "photos.getMessagesUploadServer",
@@ -360,7 +360,7 @@ class Vkontakte(Backend):
                     continue
 
                 formatted_attachments.append(
-                    await self._upload_attachment(attachment, peer_id=recipient_id),
+                    await self.upload_attachment(attachment, peer_id=recipient_id),
                 )
 
         return await self.request(

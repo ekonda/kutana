@@ -250,7 +250,7 @@ class Vkontakte(Backend):
                 exception=exception,
             )
 
-        if data.get("response") is None:
+        if data.get("response") is None or data.get("execute_errors"):
             raise RequestException(self, method, kwargs, data)
 
         return data["response"]

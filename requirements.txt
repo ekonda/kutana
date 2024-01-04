@@ -6,6 +6,7 @@ aiohttp
 
 # Optional requirements
 psutil
+pydantic
 
 # Development requirements
 coverage

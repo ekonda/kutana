@@ -1,0 +1,38 @@
+[tool.poetry]
+name = "kutana"
+version = "0.0.0"
+description = "The library for developing systems for messengers and social networks"
+authors = ["Michael Kryukov <kryukov.ms@ya.ru>"]
+license = "MIT License"
+readme = "README.md"
+
+[tool.poetry.scripts]
+kutana = "kutana.cli:run"
+
+[[tool.poetry.source]]
+name = "PyPI"
+priority = "primary"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+aiohttp = "^3.6"
+httpx = "^0.24.1"
+motor = "^3.3.2"
+pyyaml = "^6.0"
+
+[tool.poetry.group.dev.dependencies]
+mongomock-motor = "^0.0.26"
+psutil = "^5.9.7"
+pytest = "^7.4.4"
+pytest-asyncio = "^0.23.3"
+ruff = "^0.1.11"
+watchdog = "^3.0.0"
+pytest-cov = "^4.1.0"
+setuptools = "^69.0.3"
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

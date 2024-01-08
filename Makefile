@@ -1,12 +1,7 @@
-.PHONY: all test docs
-
 all: run
 
-install:
-	python3 -m pip install .
-
 run:
-	watchmedo auto-restart \
+	poetry run -- watchmedo auto-restart \
 		--directory example/ \
 		--directory kutana/ \
 		--ignore-directories \
@@ -16,8 +11,12 @@ run:
 		python3 -m kutana run example/config.yml
 
 test:
-	python3 -m coverage run -m --include=kutana/* pytest -vv tests/
-	python3 -m coverage report -m --fail-under=75
+	poetry run pytest --asyncio-mode=auto --cov=kutana --cov-report=term-missing ./tests
 
 lint:
-	python3 -m flake8 kutana/ --count --max-complexity=10 --ignore=E203 --max-line-length=127 --statistics
+	poetry run ruff check kutana/ tests/
+	poetry run ruff format --check kutana/ tests/
+
+fix:
+	poetry run ruff check --fix kutana/ tests/
+	poetry run ruff format kutana/ tests/

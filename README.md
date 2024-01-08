@@ -1,10 +1,7 @@
 # Kutana
 
-![Kutana logo](docs/_static/kutana-logo-512.png)
+![Kutana logo](./docs/kutana-logo-512.png?raw=true "Kutana")
 
-[![CodeFactor](https://www.codefactor.io/repository/github/ekonda/kutana/badge)](https://www.codefactor.io/repository/github/ekonda/kutana)
-[![Coverage Status](https://coveralls.io/repos/github/ekonda/kutana/badge.svg?branch=master)](https://coveralls.io/github/ekonda/kutana?branch=master)
-[![Codebeat Badge](https://codebeat.co/badges/fd698be3-d0f9-4e3c-b235-1c3a3cdb98a9)](https://codebeat.co/projects/github-com-ekonda-kutana-master)
 [![PyPI version](https://badge.fury.io/py/kutana.svg)](https://badge.fury.io/py/kutana)
 
 The library for developing systems for messengers and social networks. Great
@@ -94,8 +91,3 @@ async def _(msg, ctx):
 
 - Vkontakte (for [vk.com](https://vk.com) groups)
 - Telegram (for [telegram.org](https://telegram.org) bots)
-
-## Authors
-
-- **Michael Krukov** - [@michaelkrukov](https://github.com/michaelkrukov)
-- [Other contributors](CONTRIBUTORS.md)

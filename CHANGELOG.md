@@ -25,6 +25,11 @@
     - (Utils) Added watchdog to requirements and updated Makefile.
     - (Core, Telegram, VKontakte) Replaced aiohhtp with httpx everywhere it was possible.
     - (Core) Added `get` method to storage's document.
+    - (Telegram) Uploading files now passes proper file names.
+  - Fixes
+    - (Telegram) Fixed bug with processing videos without `file_name` field.
+  - Changes
+    - Updated linting to use `ruff` and generally moved to `poetry`.
   - Removed
     - (i18n) `i18n` module deleted, just use `gettext`, if needed.
     - (docs) Removed docs.

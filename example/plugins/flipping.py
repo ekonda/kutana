@@ -4,7 +4,7 @@ from kutana import Plugin
 from kutana.helpers import make_hash
 from kutana.storage import Document
 from datetime import datetime, timezone, timedelta
-from pydantic import BaseModel
+
 
 plugin = Plugin(
     name="Flipping",
@@ -25,12 +25,6 @@ class FlippingData:
         self._sender = sender
         self._sender_hash = make_hash(sender)
         self._ensure_required_fields()
-
-    @staticmethod
-    def read_args(string):
-        import shlex
-        arguemnts = shlex.split(string)
-
 
     @property
     def _flipping_data(self):
@@ -100,6 +94,7 @@ async def _(msg, ctx):
         "- flipping play <bet amount> (play with specified bet amount)"
     )
 
+
 @plugin.on_commands(["flipping daily"])
 @plugin.with_storage()
 @with_flipping_data
@@ -110,7 +105,7 @@ async def _(msg, ctx, smd: FlippingData):
         )
     else:
         await ctx.reply(
-            f"❎ You have already received a daily reward! Come back tomorrow."
+            "❎ You have already received a daily reward! Come back tomorrow."
         )
 
 

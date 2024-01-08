@@ -78,6 +78,15 @@ class Telegram(Backend):
 
         self.api_messages_lock = asyncio.Lock()
 
+    def _is_file_like_value(self, value):
+        if isinstance(value, (io.IOBase, bytes)):
+            return True
+
+        if isinstance(value, tuple) and len(value) == 2 and isinstance(value[1], (io.IOBase, bytes)):
+            return True
+
+        return False
+
     async def request(self, method, kwargs):
         data = {}
         files = {}
@@ -86,7 +95,7 @@ class Telegram(Backend):
             if value is None:
                 continue
 
-            if isinstance(value, (io.IOBase, bytes)):
+            if self._is_file_like_value(value):
                 files[key] = value
             elif isinstance(value, (list, dict)):
                 data[key] = json.dumps(value)
@@ -261,7 +270,7 @@ class Telegram(Backend):
                         pick_by(
                             {
                                 "chat_id": recipient_id,
-                                data_field: attachment.id or (attachment.content[1] if attachment.content else None),
+                                data_field: attachment.id or attachment.content or None,
                                 "caption": attachment.title or (attachment.content[0] if attachment.content else None),
                             }
                         ),

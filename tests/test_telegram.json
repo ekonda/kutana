@@ -170,7 +170,7 @@
     "method": "sendAudio",
     "kwargs": {
       "chat_id": 123123123,
-      "audio": "123",
+      "audio": ["song.mp3", "123"],
       "caption": "song.mp3"
     },
     "response": {}
@@ -179,7 +179,7 @@
     "method": "sendVideo",
     "kwargs": {
       "chat_id": 123123123,
-      "video": "123",
+      "video": ["video.mp4", "123"],
       "caption": "video.mp4"
     },
     "response": {}
@@ -188,7 +188,7 @@
     "method": "sendDocument",
     "kwargs": {
       "chat_id": 123123123,
-      "document": "123",
+      "document": ["file.pdf", "123"],
       "caption": "file.pdf"
     },
     "response": {}
@@ -197,7 +197,7 @@
     "method": "sendVoice",
     "kwargs": {
       "chat_id": 123123123,
-      "voice": "123",
+      "voice": ["voice.ogg", "123"],
       "caption": "voice.ogg"
     },
     "response": {}

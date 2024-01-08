@@ -16,6 +16,9 @@ jobs:
       matrix:
         os: [windows-latest, ubuntu-latest]
         python-version: ["3.8", "3.10"]
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v1
       - name: Set up Python ${{ matrix.python-version }}
@@ -26,9 +29,9 @@ jobs:
         uses: snok/install-poetry@v1
         with:
           version: 1.7.1
-      - name: Install dependencies, run linting and tests
-        shell: bash
-        run: |
-          poetry install
-          make lint
-          make test
+      - name: Install dependencies
+        run: poetry install --no-interaction
+      - name: Run linter
+        run: make lint
+      - name: Run tests
+        run: make test

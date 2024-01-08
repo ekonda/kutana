@@ -10,6 +10,9 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.10"]
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v1
       - name: Set up Python ${{ matrix.python-version }}
@@ -20,13 +23,11 @@ jobs:
         uses: snok/install-poetry@v1
         with:
           version: 1.7.1
-      - name: Install dependencies and run tests
-        shell: bash
-        run: |
-          poetry install
-          make test
+      - name: Install dependencies
+        run: poetry install --no-interaction
+      - name: Run tests
+        run: make test
       - name: Set module version and publish it
-        shell: bash
         run: |
           poetry version ${GITHUB_REF_NAME#v}
           poetry publish --build

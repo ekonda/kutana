@@ -135,7 +135,7 @@ class Telegram(Backend):
             return Attachment(
                 id=raw_attachment["file_id"],
                 kind=AttachmentKind.DOCUMENT,
-                title=raw_attachment["file_name"],
+                title=raw_attachment.get("file_name"),
                 raw=raw_attachment,
                 get_file=partial(self._get_file, raw_attachment["file_id"]),
             )
@@ -153,7 +153,7 @@ class Telegram(Backend):
             return Attachment(
                 id=raw_attachment["file_id"],
                 kind=AttachmentKind.VIDEO,
-                title=raw_attachment["file_name"],
+                title=raw_attachment.get("file_name"),
                 raw=raw_attachment,
                 get_file=partial(self._get_file, raw_attachment["file_id"]),
             )

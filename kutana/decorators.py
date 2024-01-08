@@ -74,8 +74,7 @@ async def _get_user_statuses_tg(backend, chat_id, user_id):
             statuses = []
 
             if administrator["status"] == "creator":
-                statuses.append("admin")
-                statuses.append("owner")
+                statuses.extend(["admin", "owner"])
             elif administrator["status"] == "administrator":
                 statuses.append("admin")
 

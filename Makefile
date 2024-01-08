@@ -14,9 +14,9 @@ test:
 	poetry run pytest --asyncio-mode=auto --cov=kutana --cov-report=term-missing ./tests
 
 lint:
-	poetry run ruff check kutana/ tests/
+	poetry run ruff check kutana/ tests/ && \
 	poetry run ruff format --check kutana/ tests/
 
 fix:
-	poetry run ruff check --fix kutana/ tests/
+	poetry run ruff check --fix kutana/ tests/ && \
 	poetry run ruff format kutana/ tests/

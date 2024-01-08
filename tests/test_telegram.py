@@ -46,7 +46,9 @@ async def test_telegram():
         await asyncio.sleep(0)
 
         for mock in TELEGRAM_DATA:
-            if mock["method"] == method and mock["kwargs"] == json.loads(json.dumps(kwargs)):
+            if mock["method"] == method and mock["kwargs"] == json.loads(
+                json.dumps(kwargs)
+            ):
                 normalized_requests.append((mock["method"], mock["kwargs"]))
                 return mock["response"]
 
@@ -90,13 +92,34 @@ async def test_telegram():
         await app._shutdown_wrapper()
 
     # Assert all the needed requests were made
-    assert ("sendMessage", {"chat_id": 123123123, "text": "/echo"}) in normalized_requests
-    assert ("sendMessage", {"chat_id": 123123123, "text": "/echo @shiudfhjkads_bot"}) in normalized_requests
+    assert (
+        "sendMessage",
+        {"chat_id": 123123123, "text": "/echo"},
+    ) in normalized_requests
+    assert (
+        "sendMessage",
+        {"chat_id": 123123123, "text": "/echo @shiudfhjkads_bot"},
+    ) in normalized_requests
     assert (
         "sendPhoto",
-        {"chat_id": 123123123, "photo": "gfhSDFSDFSDFfhjgfjdghffkhjgfhjtfjkghfhjgfGHFGDHFGDGFDHHFjtg"},
+        {
+            "chat_id": 123123123,
+            "photo": "gfhSDFSDFSDFfhjgfjdghffkhjgfhjtfjkghfhjgfGHFGDHFGDGFDHHFjtg",
+        },
     ) in normalized_requests
-    assert ("sendAudio", {"chat_id": 123123123, "audio": ["song.mp3", "123"], "caption": "song.mp3"}) in normalized_requests
-    assert ("sendVideo", {"chat_id": 123123123, "video": ["video.mp4", "123"], "caption": "video.mp4"}) in normalized_requests
-    assert ("sendDocument", {"chat_id": 123123123, "document": ["file.pdf", "123"], "caption": "file.pdf"}) in normalized_requests
-    assert ("sendVoice", {"chat_id": 123123123, "voice": ["voice.ogg", "123"], "caption": "voice.ogg"}) in normalized_requests
+    assert (
+        "sendAudio",
+        {"chat_id": 123123123, "audio": ["song.mp3", "123"], "caption": "song.mp3"},
+    ) in normalized_requests
+    assert (
+        "sendVideo",
+        {"chat_id": 123123123, "video": ["video.mp4", "123"], "caption": "video.mp4"},
+    ) in normalized_requests
+    assert (
+        "sendDocument",
+        {"chat_id": 123123123, "document": ["file.pdf", "123"], "caption": "file.pdf"},
+    ) in normalized_requests
+    assert (
+        "sendVoice",
+        {"chat_id": 123123123, "voice": ["voice.ogg", "123"], "caption": "voice.ogg"},
+    ) in normalized_requests

@@ -1,8 +1,8 @@
 import random
-from typing import Optional
 from threading import Lock
+from typing import Optional
 
-from ..storage import OptimisticLockException, Document, Storage
+from ..storage import Document, OptimisticLockException, Storage
 
 
 class MemoryStorage(Storage):
@@ -29,7 +29,9 @@ class MemoryStorage(Storage):
         with self._lock:
             # handle keys limit overflow
             if len(self._storage) >= self._keys_limit:
-                for key in random.sample(list(self._storage.keys()), k=int(self._keys_limit * 0.3)):
+                for key in random.sample(
+                    list(self._storage.keys()), k=int(self._keys_limit * 0.3)
+                ):
                     self._storage.pop(key)
 
             # use optimistic locking
@@ -40,7 +42,9 @@ class MemoryStorage(Storage):
                 raise OptimisticLockException("Data for this key was deleted")
 
             if data.get("_version") != self._storage.get(key, {}).get("_version"):
-                raise OptimisticLockException("Data version differ from the expected value")
+                raise OptimisticLockException(
+                    "Data version differ from the expected value"
+                )
 
             # process data and save it
             document = {

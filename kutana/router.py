@@ -1,5 +1,5 @@
 import re
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional
 
 from .context import Context
 from .handler import PROCESSED, SKIPPED
@@ -19,10 +19,14 @@ class Router:
     @staticmethod
     def _assert_can_merge(router, source):
         if type(source) is not type(router):
-            raise ValueError(f'Mixed routers are passed to "merge" ({source} != {router})')
+            raise ValueError(
+                f'Mixed routers are passed to "merge" ({source} != {router})'
+            )
 
         if source.priority is None:
-            raise ValueError(f'Router with None priority passed to "merge" (it already was merged) ({source})')
+            raise ValueError(
+                f'Router with None priority passed to "merge" (it already was merged) ({source})'
+            )
 
     @classmethod
     def merge(cls, source_routers):
@@ -51,7 +55,9 @@ class ListRouter(Router):
     def merge(cls, source_routers: List["ListRouter"]):
         router = cls(priority=None)
 
-        for source in sorted(source_routers, reverse=True, key=lambda item: item.priority or 0):
+        for source in sorted(
+            source_routers, reverse=True, key=lambda item: item.priority or 0
+        ):
             cls._assert_can_merge(router, source)
 
             for handler in source._handlers:
@@ -95,7 +101,9 @@ class MapRouter(Router):
     def merge(cls, source_routers: List["MapRouter"]):
         router = cls(priority=None)
 
-        for source in sorted(source_routers, reverse=True, key=lambda item: item.priority or 0):
+        for source in sorted(
+            source_routers, reverse=True, key=lambda item: item.priority or 0
+        ):
             cls._assert_can_merge(router, source)
             cls._merge_routers(router, source)
 
@@ -116,7 +124,8 @@ class CommandsRouter(MapRouter):
                     re.escape(prefix) for prefix in context.app.config["prefixes"]
                 ),
                 command="|".join(
-                    re.escape(command) for command in sorted(self._handlers, key=len, reverse=True)
+                    re.escape(command)
+                    for command in sorted(self._handlers, key=len, reverse=True)
                 ),
             ),
             context.update.text,

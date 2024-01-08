@@ -81,7 +81,9 @@ class Vkontakte(Backend):
         self.requests_queue: asyncio.Queue
         self.requests_queue_handler: asyncio.Task
 
-        self.api_request_url = api_url + f"/method/{{}}?access_token={token}&v={api_version}"
+        self.api_request_url = (
+            api_url + f"/method/{{}}?access_token={token}&v={api_version}"
+        )
 
     def get_identity(self):
         return "vk"
@@ -90,7 +92,9 @@ class Vkontakte(Backend):
         if cache and screen_name in cache:
             return cache[screen_name]
 
-        response = await self._direct_request("utils.resolveScreenName", {"screen_name": screen_name})
+        response = await self._direct_request(
+            "utils.resolveScreenName", {"screen_name": screen_name}
+        )
 
         if response and isinstance(cache, dict):
             if len(cache) > 65536:
@@ -138,7 +142,9 @@ class Vkontakte(Backend):
     def _make_attachment(self, raw_attachment):
         raw_attachment_media = raw_attachment[raw_attachment["type"]]
 
-        full_id = self._make_attachment_full_id(raw_attachment["type"], raw_attachment_media)
+        full_id = self._make_attachment_full_id(
+            raw_attachment["type"], raw_attachment_media
+        )
 
         if raw_attachment["type"] == "audio":
             return Attachment(
@@ -159,7 +165,9 @@ class Vkontakte(Backend):
             )
 
         if raw_attachment["type"] == "photo":
-            largest_size = list(sorted(raw_attachment_media["sizes"], key=lambda size: size["width"]))[0]
+            largest_size = list(
+                sorted(raw_attachment_media["sizes"], key=lambda size: size["width"])
+            )[0]
             return Attachment(
                 id=full_id,
                 kind=AttachmentKind.IMAGE,
@@ -231,7 +239,9 @@ class Vkontakte(Backend):
 
         self.requests_queue = asyncio.Queue()
 
-        self.requests_queue_handler = asyncio.ensure_future(self._handle_requests_queue())
+        self.requests_queue_handler = asyncio.ensure_future(
+            self._handle_requests_queue()
+        )
 
     async def _direct_request(self, method, kwargs):
         response = await self.client.post(
@@ -276,7 +286,9 @@ class Vkontakte(Backend):
         code = "return ["
 
         for method, kwargs, _ in chunk:
-            serialized_kwargs = json.dumps(kwargs, separators=(",", ":"), ensure_ascii=False)
+            serialized_kwargs = json.dumps(
+                kwargs, separators=(",", ":"), ensure_ascii=False
+            )
             code += f"API.{method}({serialized_kwargs}),"
 
         code += "];"
@@ -325,7 +337,9 @@ class Vkontakte(Backend):
             return f'photo{result[0]["owner_id"]}_{result[0]["id"]}'
 
         if attachment.kind in (AttachmentKind.DOCUMENT, AttachmentKind.VOICE):
-            vk_type = "audio_message" if attachment.kind == AttachmentKind.VOICE else "doc"
+            vk_type = (
+                "audio_message" if attachment.kind == AttachmentKind.VOICE else "doc"
+            )
 
             upload_data = await self.request(
                 "docs.getMessagesUploadServer",
@@ -370,7 +384,8 @@ class Vkontakte(Backend):
                 "message": str(text),
                 "attachment": ",".join(formatted_attachments),
                 **kwargs,
-                "random_id": kwargs.get("random_id") or int(random() * 4294967296) - 2147483648,
+                "random_id": kwargs.get("random_id")
+                or int(random() * 4294967296) - 2147483648,
             },
         )
 

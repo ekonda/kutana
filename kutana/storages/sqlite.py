@@ -3,7 +3,7 @@ import sqlite3
 import threading
 from contextlib import contextmanager
 
-from ..storage import OptimisticLockException, Document, Storage
+from ..storage import Document, OptimisticLockException, Storage
 
 
 def dict_factory(cursor, row):
@@ -28,13 +28,15 @@ class SqliteStorage(Storage):
         self.connection.row_factory = dict_factory
 
         with self.cursor() as cur:
-            cur.execute("""
+            cur.execute(
+                """
                 CREATE TABLE IF NOT EXISTS kvs (
                     key text NOT NULL,
                     val text NOT NULL,
                     ver integer NOT NULL default 0
                 )
-            """)
+            """
+            )
             cur.execute("CREATE UNIQUE INDEX IF NOT EXISTS kvs__key ON kvs (key)")
             cur.execute("CREATE INDEX IF NOT EXISTS kvs__key__ver ON kvs (key, ver)")
 
@@ -55,18 +57,22 @@ class SqliteStorage(Storage):
                     if old_version:
                         cur.execute(
                             "UPDATE kvs SET val = ?, ver = ? WHERE key = ? AND ver = ?",
-                            (serialized_data, new_version, key, old_version)
+                            (serialized_data, new_version, key, old_version),
                         )
 
                     if not old_version or cur.rowcount < 1:
                         cur.execute(
                             "INSERT INTO kvs (key, val, ver) VALUES (?, ?, ?)",
-                            (key, serialized_data, new_version)
+                            (key, serialized_data, new_version),
                         )
             except sqlite3.IntegrityError:
-                raise OptimisticLockException(f"Failed to update data for key {key} (mismatched version)")
+                raise OptimisticLockException(
+                    f"Failed to update data for key {key} (mismatched version)"
+                )
 
-            return Document({**new_data, "_version": new_version}, _storage=self, _storage_key=key)
+            return Document(
+                {**new_data, "_version": new_version}, _storage=self, _storage_key=key
+            )
 
     async def get(self, key):
         with self._lock:

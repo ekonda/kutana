@@ -13,7 +13,9 @@ class VkontakteLongpoll(Vkontakte):
         self._longpoll_url_template = "{}?act=a_check&key={}&wait=25&ts={}"
 
     async def _update_longpoll_data(self):
-        self._longpoll_data = await self._direct_request("groups.getLongPollServer", {"group_id": self.group["id"]})
+        self._longpoll_data = await self._direct_request(
+            "groups.getLongPollServer", {"group_id": self.group["id"]}
+        )
 
     async def on_start(self, app):
         await super().on_start(app)

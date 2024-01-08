@@ -52,12 +52,14 @@ class Context:
         for text_segment in text_segments[:-1]:
             results.append(await self.backend.send_message(recipient_id, text_segment))
 
-        results.append(await self.backend.send_message(
-            recipient_id,
-            text_segments[-1],
-            attachments,
-            **kwargs,
-        ))
+        results.append(
+            await self.backend.send_message(
+                recipient_id,
+                text_segments[-1],
+                attachments,
+                **kwargs,
+            )
+        )
 
         return results
 
@@ -88,7 +90,7 @@ def split_large_text(text, length=4096):
 
     text = str(text)
 
-    yield text[0: length]
+    yield text[0:length]
 
     for i in range(length, len(text), length):
-        yield text[i: i + length]
+        yield text[i : i + length]

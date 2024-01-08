@@ -39,7 +39,7 @@ def pick_by(obj, predicate=None):
 
 def chunks(iterable, length=4096):
     for i in range(0, len(iterable), length):
-        yield iterable[i: i + length]
+        yield iterable[i : i + length]
 
 
 def get_random_string(length=14):

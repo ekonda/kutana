@@ -64,16 +64,22 @@ def initiate_project(args):
     config_file = os.path.join(project_root, "config.yml")
 
     if os.path.isfile(config_file):
-        logging.error(f"Specified project folder already has configuration: {project_root}/config.yml")
+        logging.error(
+            f"Specified project folder already has configuration: {project_root}/config.yml"
+        )
         exit(1)
 
     with open(config_file, "w") as fh:
-        yaml.dump({
-            "backends": [],
-            "plugins": ["plugins/"],
-            "prefixes": [".", "!", "/"],
-            "storages": [],
-        }, fh, Dumper=CuteSafeDumper)
+        yaml.dump(
+            {
+                "backends": [],
+                "plugins": ["plugins/"],
+                "prefixes": [".", "!", "/"],
+                "storages": [],
+            },
+            fh,
+            Dumper=CuteSafeDumper,
+        )
 
 
 def run_project(args):  # noqa:C901
@@ -142,7 +148,9 @@ def run_project(args):  # noqa:C901
             for plugin in load_plugins_from_path(plugin_config["path"]):
                 app.add_plugin(plugin)
         elif plugin_config.get("module"):
-            app.add_plugin(load_plugins_from_module(import_module(plugin_config["module"])))
+            app.add_plugin(
+                load_plugins_from_module(import_module(plugin_config["module"]))
+            )
         else:
             raise ValueError(f'Unknown plugin config kind: "{plugin_config}"')
 

@@ -4,7 +4,9 @@ from kutana import Context, Message, RecipientKind
 
 
 async def test_reply_to_update():
-    update = Message("someone", "michaelkrukov", RecipientKind.PRIVATE_CHAT, "", [], 0, {})
+    update = Message(
+        "someone", "michaelkrukov", RecipientKind.PRIVATE_CHAT, "", [], 0, {}
+    )
     context = Context(None, update, AsyncMock())
 
     await context.reply("Sup")
@@ -32,11 +34,15 @@ async def test_reply_with_kwargs():
     context.recipient_id = "michaelkrukov"
 
     await context.reply("Sup", mood="scared")
-    context.backend.send_message.assert_awaited_with("michaelkrukov", "Sup", None, mood="scared")
+    context.backend.send_message.assert_awaited_with(
+        "michaelkrukov", "Sup", None, mood="scared"
+    )
 
 
 async def test_unique_ids():
-    update = Message("someone", "michaelkrukov", RecipientKind.PRIVATE_CHAT, "", [], 0, {})
+    update = Message(
+        "someone", "michaelkrukov", RecipientKind.PRIVATE_CHAT, "", [], 0, {}
+    )
     context = Context(None, update, AsyncMock(get_identity=Mock(return_value="b")))
 
     assert context.recipient_unique_id == "b:r:michaelkrukov"

@@ -11,7 +11,9 @@ from .plugin import Plugin
 def _validate_plugins(plugins, package):
     for plugin in plugins:
         if not isinstance(plugin, Plugin):
-            raise ValueError(f'Package "{package}" exported {plugin}, which is not an instance of Plugin')
+            raise ValueError(
+                f'Package "{package}" exported {plugin}, which is not an instance of Plugin'
+            )
 
     return plugins
 
@@ -22,7 +24,11 @@ def _extract_plugins(package):
         return _validate_plugins([package.plugin], package.__name__)
 
     if hasattr(package, "plugins"):
-        logging.info('Loaded %d plugin(s) from "%s" package', len(package.plugins), package.__name__)
+        logging.info(
+            'Loaded %d plugin(s) from "%s" package',
+            len(package.plugins),
+            package.__name__,
+        )
         return _validate_plugins(package.plugins, package.__name__)
 
     logging.debug('No plugins found in "%s" package', package.__name__)
@@ -48,7 +54,9 @@ def _load_package(path):
     # Import module using extracted name
     spec = finder.find_spec(package_name)
     if spec is None or spec.loader is None:
-        raise ValueError(f'Failed to get spec for "{package_name}" (or spec has no loader)')
+        raise ValueError(
+            f'Failed to get spec for "{package_name}" (or spec has no loader)'
+        )
 
     module = importlib.util.module_from_spec(spec)
     sys.modules[package_name] = module

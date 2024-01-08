@@ -38,5 +38,5 @@ __all__ = [
     "PROCESSED",
     "RecipientKind",
     "RequestException",
-    "SKIPPED"
+    "SKIPPED",
 ]

@@ -1,6 +1,10 @@
 import pymongo
 import pymongo.errors
-from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCollection, AsyncIOMotorDatabase
+from motor.motor_asyncio import (
+    AsyncIOMotorClient,
+    AsyncIOMotorCollection,
+    AsyncIOMotorDatabase,
+)
 
 from ..storage import Document, OptimisticLockException, Storage
 
@@ -11,7 +15,11 @@ class MongoDBStorage(Storage):
     """
 
     def __init__(self, mongodb_uri, database="kutana", collection="storage"):
-        self._config = {"host": mongodb_uri, "database": database, "collection": collection}
+        self._config = {
+            "host": mongodb_uri,
+            "database": database,
+            "collection": collection,
+        }
         self.client: AsyncIOMotorClient
         self.database: AsyncIOMotorDatabase
         self.collection: AsyncIOMotorCollection
@@ -46,7 +54,9 @@ class MongoDBStorage(Storage):
 
             return Document(data, _storage=self, _storage_key=key)
         except pymongo.errors.DuplicateKeyError:  # type: ignore
-            raise OptimisticLockException(f'Failed to update data for key "{key}" (mismatched version)')
+            raise OptimisticLockException(
+                f'Failed to update data for key "{key}" (mismatched version)'
+            )
 
     async def get(self, key):
         data = await self.collection.find_one({"_id": key}, projection={"_id": 0})

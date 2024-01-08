@@ -1,8 +1,5 @@
-import pytest
-
 from kutana.backends.debug import Debug
 from kutana.plugin import Plugin
-from kutana.update import Attachment, AttachmentKind
 
 
 async def test_vk_on_payloads():

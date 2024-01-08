@@ -64,11 +64,15 @@ class Kutana:
         for plugin in self._plugins:
             source_routers.extend(plugin._routers)
 
-        sorted_source_routers = sorted(source_routers, reverse=True, key=lambda router: router.priority)
+        sorted_source_routers = sorted(
+            source_routers, reverse=True, key=lambda router: router.priority
+        )
 
         root_router = ListRouter()
 
-        for _, outer_group in groupby(sorted_source_routers, key=lambda router: router.priority):
+        for _, outer_group in groupby(
+            sorted_source_routers, key=lambda router: router.priority
+        ):
             for cls, inner_group in groupby(outer_group, key=type):
                 if issubclass(cls, Router):
                     root_router.add_handler(cls.merge(inner_group))

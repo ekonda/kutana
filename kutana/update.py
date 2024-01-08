@@ -1,6 +1,6 @@
 import io
 from enum import Enum
-from typing import Any, Awaitable, Callable, List, NamedTuple, Optional, Union, Tuple
+from typing import Any, Awaitable, Callable, List, NamedTuple, Optional, Tuple, Union
 
 
 class AttachmentKind(str, Enum):
@@ -21,7 +21,9 @@ class Attachment:
         self,
         id: Optional[Union[str, int, float]] = None,
         kind: Optional[Union[AttachmentKind, str]] = None,
-        content: Optional[Union[AttachmentContent, Tuple[str, Union[str, bytes]]]] = None,
+        content: Optional[
+            Union[AttachmentContent, Tuple[str, Union[str, bytes]]]
+        ] = None,
         title: Optional[str] = None,
         raw: Any = None,
         get_file: Optional[Callable[..., Awaitable]] = None,

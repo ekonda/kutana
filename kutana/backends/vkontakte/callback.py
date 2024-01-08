@@ -61,11 +61,7 @@ class VkontakteCallback(Vkontakte):
 
         await self._app_runner.setup()
 
-        site = web.TCPSite(
-            self._app_runner,
-            self._host,
-            self._port
-        )
+        site = web.TCPSite(self._app_runner, self._host, self._port)
 
         await site.start()
 
@@ -113,7 +109,7 @@ class VkontakteCallback(Vkontakte):
                 "url": self._address,
                 "title": get_random_string(),
                 "secret_key": get_random_string(24),
-            }
+            },
         )
 
         server_id = response["server_id"]

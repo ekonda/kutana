@@ -31,10 +31,12 @@ class VkontaktePayloadRouter(MapRouter):
         if not isinstance(key, dict):
             return
 
-        self._possible_key_shapes = uniq_by([
-            *self._possible_key_shapes,
-            tuple(sorted(key.keys())),
-        ])
+        self._possible_key_shapes = uniq_by(
+            [
+                *self._possible_key_shapes,
+                tuple(sorted(key.keys())),
+            ]
+        )
 
     def add_handler(self, key, handler):
         self._update_possible_key_shapes(key)
@@ -47,9 +49,7 @@ class VkontaktePayloadRouter(MapRouter):
 
     def _to_hashable(self, value):
         if isinstance(value, dict):
-            return tuple(
-                (k, self._to_hashable(v)) for k, v in sorted(value.items())
-            )
+            return tuple((k, self._to_hashable(v)) for k, v in sorted(value.items()))
 
         if isinstance(value, list):
             return tuple(self._to_hashable(item) for item in value)
@@ -99,13 +99,17 @@ class VkontakteCallbackRouter(VkontaktePayloadRouter):
         context.payload = payload
 
         async def _send_message_event_answer(event_data, **kwargs):
-            return await context.request("messages.sendMessageEventAnswer", {
-                "event_id": context.update["object"]["event_id"],
-                "user_id": context.update["object"]["user_id"],
-                "peer_id": context.update["object"]["peer_id"],
-                "event_data": json.dumps(event_data),
-                **kwargs,
-            })
+            return await context.request(
+                "messages.sendMessageEventAnswer",
+                {
+                    "event_id": context.update["object"]["event_id"],
+                    "user_id": context.update["object"]["user_id"],
+                    "peer_id": context.update["object"]["peer_id"],
+                    "event_data": json.dumps(event_data),
+                    **kwargs,
+                },
+            )
+
         context.send_message_event_answer = _send_message_event_answer
 
         if isinstance(payload, dict):

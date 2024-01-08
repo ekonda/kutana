@@ -1,10 +1,10 @@
 from unittest.mock import patch
 
+from mongomock_motor import AsyncMongoMockClient
 from pytest import raises
 
 from kutana.storage import DocumentIsDeletedException, OptimisticLockException, Storage
 from kutana.storages import MemoryStorage, MongoDBStorage, SqliteStorage
-from mongomock_motor import AsyncMongoMockClient
 
 
 async def _test_storage(storage: Storage):

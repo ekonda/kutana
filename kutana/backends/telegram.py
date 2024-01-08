@@ -64,7 +64,9 @@ class Telegram(Backend):
         if isinstance(context.update, dict):
             if context.update.get("callback_query"):
                 context.sender_id = context.update["callback_query"]["from"]["id"]
-                context.recipient_id = context.update["callback_query"]["message"]["chat"]["id"]
+                context.recipient_id = context.update["callback_query"]["message"][
+                    "chat"
+                ]["id"]
 
     async def on_start(self, app):
         me = await self.request("getMe", {})
@@ -82,7 +84,11 @@ class Telegram(Backend):
         if isinstance(value, (io.IOBase, bytes)):
             return True
 
-        if isinstance(value, tuple) and len(value) == 2 and isinstance(value[1], (io.IOBase, bytes)):
+        if (
+            isinstance(value, tuple)
+            and len(value) == 2
+            and isinstance(value[1], (io.IOBase, bytes))
+        ):
             return True
 
         return False
@@ -141,7 +147,9 @@ class Telegram(Backend):
             )
 
         if raw_attachment_kind == "photo":
-            largest_photo = list(sorted(raw_attachment, key=lambda photo: photo["width"]))[0]
+            largest_photo = list(
+                sorted(raw_attachment, key=lambda photo: photo["width"])
+            )[0]
             return Attachment(
                 id=largest_photo["file_id"],
                 kind=AttachmentKind.IMAGE,
@@ -204,7 +212,9 @@ class Telegram(Backend):
 
         for kind in TELEGRAM_POSSIBLE_ATTACHMENT_KINDS:
             if raw_update["message"].get(kind):
-                attachments.append(self._make_attachment(raw_update["message"][kind], kind))
+                attachments.append(
+                    self._make_attachment(raw_update["message"][kind], kind)
+                )
 
         if raw_update["message"]["chat"]["type"] == "private":
             recipient_kind = RecipientKind.PRIVATE_CHAT
@@ -226,7 +236,9 @@ class Telegram(Backend):
 
         while True:
             try:
-                response = await self.request("getUpdates", {"timeout": 25, "offset": offset})
+                response = await self.request(
+                    "getUpdates", {"timeout": 25, "offset": offset}
+                )
             except asyncio.CancelledError:
                 raise
             except Exception:
@@ -260,7 +272,9 @@ class Telegram(Backend):
                     raise ValueError(f'Unexpected attachment: "{attachment}"')
 
                 if attachment.kind not in SUPPORTED_ATTACHMENT_KINDS:
-                    raise ValueError(f'Unsupported attachment kind: "{attachment.kind}"')
+                    raise ValueError(
+                        f'Unsupported attachment kind: "{attachment.kind}"'
+                    )
 
                 method, data_field = SUPPORTED_ATTACHMENT_KINDS[attachment.kind]
 
@@ -271,7 +285,12 @@ class Telegram(Backend):
                             {
                                 "chat_id": recipient_id,
                                 data_field: attachment.id or attachment.content or None,
-                                "caption": attachment.title or (attachment.content[0] if attachment.content else None),
+                                "caption": attachment.title
+                                or (
+                                    attachment.content[0]
+                                    if attachment.content
+                                    else None
+                                ),
                             }
                         ),
                     )

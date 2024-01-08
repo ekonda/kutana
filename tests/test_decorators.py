@@ -1,9 +1,14 @@
-from unittest.mock import MagicMock, AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from kutana import PROCESSED, SKIPPED, RecipientKind
-from kutana.decorators import expect_backend, expect_recipient_kind, expect_sender_is_admin, expect_sender_is_owner
+from kutana.decorators import (
+    expect_backend,
+    expect_recipient_kind,
+    expect_sender_is_admin,
+    expect_sender_is_owner,
+)
 
 
 async def test_expect_backend():
@@ -12,10 +17,14 @@ async def test_expect_backend():
 
     funciton = expect_backend("vk")(_return_processed)
 
-    context_from_vk = MagicMock(backend=MagicMock(get_identity=MagicMock(return_value="vk")))
+    context_from_vk = MagicMock(
+        backend=MagicMock(get_identity=MagicMock(return_value="vk"))
+    )
     assert await funciton(MagicMock(), context_from_vk) == PROCESSED
 
-    context_from_tg = MagicMock(backend=MagicMock(get_identity=MagicMock(return_value="tg")))
+    context_from_tg = MagicMock(
+        backend=MagicMock(get_identity=MagicMock(return_value="tg"))
+    )
     assert await funciton(MagicMock(), context_from_tg) == SKIPPED
 
 
@@ -48,7 +57,9 @@ async def _test_expect_sender(decorator, results):
     context_from_vk = MagicMock(
         backend=MagicMock(
             get_identity=MagicMock(return_value="vk"),
-            request=AsyncMock(return_value={"items": [{"member_id": 3, "is_owner": True}]}),
+            request=AsyncMock(
+                return_value={"items": [{"member_id": 3, "is_owner": True}]}
+            ),
         )
     )
     assert await funciton(message, context_from_vk) == results[0]
@@ -56,7 +67,9 @@ async def _test_expect_sender(decorator, results):
     context_from_vk = MagicMock(
         backend=MagicMock(
             get_identity=MagicMock(return_value="vk"),
-            request=AsyncMock(return_value={"items": [{"member_id": 3, "is_admin": True}]}),
+            request=AsyncMock(
+                return_value={"items": [{"member_id": 3, "is_admin": True}]}
+            ),
         )
     )
     assert await funciton(message, context_from_vk) == results[1]
@@ -69,7 +82,12 @@ async def _test_expect_sender(decorator, results):
     )
     assert await funciton(message, context_from_vk) == results[2]
 
-    assert await funciton(MagicMock(recipient_kind=RecipientKind.PRIVATE_CHAT), context_from_vk) == SKIPPED
+    assert (
+        await funciton(
+            MagicMock(recipient_kind=RecipientKind.PRIVATE_CHAT), context_from_vk
+        )
+        == SKIPPED
+    )
 
     # --- tg ---
     context_from_tg = MagicMock(
@@ -83,7 +101,9 @@ async def _test_expect_sender(decorator, results):
     context_from_tg = MagicMock(
         backend=MagicMock(
             get_identity=MagicMock(return_value="tg"),
-            request=AsyncMock(return_value=[{"user": {"id": 3}, "status": "administrator"}]),
+            request=AsyncMock(
+                return_value=[{"user": {"id": 3}, "status": "administrator"}]
+            ),
         )
     )
     assert await funciton(message, context_from_tg) == results[4]
@@ -96,15 +116,27 @@ async def _test_expect_sender(decorator, results):
     )
     assert await funciton(message, context_from_tg) == results[5]
 
-    assert await funciton(MagicMock(recipient_kind=RecipientKind.PRIVATE_CHAT), context_from_tg) == SKIPPED
+    assert (
+        await funciton(
+            MagicMock(recipient_kind=RecipientKind.PRIVATE_CHAT), context_from_tg
+        )
+        == SKIPPED
+    )
 
     # --- other backend ---
-    context_from_bruh = MagicMock(backend=MagicMock(get_identity=MagicMock(return_value="bruh")))
+    context_from_bruh = MagicMock(
+        backend=MagicMock(get_identity=MagicMock(return_value="bruh"))
+    )
 
     with pytest.raises(NotImplementedError):
         await funciton(message, context_from_bruh)
 
-    assert await funciton(MagicMock(recipient_kind=RecipientKind.PRIVATE_CHAT), context_from_bruh) == SKIPPED
+    assert (
+        await funciton(
+            MagicMock(recipient_kind=RecipientKind.PRIVATE_CHAT), context_from_bruh
+        )
+        == SKIPPED
+    )
 
 
 async def test_expect_sender_is_admin():

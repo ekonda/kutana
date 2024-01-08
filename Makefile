@@ -1,17 +1,17 @@
 .PHONY: run
 run:
 	poetry run -- watchmedo auto-restart \
-	    --directory example/ \
-	    --directory kutana/ \
-	    --ignore-directories \
-	    --recursive \
-	    --ignore-patterns '*.pyc;*.sqlite3;*.sqlite3-journal' \
-	    -- \
-	    python3 -m kutana run example/config.yml
+		--directory example/ \
+		--directory kutana/ \
+		--ignore-directories \
+		--recursive \
+		--ignore-patterns '*.pyc;*.sqlite3;*.sqlite3-journal' \
+		-- \
+		python3 -m kutana run example/config.yml
 
 .PHONY: test
 test:
-	poetry run pytest ./tests
+	poetry run pytest --asyncio-mode=auto --cov=kutana --cov-report=term-missing ./tests
 
 .PHONY: lint
 lint:

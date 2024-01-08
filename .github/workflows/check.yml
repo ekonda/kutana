@@ -34,4 +34,4 @@ jobs:
       - name: Run linter
         run: make lint
       - name: Run tests
-        run: poetry run pytest --asyncio-mode=auto --cov=kutana --cov-report=term-missing ./tests
+        run: make test

@@ -20,14 +20,13 @@ jobs:
         uses: snok/install-poetry@v1
         with:
           version: 1.7.1
-      - name: Install dependencies
-        run: poetry install
-      - name: Test with coverage and pytest
-        run: make test
-      - name: Generate distribution archives
+      - name: Install dependencies and run tests
+        shell: bash
         run: |
-          python setup.py sdist bdist_wheel
-      - name: Upload the distribution archives
+          poetry install
+          make test
+      - name: Set module version and publish it
+        shell: bash
         run: |
           poetry version ${GITHUB_REF_NAME#v}
           poetry publish --build

@@ -26,9 +26,9 @@ jobs:
         uses: snok/install-poetry@v1
         with:
           version: 1.7.1
-      - name: Install dependencies
-        run: poetry install
-      - name: Link
-        run: make lint
-      - name: Test with coverage and pytest
-        run: make test
+      - name: Install dependencies, run linting and tests
+        shell: bash
+        run: |
+          poetry install
+          make lint
+          make test

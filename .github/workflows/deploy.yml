@@ -30,5 +30,5 @@ jobs:
           poetry version ${GITHUB_REF_NAME#v}
           poetry publish --build
         env:
-          POETRY_HTTP_BASIC_INTERNAL_USERNAME: ${{ secrets.PYPI_LOGIN }}
-          POETRY_HTTP_BASIC_INTERNAL_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+          POETRY_HTTP_BASIC_PYPI_USERNAME: ${{ secrets.PYPI_LOGIN }}
+          POETRY_HTTP_BASIC_PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}

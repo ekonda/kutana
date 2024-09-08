@@ -1,7 +1,7 @@
 import asyncio
 import logging
 from itertools import groupby
-from typing import Dict, List
+from typing import Callable, Dict, List
 
 from .backend import Backend
 from .context import Context
@@ -43,7 +43,7 @@ class Kutana:
         self._storages: Dict[str, Storage] = {"default": MemoryStorage()}
         self._root_router: Router
 
-        self._hooks = {
+        self._hooks: Dict[str, List[Callable]] = {
             "start": [],
             "exception": [],
             "completion": [],
@@ -79,7 +79,7 @@ class Kutana:
 
         self._root_router = root_router
 
-    async def _handle_event(self, event, *args, **kwargs):
+    async def _handle_event(self, event: str, *args, **kwargs):
         for handler in self._hooks[event]:
             try:
                 await handler(*args, **kwargs)
@@ -96,11 +96,8 @@ class Kutana:
     def storages(self):
         return self._storages
 
-    def add_plugin(self, plugin):
+    def add_plugin(self, plugin: Plugin):
         """Add plugin to the application."""
-        if not isinstance(plugin, Plugin):
-            raise ValueError(f"Provided value is not a plugin: {plugin}")
-
         if plugin in self._plugins:
             raise RuntimeError("Plugin already added")
 
@@ -113,11 +110,8 @@ class Kutana:
     def plugins(self):
         return self._plugins
 
-    def add_backend(self, backend):
+    def add_backend(self, backend: Backend):
         """Add backend to the application."""
-        if not isinstance(backend, Backend):
-            raise ValueError(f"Provided value is not a backend: {backend}")
-
         if backend in self._backends:
             raise RuntimeError("Backend already added")
 
@@ -174,7 +168,7 @@ class Kutana:
             self.stop()
             raise
 
-    async def _handle_update(self, context):
+    async def _handle_update(self, context: Context):
         logging.debug("Processing update %s", context.update)
 
         try:

@@ -1,4 +1,4 @@
-class Symbol:
+class HandledResultSymbol:
     def __init__(self, name: str):
         self.name = name
 
@@ -6,5 +6,5 @@ class Symbol:
         return f"<Symbol({self.name})>"
 
 
-PROCESSED = Symbol("PROCESSED")
-SKIPPED = Symbol("SKIPPED")
+PROCESSED = HandledResultSymbol("PROCESSED")
+SKIPPED = HandledResultSymbol("SKIPPED")

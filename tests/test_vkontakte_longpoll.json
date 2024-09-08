@@ -3,18 +3,20 @@
     "url": "https://api.vk.com/method/groups.getById",
     "data": { "fields": "screen_name" },
     "response": {
-      "response": [
-        {
-          "id": 654327632,
-          "name": "jahskdkafsdhj",
-          "screen_name": "jahskdkafsdhj",
-          "is_closed": 1,
-          "type": "group",
-          "photo_50": "https://sun1-22.userapi.com/s/v1/if1/ajsdhakjhdskjahdhjgasdjhagsd.jpg?size=50x50&quality=96&crop=394,0,1076,1076&ava=1",
-          "photo_100": "https://sun1-22.userapi.com/s/v1/if1/adsgajdhkajdshajdgjahldjhgjahksd.jpg?size=100x100&quality=96&crop=394,0,1076,1076&ava=1",
-          "photo_200": "https://sun1-22.userapi.com/s/v1/if1/asdjghjaklkdjhjasgkdlkjhagsydku.jpg?size=200x200&quality=96&crop=394,0,1076,1076&ava=1"
-        }
-      ]
+      "response": {
+        "groups": [
+          {
+            "id": 654327632,
+            "name": "jahskdkafsdhj",
+            "screen_name": "jahskdkafsdhj",
+            "is_closed": 1,
+            "type": "group",
+            "photo_50": "https://sun1-22.userapi.com/s/v1/if1/ajsdhakjhdskjahdhjgasdjhagsd.jpg?size=50x50&quality=96&crop=394,0,1076,1076&ava=1",
+            "photo_100": "https://sun1-22.userapi.com/s/v1/if1/adsgajdhkajdshajdgjahldjhgjahksd.jpg?size=100x100&quality=96&crop=394,0,1076,1076&ava=1",
+            "photo_200": "https://sun1-22.userapi.com/s/v1/if1/asdjghjaklkdjhjasgkdlkjhagsydku.jpg?size=200x200&quality=96&crop=394,0,1076,1076&ava=1"
+          }
+        ]
+      }
     }
   },
   {

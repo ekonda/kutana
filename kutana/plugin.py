@@ -1,12 +1,15 @@
 import functools
 import re
-from typing import Any, List
+from typing import Any, Awaitable, Callable, Dict, List, Optional, Union
 
 from .backends.vkontakte import VkontaktePluginExtension
-from .handler import SKIPPED
+from .context import Context
+from .handler import SKIPPED, HandledResultSymbol
 from .router import AttachmentsRouter, CommandsRouter, ListRouter, Router
 from .storage import Document
 from .update import Message
+
+HandlerType = Callable[[Message, Context], Awaitable[Optional[HandledResultSymbol]]]
 
 
 class Plugin:
@@ -31,14 +34,6 @@ class Plugin:
 
         # Setup extensions
         self.vk = VkontaktePluginExtension(self)
-
-    def __getattr__(self, name):
-        """Defined for typing"""
-        return super().__getattribute__(name)
-
-    def __setattr__(self, name, value):
-        """Defined for typing"""
-        return super().__setattr__(name, value)
 
     def on_start(self):
         """
@@ -91,8 +86,8 @@ class Plugin:
 
     def on_commands(
         self,
-        commands,
-        priority=0,
+        commands: List[str],
+        priority: int = 0,
     ):
         """
         Return decorator for registering handler that will be called
@@ -112,7 +107,7 @@ class Plugin:
         other handlers are not executed further.
         """
 
-        def decorator(coro):
+        def decorator(coro: HandlerType):
             router = CommandsRouter(priority=priority)
             for command in commands:
                 router.add_handler(command, coro)
@@ -123,7 +118,11 @@ class Plugin:
 
         return decorator
 
-    def on_match(self, patterns, priority=0):
+    def on_match(
+        self,
+        patterns: List[Union[str, re.Pattern[str]]],
+        priority: int = 0,
+    ):
         """
         Return decorator for registering handler that will be called
         when incoming update is a message and it's message matches any
@@ -168,8 +167,8 @@ class Plugin:
 
     def on_attachments(
         self,
-        kinds,
-        priority=0,
+        kinds: List[str],
+        priority: int = 0,
     ):
         """
         Return decorator for registering handler that will be called
@@ -180,7 +179,7 @@ class Plugin:
         about 'priority' and return values.
         """
 
-        def decorator(coro):
+        def decorator(coro: HandlerType):
             router = AttachmentsRouter(priority=priority)
             for kind in kinds:
                 router.add_handler(kind, coro)
@@ -191,7 +190,10 @@ class Plugin:
 
         return decorator
 
-    def on_messages(self, priority=-1):
+    def on_messages(
+        self,
+        priority: int = -1,
+    ):
         """
         Return decorator for registering handler that will be called
         when incoming update is a message. Handler will always be
@@ -202,7 +204,7 @@ class Plugin:
         about 'priority' and return values.
         """
 
-        def decorator(coro):
+        def decorator(coro: HandlerType):
             router = ListRouter(priority=priority)
 
             @functools.wraps(coro)
@@ -219,7 +221,10 @@ class Plugin:
 
         return decorator
 
-    def on_updates(self, priority=0):
+    def on_updates(
+        self,
+        priority: int = 0,
+    ):
         """
         Return decorator for registering handler that will be always
         called (for messages and not messages).
@@ -228,7 +233,7 @@ class Plugin:
         about 'priority' and return values.
         """
 
-        def decorator(coro):
+        def decorator(coro: HandlerType):
             router = ListRouter(priority=priority)
             router.add_handler(coro)
 
@@ -238,7 +243,12 @@ class Plugin:
 
         return decorator
 
-    def with_storage(self, check_sender=None, check_recipient=None, storage="default"):
+    def with_storage(
+        self,
+        check_sender: Optional[Dict] = None,
+        check_recipient: Optional[Dict] = None,
+        storage: str = "default",
+    ):
         """
         This decorator allow plugins to implicitly require access to database.
         Context is populated with the following fields:
@@ -276,12 +286,12 @@ class Plugin:
             context.sender.update_and_save(field2="value2")  # update data and store it in database
         """
 
-        def _perform_check(data, check):
+        def _perform_check(data: Document, check: Optional[Dict]):
             """Return true if handler should be called."""
 
             return not check or all(data.get(k) == v for k, v in check.items())
 
-        def decorator(coro):
+        def decorator(coro: HandlerType):
             @functools.wraps(coro)
             async def wrapper(update, context):
                 context.storage = self.app.storages[storage]
@@ -315,3 +325,11 @@ class Plugin:
             return wrapper
 
         return decorator
+
+    def __getattr__(self, name: str):
+        """Defined for typing"""
+        return super().__getattribute__(name)
+
+    def __setattr__(self, name: str, value):
+        """Defined for typing"""
+        return super().__setattr__(name, value)

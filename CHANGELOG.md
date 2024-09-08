@@ -3,6 +3,13 @@
 > Changes to public API are marked as `^`. Possible changes
 > to public API are marked as `^?`.
 
+- v6.0.1
+  - Changes
+    - (VKontakte) Bumped default `api_version` to `5.199`.
+    - Updated version of python for tests and lintings.
+  - Refactor
+    - (Core) Provided more typing for some of the plugin's methods.
+
 - v6.0.0
   - Notes
     - This version focuses on removing features that are too hard

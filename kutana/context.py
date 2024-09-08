@@ -79,7 +79,7 @@ class Context:
         )
 
 
-def split_large_text(text, length=4096):
+def split_large_text(text: str, length=4096):
     """
     Split text into chunks with specified length.
 

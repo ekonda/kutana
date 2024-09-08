@@ -25,6 +25,15 @@ async def _(msg, ctx):
 
     await ctx.reply("Document", attachments=[doc])
 
+    # Audio message
+    with open(get_path(__file__, "assets/audio.ogg"), "rb") as fh:
+        audio_message = Attachment(
+            kind=AttachmentKind.VOICE,
+            content=("audio.ogg", fh.read()),
+        )
+
+    await ctx.reply("Audio message", attachments=[audio_message])
+
     # Video
     with open(get_path(__file__, "assets/video.mp4"), "rb") as fh:
         video = Attachment(
@@ -34,12 +43,3 @@ async def _(msg, ctx):
         )
 
     await ctx.reply("Video", attachments=[video])
-
-    # Audio message
-    with open(get_path(__file__, "assets/audio.ogg"), "rb") as fh:
-        audio_message = Attachment(
-            kind=AttachmentKind.VOICE,
-            content=("audio.ogg", fh.read()),
-        )
-
-    await ctx.reply("Audio message", attachments=[audio_message])

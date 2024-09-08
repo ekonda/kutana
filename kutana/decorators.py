@@ -1,4 +1,5 @@
 from functools import wraps
+from typing import Callable, List
 
 from .backend import Backend
 from .context import Context
@@ -24,7 +25,7 @@ def expect_recipient_kind(expected_recipient_kind: RecipientKind):
     return decorator
 
 
-def expect_backend(expected_identity):
+def expect_backend(expected_identity: str):
     """
     Return decorators that skips all updates acquired from
     backends with identity different from specified one.
@@ -42,7 +43,11 @@ def expect_backend(expected_identity):
     return decorator
 
 
-async def _get_user_statuses_vk(backend, chat_id, user_id):
+async def _get_user_statuses_vk(
+    backend: Backend,
+    chat_id: str,
+    user_id: str,
+) -> List[str]:
     members_response = await backend.request(
         "messages.getConversationMembers",
         {"peer_id": chat_id, "fields": ""},
@@ -63,7 +68,11 @@ async def _get_user_statuses_vk(backend, chat_id, user_id):
     return []
 
 
-async def _get_user_statuses_tg(backend, chat_id, user_id):
+async def _get_user_statuses_tg(
+    backend: Backend,
+    chat_id: str,
+    user_id: str,
+) -> List[str]:
     chat_administrators = await backend.request(
         "getChatAdministrators",
         {"chat_id": chat_id},
@@ -83,7 +92,7 @@ async def _get_user_statuses_tg(backend, chat_id, user_id):
     return []
 
 
-async def _get_user_statuses(backend: Backend, chat_id, user_id):
+async def _get_user_statuses(backend: Backend, chat_id: str, user_id: str):
     if backend.get_identity() == "vk":
         return await _get_user_statuses_vk(backend, chat_id, user_id)
 
@@ -93,7 +102,7 @@ async def _get_user_statuses(backend: Backend, chat_id, user_id):
     raise NotImplementedError()
 
 
-def _expect_sender_status(func, expected_status):
+def _expect_sender_status(func: Callable, expected_status: str):
     @expect_recipient_kind(RecipientKind.GROUP_CHAT)
     @wraps(func)
     async def wrapper(message: Message, context: Context):

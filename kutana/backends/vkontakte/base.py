@@ -65,7 +65,7 @@ class Vkontakte(Backend):
         self,
         token,
         requests_per_second=19,
-        api_version="5.131",
+        api_version="5.199",
         api_url="https://api.vk.com",
     ):
         if not token:
@@ -224,9 +224,8 @@ class Vkontakte(Backend):
         )
 
     async def _update_group_data(self):
-        groups = await self._direct_request("groups.getById", {"fields": "screen_name"})
-
-        self.group = groups[0]
+        data = await self._direct_request("groups.getById", {"fields": "screen_name"})
+        self.group = data["groups"][0]
 
     async def on_start(self, app):
         await self._update_group_data()

@@ -120,7 +120,7 @@ class Plugin:
 
     def on_match(
         self,
-        patterns: List[Union[str, re.Pattern[str]]],
+        patterns: List[Union[str, re.Pattern]],
         priority: int = 0,
     ):
         """
